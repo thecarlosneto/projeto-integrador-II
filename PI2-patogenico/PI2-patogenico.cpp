@@ -11,8 +11,6 @@ bool isColliding(int x1, int y1, int width1, int height1, int x2, int y2, int wi
     return false;
 }
 
-
-
 int main()
 {
     al_init();

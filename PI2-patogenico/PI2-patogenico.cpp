@@ -55,7 +55,7 @@ int main()
             al_clear_to_color(al_map_rgb(40, 40, 40));
             al_draw_text(font, al_map_rgb(255, 255, 255), 0, 100, 0, "estou montando arapucas e engenhocas");
             al_draw_filled_triangle(35, 350, 85, 375, 35, 400, al_map_rgb_f(1, 0, 1));
-            al_draw_filled_circle(150, 150, cRaio, al_map_rgb_f(0.5, 0.5, 1));
+            al_draw_filled_circle(150, 150, 20, al_map_rgb_f(0.5, 0.5, 1));
             if (isColliding(mState.x, mState.y, 1, 1, 150-cRaio, 150-cRaio, cRaio * 2, cRaio * 2))
                 cRaio++;
 

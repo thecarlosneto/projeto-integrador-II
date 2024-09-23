@@ -2,6 +2,12 @@
 #include <allegro5/allegro_primitives.h> // Para criar um circulo
 #include <cmath> // Para utilizar o sqrt
 
+bool isColliding(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2) {
+    if ((x2 < x1 && x1 < x2 + width2) && (y2 < y1 && y1 < y2 + height2))
+        return true;
+    return false;
+}
+
 const float CIRCUFERENCIA = 50;
 const float MOVE_VELO = 5.0; // Velocidade do movimento do círculo
 

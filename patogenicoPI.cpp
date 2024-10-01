@@ -103,7 +103,7 @@ int main() {
                         tela = 2;
                     }
 
-                    printf("Clique detectado na posição (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+                    printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
                 }
             }
             // Desenhar o texto na tela usando a fonte embutida
@@ -140,7 +140,7 @@ int main() {
                         }
                     }
 
-                    printf("Clique detectado na posição (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+                    printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
                 }
             }
 

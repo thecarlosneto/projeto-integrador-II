@@ -1,29 +1,39 @@
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h> // Para criar um circulo
-#include <cmath> // Para utilizar o sqrt
+#include <time.h>
 #include <stdio.h>
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_image.h>
 
 int tela = 1;
+int width = 800;
+int height = 600;
 
-bool isColliding(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2) {
-    if ((x2 < x1 && x1 < x2 + width2) && (y2 < y1 && y1 < y2 + height2))
-        return true;
-    return false;
+void geracoordenadasX(int* coordenadaX, int tamanho, int x1, int x2) {
+    coordenadaX[0] = x1;
+    coordenadaX[tamanho - 1] = x2;
+    for (int i = 1; i < tamanho - 1; i++) {
+        coordenadaX[i] = 20 + rand() % (width - 40);
+    }
 }
 
+void geracoordenadasY(int* coordenadaY, int tamanho, int y1, int y2) {
+    coordenadaY[0] = y1;
+    coordenadaY[tamanho - 1] = y2;
+    for (int i = 1; i < tamanho - 1; i++) {
+        coordenadaY[i] = 20 + rand() % (height - 40);
+    }
+}
 
-
-const float CIRCUFERENCIA = 50;
-const float MOVE_VELO = 5.0; // Velocidade do movimento do círculo
-
-// Posição inicial do círculo (centro da tela)
-float circle_x = 400;
-float circle_y = 300;
+void gerarLinhas(int* coordenadaX, int* coordenadaY, int tamanho) {
+    for (int i = 0; i < tamanho - 1; i++) {
+        al_draw_line(coordenadaX[i], coordenadaY[i], coordenadaX[i + 1], coordenadaY[i + 1], al_map_rgb(119, 25, 15), 10.0);
+    };
+}
 
 int main() {
+    srand(time(NULL)); //inicializa a semente para números aleatórios
 
     // Inicializa o Allegro
     al_init();
@@ -45,11 +55,12 @@ int main() {
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 60.0);
 
     // Criação de uma janela de 640x480 pixels
-    ALLEGRO_DISPLAY* display = al_create_display(800, 600);
+    ALLEGRO_DISPLAY* display = al_create_display(width, height);
 
     // Carregar uma imagem (substitua "sua_imagem.png" pelo caminho da sua imagem)
     ALLEGRO_BITMAP* background = al_load_bitmap("img/telaTeste.png");
     ALLEGRO_BITMAP* background2 = al_load_bitmap("img/tela2Teste.png");
+    ALLEGRO_BITMAP* backgroundViremia = al_load_bitmap("img/backgroundViremia.png");
 
     if (!display) {
         printf("Erro ao criar a janela.\n");
@@ -78,6 +89,36 @@ int main() {
 
     // Inicia o temporizador
     al_start_timer(timer);
+
+    //Variáveis para o case Viremia
+    int x1 = 50, y1 = 535;
+    int x2 = 740, y2 = 50;
+
+    float circle_x = x1 + 10; // Posição inicial do círculo
+    float circle_y = y1 + 10;
+
+    bool minigame3 = false;
+    bool gameOver = false;
+
+    int tamanho = 4;
+    // Aloca memória para o coordenadaX
+    int* coordenadaX = (int*)malloc(tamanho * sizeof(int));
+    if (coordenadaX == NULL) {
+        printf("Erro ao alocar memória.\n");
+        return 1; // Sai em caso de falha na alocação
+    }
+
+    // Aloca memória para o coordenadaY
+    int* coordenadaY = (int*)malloc(tamanho * sizeof(int));
+    if (coordenadaY == NULL) {
+        printf("Erro ao alocar memória.\n");
+        return 1; // Sai em caso de falha na alocação
+    }
+
+    // Chama a função para preencher o array com números aleatórios
+    geracoordenadasX(coordenadaX, tamanho, x1, x2);
+    geracoordenadasY(coordenadaY, tamanho, y1, y2);
+    //fim das variáveis para o case Viremia
 
     // Loop de eventos
     bool running = true;
@@ -149,16 +190,8 @@ int main() {
             break;
 
         case 3:
-
-
-            al_clear_to_color(al_map_rgb(0, 0, 0));
-
-            // Cor do círculo
-            ALLEGRO_COLOR circle_color = al_map_rgb(255, 0, 0);
-
-
-            
-
+            // Desenha a imagem de fundo
+            al_draw_bitmap(backgroundViremia, 0, 0, 0);
 
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {
@@ -166,28 +199,25 @@ int main() {
                 ALLEGRO_MOUSE_STATE mState;
                 al_get_mouse_state(&mState);
 
-                // Calcula a direção e a distância até a posição do mouse
-                // Diferença na coordenada x entre o círculo e o mouse (mState.x - circle_x)
-                float dx = mState.x - circle_x;
-                // Diferença na coordenada y entre o círculo e o mouse (mState.y - circle_y).
-                float dy = mState.y - circle_y;
-                // Distância entre o círculo e o mouse, calculada como a raiz quadrada da soma dos quadrados de dx e dy
-                float distancia = sqrt(dx * dx + dy * dy);
+                // Verifica se o mouse está sobre o círculo
+                if (mState.x >= circle_x - 10 && mState.x <= circle_x + 10 &&
+                    mState.y >= circle_y - 10 && mState.y <= circle_y + 10) {
 
-                // Move o círculo em direção ao mouse
-                // apenas se a distancia > velocidade do circulo
-                if (distancia > MOVE_VELO) {
-                    float move_x = (dx / distancia) * MOVE_VELO;
-                    float move_y = (dy / distancia) * MOVE_VELO;
-                    circle_x += move_x;
-                    circle_y += move_y;
+                    minigame3 = true;
                 }
 
-                // Define a cor de fundo (preto neste caso)
-                al_clear_to_color(al_map_rgb(0, 0, 0));
+                if (minigame3 == true) {
+                    circle_x = mState.x; // Atualiza a posição do círculo para a posição do mouse
+                    circle_y = mState.y;
+                }
 
+                gerarLinhas(coordenadaX, coordenadaY, tamanho);
+
+
+                al_draw_filled_rectangle(x1, y1, x1 + 20, y1 + 20, al_map_rgb(255, 255, 255));
+                al_draw_filled_rectangle(x2, y2, x2 + 20, y2 + 20, al_map_rgb(255, 255, 255));
                 // Desenha o círculo na nova posição
-                al_draw_filled_circle(circle_x, circle_y, CIRCUFERENCIA, circle_color);
+                al_draw_filled_circle(circle_x, circle_y, 10, al_map_rgb(255, 0, 0));
 
                 // Atualiza a tela
                 al_flip_display();
@@ -210,6 +240,11 @@ int main() {
     al_destroy_timer(timer);
     al_destroy_bitmap(background); 
     al_destroy_bitmap(background2);
+    al_destroy_bitmap(backgroundViremia);
+
+    // Libera a memória alocada
+    free(coordenadaX);
+    free(coordenadaY);
 
     return 0; // Encerrar o programa corretamente
 }

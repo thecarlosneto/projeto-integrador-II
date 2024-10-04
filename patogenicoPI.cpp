@@ -5,11 +5,23 @@
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_image.h>
+#include <math.h>
 
 int tela = 1;
 int width = 800;
 int height = 600;
 
+#define gameOver 0
+#define telaInicial 1
+#define seletorFase 2
+#define ataqueMosquito 3
+#define fagocitose 4
+#define viremia 5
+
+
+/*Função que gera coordenadas de X aleatorias com base no tamanho do display,
+  preenchendo um array. Onde a primeira e a última posição já tem coordenadas
+  pré estabelecidas*/
 void geracoordenadasX(int* coordenadaX, int tamanho, int x1, int x2) {
     coordenadaX[0] = x1;
     coordenadaX[tamanho - 1] = x2;
@@ -18,6 +30,9 @@ void geracoordenadasX(int* coordenadaX, int tamanho, int x1, int x2) {
     }
 }
 
+/*Função que gera coordenadas de Y aleatorias com base no tamanho do display,
+  preenchendo um array. Onde a primeira e a última posição já tem coordenadas
+  pré estabelecidas*/
 void geracoordenadasY(int* coordenadaY, int tamanho, int y1, int y2) {
     coordenadaY[0] = y1;
     coordenadaY[tamanho - 1] = y2;
@@ -26,10 +41,22 @@ void geracoordenadasY(int* coordenadaY, int tamanho, int y1, int y2) {
     }
 }
 
-void gerarLinhas(int* coordenadaX, int* coordenadaY, int tamanho) {
+//Função que gera retas colineares de acordo com as coordenadas 
+void gerarLinhas(int* coordenadaX, int* coordenadaY, int tamanho, int espessuraLinha) {
     for (int i = 0; i < tamanho - 1; i++) {
-        al_draw_line(coordenadaX[i], coordenadaY[i], coordenadaX[i + 1], coordenadaY[i + 1], al_map_rgb(119, 25, 15), 10.0);
+        al_draw_line(coordenadaX[i], coordenadaY[i], coordenadaX[i + 1], coordenadaY[i + 1], al_map_rgb(119, 25, 15), espessuraLinha);
     };
+}
+
+// Função para verificar se o círculo está sobre uma linha com espessura
+bool foraDaLinha(float x, float y, float x1, float y1, float x2, float y2, float espessura) {
+    // Calcular a distância perpendicular do ponto à reta
+    float A = y2 - y1;
+    float B = x1 - x2;
+    float C = x2 * y1 - x1 * y2;
+    float distancia = fabs(A * x + B * y + C) / sqrt(A * A + B * B);
+
+    return distancia > espessura / 2;
 }
 
 int main() {
@@ -90,17 +117,21 @@ int main() {
     // Inicia o temporizador
     al_start_timer(timer);
 
-    //Variáveis para o case Viremia
+    // - - - - - - - VARIÁVEIS PARA VIREMIA - - - - - - -
+    //Coordenadas pré estabelecidas 
     int x1 = 50, y1 = 535;
     int x2 = 740, y2 = 50;
 
-    float circle_x = x1 + 10; // Posição inicial do círculo
-    float circle_y = y1 + 10;
+    // Posição inicial do círculo
+    int circle_x = x1 + 10;
+    int circle_y = y1 + 10;
 
-    bool minigame3 = false;
-    bool gameOver = false;
+    bool startJogo = false;
 
     int tamanho = 4;
+
+    int espessuraLinha = 15.0;
+    bool dentroDaLinha = false;
     // Aloca memória para o coordenadaX
     int* coordenadaX = (int*)malloc(tamanho * sizeof(int));
     if (coordenadaX == NULL) {
@@ -118,7 +149,7 @@ int main() {
     // Chama a função para preencher o array com números aleatórios
     geracoordenadasX(coordenadaX, tamanho, x1, x2);
     geracoordenadasY(coordenadaY, tamanho, y1, y2);
-    //fim das variáveis para o case Viremia
+    // - - - - - - -FIM DAS VARIÁVEIS PARA VIREMIA - - - - - - -
 
     // Loop de eventos
     bool running = true;
@@ -132,7 +163,7 @@ int main() {
         }
 
         switch (tela) {
-        case 1:
+        case telaInicial:
 
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(background, 0, 0, 0);
@@ -155,7 +186,7 @@ int main() {
 
             break;
 
-        case 2:
+        case seletorFase:
 
             al_draw_bitmap(background2, 0, 0, 0);
             // Desenhar o texto na tela usando a fonte embutida
@@ -167,17 +198,17 @@ int main() {
 
                         if (ev.mouse.x > 150 && ev.mouse.x < 230) {
 
-                            tela = 3;
+                            tela = ataqueMosquito;
                         }
 
                         if (ev.mouse.x > 345 && ev.mouse.x < 437) {
 
-                            tela = 3;
+                            tela = fagocitose;
                         }
 
                         if (ev.mouse.x > 544 && ev.mouse.x < 627) {
 
-                            tela = 3;
+                            tela = viremia;
                         }
                     }
 
@@ -189,7 +220,7 @@ int main() {
             al_flip_display();
             break;
 
-        case 3:
+        case viremia:
             // Desenha a imagem de fundo
             al_draw_bitmap(backgroundViremia, 0, 0, 0);
 
@@ -203,19 +234,40 @@ int main() {
                 if (mState.x >= circle_x - 10 && mState.x <= circle_x + 10 &&
                     mState.y >= circle_y - 10 && mState.y <= circle_y + 10) {
 
-                    minigame3 = true;
-                }
+                    startJogo = true;
+                };
+                // Reiniciar a cada iteração
+                dentroDaLinha = false;
 
-                if (minigame3 == true) {
-                    circle_x = mState.x; // Atualiza a posição do círculo para a posição do mouse
+                //Fase viremia começou
+                if (startJogo == true) {
+                    circle_x = mState.x;
                     circle_y = mState.y;
+                    //Verifica se o círculo está em cima de alguma linha ou dos quadrados brancos
+                    for (int i = 0; i < tamanho - 1; i++) {
+                        if (!foraDaLinha(circle_x, circle_y, coordenadaX[i], coordenadaY[i], coordenadaX[i + 1],
+                            coordenadaY[i + 1], espessuraLinha)
+                            || circle_x >= x1 && circle_x <= x1 + 20 && circle_y >= y1 && circle_y <= y1 + 20
+                            || circle_x >= x2 && circle_x <= x2 + 20 && circle_y >= y2 && circle_y <= y2 + 20) {
+                            dentroDaLinha = true;
+                            break; // Se o cursor estiver sobre uma linha, não precisa verificar as demais
+                        }
+                    }
+
+                    //Fora da linha
+                    if (!dentroDaLinha) {
+                        //deixar comentado por enquanto => tela = gameOver;
+                        al_draw_text(font, al_map_rgb(255, 255, 255), 100, 200, ALLEGRO_ALIGN_CENTER, "GAME OVER");
+                    }
+
                 }
+                //Desenha as linhas chamando a função
+                gerarLinhas(coordenadaX, coordenadaY, tamanho, espessuraLinha);
 
-                gerarLinhas(coordenadaX, coordenadaY, tamanho);
-
-
+                //Desenha os quadrados brancos
                 al_draw_filled_rectangle(x1, y1, x1 + 20, y1 + 20, al_map_rgb(255, 255, 255));
                 al_draw_filled_rectangle(x2, y2, x2 + 20, y2 + 20, al_map_rgb(255, 255, 255));
+
                 // Desenha o círculo na nova posição
                 al_draw_filled_circle(circle_x, circle_y, 10, al_map_rgb(255, 0, 0));
 

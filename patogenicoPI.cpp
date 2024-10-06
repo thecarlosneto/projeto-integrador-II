@@ -59,6 +59,21 @@ bool foraDaLinha(float x, float y, float x1, float y1, float x2, float y2, float
     return distancia > espessura / 2;
 }
 
+#define PI 3.14159265358979323846
+//função que cria linhas onduladas por meio do calculo da Função Seno
+void linhasOnduladas(float x1, float y1, float x2, float y2, int qtdOndas) {
+    float dx = x2 - x1;
+    float dy = y2 - y1;
+    float comprimentoDaOnda = dx / qtdOndas;
+    float amplitude = 20; // Ajuste a amplitude para controlar a altura das ondas
+
+    for (int i = 0; i <= qtdOndas; ++i) {
+        float x = x1 + i * comprimentoDaOnda;
+        float y = y1 + dy * i / qtdOndas + amplitude * sin(i * 2 * PI / qtdOndas);
+        al_draw_line(x, y, x + comprimentoDaOnda, y, al_map_rgb(252, 186, 3), 5.0);
+    }
+}
+
 int main() {
     srand(time(NULL)); //inicializa a semente para números aleatórios
 
@@ -88,6 +103,7 @@ int main() {
     ALLEGRO_BITMAP* background = al_load_bitmap("img/telaTeste.png");
     ALLEGRO_BITMAP* background2 = al_load_bitmap("img/tela2Teste.png");
     ALLEGRO_BITMAP* backgroundViremia = al_load_bitmap("img/backgroundViremia.png");
+    ALLEGRO_BITMAP* virusViremia = al_load_bitmap("img/virus.png");
 
     if (!display) {
         printf("Erro ao criar a janela.\n");
@@ -149,6 +165,10 @@ int main() {
     // Chama a função para preencher o array com números aleatórios
     geracoordenadasX(coordenadaX, tamanho, x1, x2);
     geracoordenadasY(coordenadaY, tamanho, y1, y2);
+
+    // Variáveis para o movimento circular
+    float angle = 0; //variável de ângulo será incrementada a cada frame para simular o movimento circular
+    float radius = 50;
     // - - - - - - -FIM DAS VARIÁVEIS PARA VIREMIA - - - - - - -
 
     // Loop de eventos
@@ -268,8 +288,21 @@ int main() {
                 al_draw_filled_rectangle(x1, y1, x1 + 20, y1 + 20, al_map_rgb(255, 255, 255));
                 al_draw_filled_rectangle(x2, y2, x2 + 20, y2 + 20, al_map_rgb(255, 255, 255));
 
+                // Calcula a posição da imagem no círculo
+                float x = circle_x + radius * cos(angle);
+                float y = circle_y + radius * sin(angle);
+
+                //Desenha as linhas onduladas a partir da Função seno
+                linhasOnduladas(circle_x, circle_y, x, y, 40);
+
+                // Desenha a imagem
+                al_draw_bitmap(virusViremia, x - al_get_bitmap_width(virusViremia) / 2, y - al_get_bitmap_height(virusViremia) / 2, 0);
+
                 // Desenha o círculo na nova posição
                 al_draw_filled_circle(circle_x, circle_y, 10, al_map_rgb(255, 0, 0));
+
+                // Incrementa o ângulo
+                angle += 0.03;
 
                 // Atualiza a tela
                 al_flip_display();

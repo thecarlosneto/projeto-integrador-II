@@ -1,3 +1,3 @@
 ﻿  patogenicoPI.cpp
-C:\Users\User\source\repos\PI2-patogenico\patogenicoPI.cpp(97,9): warning C4101: 'gridMap': variável local não referenciada
+C:\Users\User\source\repos\PI2-patogenico\patogenicoPI.cpp(34,17): warning C4091: 'typedef ': ignorado à esquerda de 'player_fagocitose' quando nenhuma variável é declarada
   patogenicoPI.vcxproj -> C:\Users\User\source\repos\PI2-patogenico\x64\Debug\patogenicoPI.exe

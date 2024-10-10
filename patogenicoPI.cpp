@@ -174,10 +174,14 @@ int main() {
     int circle_x = x1 + 10;
     int circle_y = y1 + 10;
 
+    int xChegada;
+    int yChegada;
+
     bool startJogo = false;
+    bool mudouDeNivel = false;
+    int nivelViremia = 1;
 
     int tamanho = 4;
-
     int espessuraLinha = 15.0;
     bool dentroDaLinha = false;
     // Aloca memória para o coordenadaX
@@ -357,8 +361,27 @@ int main() {
                         //deixar comentado por enquanto => tela = gameOver;
                         al_draw_text(font, al_map_rgb(255, 255, 255), 100, 200, ALLEGRO_ALIGN_CENTER, "GAME OVER");
                     }
-
+                    if (nivelViremia == 1 || nivelViremia == 3) {
+                        xChegada = x2;
+                        yChegada = y2;
+                    }
+                    else if (nivelViremia == 2) {
+                        xChegada = x1;
+                        yChegada = y1;
+                    }
+                    if (nivelViremia < 3 && (circle_x >= xChegada && circle_x <= xChegada + 20 && circle_y >= yChegada && circle_y <= yChegada + 20)) {
+                        mudouDeNivel = true;
+                    }
+                    if (mudouDeNivel == true) {
+                        al_clear_to_color(al_map_rgb(0, 0, 0)); // Limpa a tela
+                        
+                        nivelViremia++;
+                        mudouDeNivel = false;
+                    }
                 }
+                // Desenhar o texto na tela usando a fonte embutida
+                al_draw_textf(font, al_map_rgb(255, 255, 255), 700, 10, ALLEGRO_ALIGN_CENTER, "Nível %d/3", nivelViremia);
+
                 //Desenha as linhas chamando a função
                 gerarLinhas(coordenadaX, coordenadaY, tamanho, espessuraLinha);
 

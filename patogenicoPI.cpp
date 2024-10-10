@@ -104,6 +104,8 @@ int main() {
     ALLEGRO_BITMAP* background2 = al_load_bitmap("img/tela2Teste.png");
     ALLEGRO_BITMAP* backgroundViremia = al_load_bitmap("img/backgroundViremia.png");
     ALLEGRO_BITMAP* virusViremia = al_load_bitmap("img/virus.png");
+    ALLEGRO_BITMAP* mosquito = al_load_bitmap("img/mosquito.png");
+
 
     if (!display) {
         printf("Erro ao criar a janela.\n");
@@ -171,6 +173,14 @@ int main() {
     float radius = 50;
     // - - - - - - -FIM DAS VARIÁVEIS PARA VIREMIA - - - - - - -
 
+    // - - - - - - - VARIÁVEIS PARA MOSQUITO - - - - - - -
+
+    int mosquito_x = 400; // Posição fixa em X
+    int mosquito_y = 0; // Declaração de Y
+
+
+    // - - - - - - -FIM DAS VARIÁVEIS PARA MOSQUITO - - - - - - -
+    
     // Loop de eventos
     bool running = true;
     while (running) {
@@ -310,12 +320,28 @@ int main() {
        
             break;
 
-            // Você pode ter quantos casos quiser
+
+        case ataqueMosquito:
+            // Desenha a imagem de fundo
+            al_draw_bitmap(background2, 0, 0, 0);
+
+            // Estado do mouse
+            ALLEGRO_MOUSE_STATE mState;
+            al_get_mouse_state(&mState);
+
+            // Atualiza a posição do mosquito para seguir o mouse somente no eixo Y
+            mosquito_y = mState.y - al_get_bitmap_height(mosquito) / 2; // Centraliza a imagem do mosquito
+
+            // Desenha a imagem do mosquito na nova posição
+            al_draw_bitmap(mosquito, mosquito_x, mosquito_y, 0);
+
+            // Atualiza o display
+            al_flip_display();
+            break;
 
         default:
             // Código a ser executado se nenhum caso for correspondente
             break;
-
         }
     }
 

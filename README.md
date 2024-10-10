@@ -24,12 +24,16 @@ Um mosquito fêmea da espécie *Aedes aegypti* é o **vetor** da dengue; isto qu
 
 * ### Fagocitose
 
-Agora no nosso corpo, o vírus penetra uma célula e muda seu "código", fazendo com que ela consuma nutrientes e comece a clonar o vírus ela mesma. Este processo acaba destruindo a célula no fim. Após ser clonado, o vírus sai da célula que estava e penetra outra célula, crescendo seu número exponencialmente. <br>
-Neste processo, o sistema imune do nosso corpo tenta destruir essas células infectadas através de um processo chamado **fagocitose** TERMINAR TEXTO 
+Agora no nosso corpo, o vírus penetra uma célula e muda seu "código", fazendo com que ela consuma nutrientes e comece a clonar o vírus ela mesma. Este processo acaba destruindo a célula no fim. Após ser clonado, cada vírus sai da célula que estava e penetra outra célula, crescendo seu número exponencialmente. <br>
+Porém, o sistema imune do nosso corpo tenta destruir essas células infectadas através de um processo chamado **fagocitose**.
+
+![Processo de fagocitose.](https://s1.static.brasilescola.uol.com.br/be/2023/01/ilustracao-dos-neutrofilos-realizando-a-fagocitose.jpg "Fagócito em ação")
+
+Como possível ver na imagem acima, a célula saudável cobre a partícula indesejada (no nosso caso a célula infectada com a dengue), a digere por dentro e por fim despeja seus destroços. Nesta etapa do jogo, o objetivo é o vírus conseguir ser clonado enquanto evita ser destruido pelos fagócitos (células capazes de fazer fagocitose).
 
 * ### Viremia
 
-
+Caso consiga sobreviver, após se reproduzir os vírus no corpo se espalham pela nossa corrente sanguínea, podendo então atingir basicamente qualquer órgão. Esta presença do vírus no sangue é o que chamamos de **viremia**. Na dengue, especificamente, categorizamos como viremia passiva pois o vírus é depositado diretamente no nosso sangue (por conta da picada do mosquito).
 
 
 ## Algoritmos e programação <a name="algoritmos"></a>
@@ -37,4 +41,4 @@ Neste processo, o sistema imune do nosso corpo tenta destruir essas células inf
 O jogo possui 3 mini-jogos
 
 ## Última atualização <a name="atualizacoes"></a>
-Este documento foi atualizado pela última vez no dia 09/10
+Este documento foi atualizado pela última vez no dia 10/10.

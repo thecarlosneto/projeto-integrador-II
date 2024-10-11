@@ -19,6 +19,7 @@ int teste = 0;
 #define ataqueMosquito 4
 #define fagocitose 5
 #define viremia 6
+#define venceuViremia 7
 
 /*Função que gera coordenadas de X aleatorias com base no tamanho do display,
   preenchendo um array. Onde a primeira e a última posição já tem coordenadas
@@ -381,6 +382,9 @@ int main() {
 
                         //Reseta mudouDeNivel
                         mudouDeNivel = false;
+                    }
+                    if (nivelViremia == 3 && (circle_x >= x2 && circle_x <= x2 + 20 && circle_y >= y2 && circle_y <= y2 + 20)) {
+                        tela = venceuViremia;
                     }
                 }
                 // Desenhar o texto na tela usando a fonte embutida

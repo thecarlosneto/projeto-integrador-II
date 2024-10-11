@@ -304,6 +304,19 @@ int main() {
                 // Incrementa o ângulo
                 angle += 0.03;
 
+               //Variáveis para criação da caixa de diálogo
+                int caixaX = 50;
+                int caixaY = 50;
+                int caixaLargura = 400;
+                int caixaAltura = 60;
+
+                // Desenha a caixa de diálogo
+                al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(50, 50, 50));
+                al_draw_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(255, 255, 255), 2);
+
+                // Desenha o texto dentro da caixa de diálogo
+                al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 25, 0, "teste teste teste teste teste");
+
                 // Atualiza a tela
                 al_flip_display();
             }

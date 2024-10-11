@@ -373,9 +373,13 @@ int main() {
                         mudouDeNivel = true;
                     }
                     if (mudouDeNivel == true) {
-                        al_clear_to_color(al_map_rgb(0, 0, 0)); // Limpa a tela
-                        
+                        geracoordenadasX(coordenadaX, tamanho, x1, x2);
+                        geracoordenadasY(coordenadaY, tamanho, y1, y2);
+                        //Diminui a espessura da linha
+                        espessuraLinha -= espessuraLinha * 0.2;
                         nivelViremia++;
+
+                        //Reseta mudouDeNivel
                         mudouDeNivel = false;
                     }
                 }

@@ -38,7 +38,12 @@ Caso consiga sobreviver, após se reproduzir os vírus no corpo se espalham pela
 
 ## Algoritmos e programação <a name="algoritmos"></a>
 
-O jogo possui 3 mini-jogos
+O jogo terá 3 mini-jogos, um para cada etapa de infecção.
+
+
+### Segundo jogo
+
+Neste jogo representando a fagocitose, o jogdor deverá 
 
 ## Última atualização <a name="atualizacoes"></a>
 Este documento foi atualizado pela última vez no dia 10/10.

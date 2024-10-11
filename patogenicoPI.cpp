@@ -141,7 +141,7 @@ int main() {
     // - - - - - - - VARIÁVEIS PARA A TELA LOADING - - - - - - -
     int contadorDeFrames = 0;
     const int frameSegundo = 60;
-    const int intervaloSegundo = 1;
+    const int intervaloSegundo = 2;
 
     int opacidadeTexto = 255;
 
@@ -234,8 +234,8 @@ int main() {
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 contadorDeFrames++;
-                //Verifica o timer a cada 2 segundos
-                if (contadorDeFrames % (frameSegundo * intervaloSegundo)==0) {
+                //Verifica o timer a cada meio segundo
+                if (contadorDeFrames % (frameSegundo / intervaloSegundo)==0) {
                     // Criar um novo retângulo
                     if (num_retangulos <= 7) {
                         /*Calcula a posição x do novo retângulo, 
@@ -332,7 +332,7 @@ int main() {
                 // Estado do mouse
                 ALLEGRO_MOUSE_STATE mState;
                 al_get_mouse_state(&mState);
-
+                
                 // Verifica se o mouse está sobre o círculo
                 if (mState.x >= circle_x - 10 && mState.x <= circle_x + 10 &&
                     mState.y >= circle_y - 10 && mState.y <= circle_y + 10) {

@@ -1,7 +1,6 @@
 # Patogênico.exe
 
-## README EM ANDAMENTO!!!!
-
+!["Background patogenico"](img/bg.png)
 
 ## Tabela de conteúdos
 - [Sobre](#sobre)
@@ -25,10 +24,10 @@ Um mosquito fêmea da espécie *Aedes aegypti* é o **vetor** da dengue; isto qu
 * ### Fagocitose
 
 Agora no nosso corpo, o vírus penetra uma célula e muda seu "código", fazendo com que ela consuma nutrientes e comece a clonar o vírus ela mesma. Este processo acaba destruindo a célula no fim. Após ser clonado, cada vírus sai da célula que estava e penetra outra célula, crescendo seu número exponencialmente. <br>
-Porém, o sistema imune do nosso corpo tenta destruir essas células infectadas através de um processo chamado **fagocitose**.
+    Porém, o sistema imune do nosso corpo tenta destruir essas células infectadas através de um processo chamado **fagocitose**.
 
 ![Processo de fagocitose.](https://s1.static.brasilescola.uol.com.br/be/2023/01/ilustracao-dos-neutrofilos-realizando-a-fagocitose.jpg "Fagócito em ação")
-
+    
 Como possível ver na imagem acima, a célula saudável cobre a partícula indesejada (no nosso caso a célula infectada com a dengue), a digere por dentro e por fim despeja seus destroços. Nesta etapa do jogo, o objetivo é o vírus conseguir ser clonado enquanto evita ser destruido pelos fagócitos (células capazes de fazer fagocitose).
 
 * ### Viremia
@@ -38,12 +37,24 @@ Caso consiga sobreviver, após se reproduzir os vírus no corpo se espalham pela
 
 ## Algoritmos e programação <a name="algoritmos"></a>
 
-O jogo terá 3 mini-jogos, um para cada etapa de infecção.
+O jogo terá 3 mini-jogos, um para cada etapa de infecção. A programação de cada um fica separada entre vários `switch: case`. A seguir, a explicação de qual a proposta de cada mini-jogo e seus algoritmos.
+
+* ### Mosquito
+
+Como jogo inicial, este deve ser o mais fácil. O jogador utiliza o teclado para mover o mosquito para cima e para baixo, evitando ser morto por aranhas e uma mão humana.
 
 
-### Segundo jogo
+* ### Fagocitose
 
-Neste jogo representando a fagocitose, o jogdor deverá 
+Na segunda fase, o jogador controla uma célula infectada e deve consumir nutrientes (pequenas bolinhas espalhadas pela tela) enquanto desvia de fagócitos tentando eliminá-lo. Esta mecânica é inspirada no jogo multiplayer online Agar.io, como na imagem abaixo.
+
+![Agar.io](https://fs.npstatic.com/userfiles/6947537/image/agario-w810h462.jpg "Jogo Agar.io")
+
+Como haveriam muitas bolinhas na tela, um sistema de colisão mais eficiente teve de ser implementado. Veja que na imagem acima há uma grade no fundo; no mini-jogo sobre fagocitose, a colisão é checada apenas nos 9 quadrados ao redor do jogador, diminuindo sua complexidade de O(n) para O(k).
+
+* ### Viremia
+
+Aqui o jogador controla o vírus no processo de infecção completa do ser-humano: linhas são geradas aleatoriamente na tela, e o objetivo é evitar que o mouse saia de dentro dessas linhas. Toda vez que se chega do outro lado da tela, no "destino", um novo padrão de linhas é gerado, e o destino agora é outro. Cada vez que se atinge o destino, a espessura das linhas diminui, aumentando a dificuldade.
 
 ## Última atualização <a name="atualizacoes"></a>
-Este documento foi atualizado pela última vez no dia 10/10.
+Este documento foi atualizado pela última vez no dia 11/10.

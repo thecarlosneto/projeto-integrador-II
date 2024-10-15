@@ -11,5 +11,5 @@
 *.userosscache
 *.sln.docstates
 *.VC.db
-*x64/
+*.x64/
 >>>>>>> main

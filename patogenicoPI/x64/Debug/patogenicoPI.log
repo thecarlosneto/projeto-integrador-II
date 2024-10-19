@@ -1,10 +1,2 @@
 ﻿  patogenicoPI.cpp
-C:\Users\User\source\repos\PI2-patogenico\patogenicoPI.cpp(330,20): warning C4477: 'printf': a cadeia de formato '%d' requer um argumento do tipo 'int', mas um argumento variadic 1 tem o tipo 'unsigned __int64'
-      C:\Users\User\source\repos\PI2-patogenico\patogenicoPI.cpp(330,20):
-      considere usar '%lld' na cadeia de formato
-      C:\Users\User\source\repos\PI2-patogenico\patogenicoPI.cpp(330,20):
-      considere usar '%Id' na cadeia de formato
-      C:\Users\User\source\repos\PI2-patogenico\patogenicoPI.cpp(330,20):
-      considere usar '%I64d' na cadeia de formato
-  
   patogenicoPI.vcxproj -> C:\Users\User\source\repos\PI2-patogenico\x64\Debug\patogenicoPI.exe

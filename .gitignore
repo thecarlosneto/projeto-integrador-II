@@ -11,5 +11,6 @@
 *.userosscache
 *.sln.docstates
 *.VC.db
-*.x64/
+x64/
+patogenicoPI/x64/
 >>>>>>> main

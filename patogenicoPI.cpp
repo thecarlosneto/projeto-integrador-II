@@ -8,6 +8,7 @@
 #include <math.h>
 
 int tela = 1;
+int telaAnterior = 0;
 int width = 800;
 int height = 600;
 int teste = 0;
@@ -24,6 +25,7 @@ int tempo = 0;
 #define fagocitose 5
 #define viremia 6
 #define venceuViremia 7
+#define perdeu 8
 
 
 void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char* texto,int* tempo) {
@@ -141,6 +143,11 @@ int main() {
     ALLEGRO_BITMAP* background2 = al_load_bitmap("img/tela2Teste.png");
     ALLEGRO_BITMAP* backgroundViremia = al_load_bitmap("img/backgroundViremia.png");
     ALLEGRO_BITMAP* virusViremia = al_load_bitmap("img/virus.png");
+    ALLEGRO_BITMAP* telaPerdeu = al_load_bitmap("img/telaPerdeu.png");
+
+    //carrega uma fonte que foi baixada
+    ALLEGRO_FONT* fonte_20 = al_load_font("img/fonte.TTF", 20, 0);
+
 
     if (!display) {
         printf("Erro ao criar a janela.\n");
@@ -260,6 +267,8 @@ int main() {
         switch (tela) {
         case telaLoading:
 
+            telaAnterior = tela;
+
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(loading, 0, 0, 0);
 
@@ -306,6 +315,8 @@ int main() {
             break;
         case telaInicial:
 
+            telaAnterior = tela;
+
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(background, 0, 0, 0);
 
@@ -320,7 +331,7 @@ int main() {
                 }
             }
             // Desenhar o texto na tela usando a fonte embutida
-            al_draw_text(font, al_map_rgb(0, 100, 0), 600, 300, ALLEGRO_ALIGN_CENTER, "jogar");
+            al_draw_text(font, al_map_rgb(0, 0, 0), 600, 300, ALLEGRO_ALIGN_CENTER, "jogar");
 
             // Atualiza o display para mostrar o texto
             al_flip_display();
@@ -328,6 +339,8 @@ int main() {
             break;
 
         case seletorFase:
+
+            telaAnterior = tela;
 
             al_draw_bitmap(background2, 0, 0, 0);
             // Desenhar o texto na tela usando a fonte embutida
@@ -364,10 +377,12 @@ int main() {
             break;
 
         case viremia:
+
+            telaAnterior = tela;
             // Desenha a imagem de fundo
             al_draw_bitmap(backgroundViremia, 0, 0, 0);
 
-            while (tempo < 5) {
+            while (tempo < 3) {
                 desenhar_caixa_dialogo(50, 50, 400, 60, font, "Aguarde 5 segundos...", &tempo);
 
                 cron = cronP;
@@ -440,7 +455,7 @@ int main() {
                         al_draw_text(font, al_map_rgb(255, 255, 255), 100, 200, ALLEGRO_ALIGN_CENTER, "GAME OVER");
                         cron = cronP;
 
-
+                        tela = perdeu;
                         circle_x = x1 + 10;
                         circle_y = y1 + 10;
                     }
@@ -526,6 +541,50 @@ int main() {
 
             break;
 
+         case perdeu:
+
+
+             al_draw_bitmap(telaPerdeu, 0, 0, 0);
+
+             if (ev.type == ALLEGRO_EVENT_TIMER) {
+
+                 if (ev.type == ALLEGRO_EVENT_TIMER && ev.timer.source == countdown_timer) {
+
+
+                     if (tempo>=0) {
+                         tempo = tempo + 1;  // Decrementa o cronômetro
+                         printf("%d\n", tempo);
+                     }
+                 }
+             }
+
+             if (tempo % 2 == 1) {
+                
+                 al_draw_text(fonte_20, al_map_rgb(255, 255, 255), 370, 550,-20, "S/N");
+             }else{
+                 al_draw_text(fonte_20, al_map_rgb(255, 0, 0), 370, 550, 0, "S/N");
+             }
+
+
+             if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
+
+                
+                 if (ev.keyboard.keycode == ALLEGRO_KEY_S) {
+                     tela = telaAnterior;
+                    
+                 }
+                 else if (ev.keyboard.keycode == ALLEGRO_KEY_N) {
+                     tela = telaInicial;
+                 }
+             }
+
+             al_flip_display();
+
+
+
+            break;
+
+
             // Você pode ter quantos casos quiser
 
         default:
@@ -542,6 +601,8 @@ int main() {
     al_destroy_bitmap(background);
     al_destroy_bitmap(background2);
     al_destroy_bitmap(backgroundViremia);
+    al_destroy_bitmap(telaPerdeu);
+    al_destroy_font(fonte_20);
 
     // Libera a memória alocada
     free(coordenadaX);

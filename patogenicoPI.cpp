@@ -14,6 +14,7 @@ int teste = 0;
 int cron = 20;
 int cronP = 20; // para o cronometro do viremia 
 char cron_str[10];
+int tempo = 0;
 
 #define gameOver 0
 #define telaLoading 1
@@ -23,6 +24,33 @@ char cron_str[10];
 #define fagocitose 5
 #define viremia 6
 #define venceuViremia 7
+
+
+void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char* texto,int* tempo) {
+    // Variável estática para persistir o valor do tempo entre as chamadas
+  //  static int tempo = 0;
+
+    (*tempo) += 1;  // Incrementa o tempo a cada chamada
+    printf("%d\n", *tempo);
+
+    // Desenha a caixa de diálogo preenchida
+    al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(50, 50, 50));
+
+    // Desenha a borda da caixa de diálogo
+    al_draw_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(255, 255, 255), 2);
+
+    // Desenha o texto dentro da caixa de diálogo (com offset de 20 e 25 para centralização)
+    al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + (caixaAltura / 2) - (al_get_font_line_height(font) / 2), 0, texto);
+
+    // Atualiza a tela
+    al_flip_display();
+
+    // Quando o tempo for maior ou igual a 5, sai da função
+    if (*tempo >= 2) {
+        printf("Tempo atingido, saindo da função.\n");
+        return;
+    }
+}
 
 /*Função que gera coordenadas de X aleatorias com base no tamanho do display,
   preenchendo um array. Onde a primeira e a última posição já tem coordenadas
@@ -325,6 +353,8 @@ int main() {
                         }
                     }
 
+                    tempo = 0;
+
                     printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
                 }
             }
@@ -337,15 +367,32 @@ int main() {
             // Desenha a imagem de fundo
             al_draw_bitmap(backgroundViremia, 0, 0, 0);
 
+            while (tempo < 5) {
+                desenhar_caixa_dialogo(50, 50, 400, 60, font, "Aguarde 5 segundos...", &tempo);
+
+                cron = cronP;
+
+                // Atualiza a tela e faz outras operações, se necessário
+                al_flip_display();
+
+                // Espera um segundo para dar tempo para o tempo ser incrementado
+                al_rest(1.0);
+            }
+
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {
 
                 if (ev.type == ALLEGRO_EVENT_TIMER && ev.timer.source == countdown_timer) {
+
+
                     if (cron > 0) {
                         cron = cron - 1;  // Decrementa o cronômetro
                     }
                 }
                
+                
+              
+
 
                 if (cron == 0) {
                     al_draw_text(font, al_map_rgb(255, 255, 255), 100, 200, ALLEGRO_ALIGN_CENTER, "GAME OVER");

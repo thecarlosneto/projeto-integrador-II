@@ -365,67 +365,67 @@ int main() {
         case ataqueMosquito:
             // Desenha a imagem de fundo
             al_draw_bitmap(background2, 0, 0, 0);
+            if(ev.type == ALLEGRO_EVENT_TIMER){
+                // Checa o estado do teclado
+                ALLEGRO_KEYBOARD_STATE kState;
+                al_get_keyboard_state(&kState);
 
-            // Checa o estado do teclado
-            ALLEGRO_KEYBOARD_STATE kState;
-            al_get_keyboard_state(&kState);
+                // Atualiza a posição do mosquito com base nas teclas A e D
+                if (al_key_down(&kState, ALLEGRO_KEY_A)) {
+                    mosquito_y -= 5; // Move para cima
+                }
+                if (al_key_down(&kState, ALLEGRO_KEY_D)) {
+                    mosquito_y += 5; // Move para baixo
+                }
 
-            // Atualiza a posição do mosquito com base nas teclas A e D
-            if (al_key_down(&kState, ALLEGRO_KEY_A)) {
-                mosquito_y -= 5; // Move para cima
+                // Limita a posição do mosquito dentro da tela
+                if (mosquito_y < 0) {
+                    mosquito_y = 0;
+                }
+                if (mosquito_y > height - al_get_bitmap_height(mosquito)) {
+                    mosquito_y = height - al_get_bitmap_height(mosquito);
+                }
+
+                // Atualiza a posição da mão
+                mao_x += velocidade_x;
+
+                // Verifica se a mão saiu da tela
+                if (mao_x > width) {
+                    // Resetando a mão para o início
+                    mao_x = 0;
+
+                    // Alterna para o próximo padrão
+                    indice_padroes = (indice_padroes + 1) % 5;
+
+                    // Atualiza a amplitude para o novo padrão
+                    amplitude = rand() % (height / 2) + (height / 2);
+
+                    // Nova posição Y aleatória
+                    mao_y = rand() % (height - 20) + 10;
+
+                    // Atribui uma nova velocidade aleatória à mão entre 5 e 10
+                    velocidade_x = (rand() % 6 + 5); // Gera um número aleatório entre 5 e 10
+                }
+
+                // Calcula a posição Y da mão usando o padrão atual
+                mao_y = padroesMovimento[indice_padroes](mao_x, amplitude);
+
+                // Verifica colisão com o mosquito
+                if (mao_x + 10 >= mosquito_x && mao_x - 10 <= mosquito_x + al_get_bitmap_width(mosquito) &&
+                    mao_y + 10 >= mosquito_y && mao_y - 10 <= mosquito_y + al_get_bitmap_height(mosquito)) {
+                    mosquito_x -= 200; // Lógica de colisão
+                }
+
+                // Desenha a mão
+                al_draw_filled_circle(mao_x, mao_y, 10, al_map_rgb(255, 255, 0)); // Mão
+
+                // Desenha o mosquito
+                al_draw_bitmap(mosquito, mosquito_x, mosquito_y, 0);
+
+                // Atualiza o display
+                al_flip_display();
+                break;
             }
-            if (al_key_down(&kState, ALLEGRO_KEY_D)) {
-                mosquito_y += 5; // Move para baixo
-            }
-
-            // Limita a posição do mosquito dentro da tela
-            if (mosquito_y < 0) {
-                mosquito_y = 0;
-            }
-            if (mosquito_y > height - al_get_bitmap_height(mosquito)) {
-                mosquito_y = height - al_get_bitmap_height(mosquito);
-            }
-
-            // Atualiza a posição da mão
-            mao_x += velocidade_x;
-
-            // Verifica se a mão saiu da tela
-            if (mao_x > width) {
-                // Resetando a mão para o início
-                mao_x = 0;
-
-                // Alterna para o próximo padrão
-                indice_padroes = (indice_padroes + 1) % 5;
-
-                // Atualiza a amplitude para o novo padrão
-                amplitude = rand() % (height / 2) + (height / 2);
-
-                // Nova posição Y aleatória
-                mao_y = rand() % (height - 20) + 10;
-
-                // Atribui uma nova velocidade aleatória à mão entre 5 e 10
-                velocidade_x = (rand() % 6 + 5); // Gera um número aleatório entre 5 e 10
-            }
-
-            // Calcula a posição Y da mão usando o padrão atual
-            mao_y = padroesMovimento[indice_padroes](mao_x, amplitude);
-
-            // Verifica colisão com o mosquito
-            if (mao_x + 10 >= mosquito_x && mao_x - 10 <= mosquito_x + al_get_bitmap_width(mosquito) &&
-                mao_y + 10 >= mosquito_y && mao_y - 10 <= mosquito_y + al_get_bitmap_height(mosquito)) {
-                mosquito_x -= 200; // Lógica de colisão
-            }
-
-            // Desenha a mão
-            al_draw_filled_circle(mao_x, mao_y, 10, al_map_rgb(255, 255, 0)); // Mão
-
-            // Desenha o mosquito
-            al_draw_bitmap(mosquito, mosquito_x, mosquito_y, 0);
-
-            // Atualiza o display
-            al_flip_display();
-            break;
-
         default:
             // Código a ser executado se nenhum caso for correspondente
             break;

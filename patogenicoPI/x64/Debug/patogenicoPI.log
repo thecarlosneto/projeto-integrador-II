@@ -1,2 +1,3 @@
 ﻿  patogenicoPI.cpp
+C:\Users\2005u\source\repos\projeto-integrador-II\patogenicoPI.cpp(216,11): warning C4101: 'offset': variável local não referenciada
   patogenicoPI.vcxproj -> C:\Users\2005u\Source\Repos\projeto-integrador-II\x64\Debug\patogenicoPI.exe

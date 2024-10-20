@@ -75,10 +75,6 @@ void linhasOnduladas(float x1, float y1, float x2, float y2, int qtdOndas) {
 }
 
 // Funções de movimento da mão
-float movimento_linear(float x, float amplitude) {
-    return height / 2;
-}
-
 float movimento_senoidal(float x, float amplitude) {
     return (height / 2) + amplitude * sin((x / width) * (2 * PI)) * 0.5; // Reduz a amplitude para não sair da tela
 }
@@ -95,8 +91,7 @@ float movimento_inverso_cosenoidal(float x, float amplitude) {
     return (height / 2) - amplitude * cos((x / width) * (2 * PI)) * 0.5;
 }
 
-float (*padroesMovimento[5])(float, float) = {
-    movimento_linear,
+float (*padroesMovimento[4])(float, float) = {
     movimento_senoidal,
     movimento_cosenoidal,
     movimento_inverso_senoidal,
@@ -136,6 +131,7 @@ int main() {
     ALLEGRO_BITMAP* backgroundViremia = al_load_bitmap("img/backgroundViremia.png");
     ALLEGRO_BITMAP* virusViremia = al_load_bitmap("img/virus.png");
     ALLEGRO_BITMAP* mosquito = al_load_bitmap("img/mosquito.png");
+    ALLEGRO_BITMAP* teia = al_load_bitmap("img/teia.png");
 
 
     if (!display) {
@@ -208,6 +204,9 @@ int main() {
 
     int mosquito_x = 600; // Posição fixa em X
     int mosquito_y = 0; // Declaração de Y
+
+    int teia_x = width;
+    int teia_y = rand() % (height - 20) + 10;
 
     float mao_x = 0; // Posição fixa em X
     float mao_y = rand() % (height - 20) + 10; // Posição inicial aleatória em Y
@@ -387,15 +386,17 @@ int main() {
                 }
 
                 // Atualiza a posição da mão
-                mao_x += velocidade_x;
+                mao_x -= velocidade_x;
+                // Atualiza a posição da teia
+                teia_x -= velocidade_x;
 
                 // Verifica se a mão saiu da tela
-                if (mao_x > width) {
+                if (mao_x < 0) {
                     // Resetando a mão para o início
-                    mao_x = 0;
+                    mao_x = width;
 
                     // Alterna para o próximo padrão
-                    indice_padroes = (indice_padroes + 1) % 5;
+                    indice_padroes = (indice_padroes + 1) % 4;
 
                     // Atualiza a amplitude para o novo padrão
                     amplitude = rand() % (height / 2) + (height / 2);
@@ -406,6 +407,14 @@ int main() {
                     // Atribui uma nova velocidade aleatória à mão entre 5 e 10
                     velocidade_x = (rand() % 6 + 5); // Gera um número aleatório entre 5 e 10
                 }
+                if (teia_x < -30) {
+                    // Resetando a teia para o início
+                    teia_x = width;
+
+                    // Nova posição Y aleatória
+                    teia_y = rand() % (height - 20) + 10;
+                    velocidade_x = (rand() % 6 + 5); // Gera um número aleatório entre 5 e 10
+                }
 
                 // Calcula a posição Y da mão usando o padrão atual
                 mao_y = padroesMovimento[indice_padroes](mao_x, amplitude);
@@ -413,11 +422,18 @@ int main() {
                 // Verifica colisão com o mosquito
                 if (mao_x + 10 >= mosquito_x && mao_x - 10 <= mosquito_x + al_get_bitmap_width(mosquito) &&
                     mao_y + 10 >= mosquito_y && mao_y - 10 <= mosquito_y + al_get_bitmap_height(mosquito)) {
-                    mosquito_x -= 200; // Lógica de colisão
+                    mosquito_x -= 100; // Lógica de colisão com a mao
                 }
-
+                // Verifica colisão com a teia
+                if (teia_x + 10 >= mosquito_x && teia_x - 10 <= mosquito_x + al_get_bitmap_width(mosquito) &&
+                    teia_y + 10 >= mosquito_y && teia_y - 10 <= mosquito_y + al_get_bitmap_height(mosquito)) {
+                    mosquito_x -= 100; // Lógica de colisão com a teia
+                }
                 // Desenha a mão
-                al_draw_filled_circle(mao_x, mao_y, 10, al_map_rgb(255, 255, 0)); // Mão
+                al_draw_filled_circle(mao_x, mao_y, 10, al_map_rgb(255, 255, 0));
+
+                //Desenha a teia
+                al_draw_bitmap(teia, teia_x, teia_y, 0);
 
                 // Desenha o mosquito
                 al_draw_bitmap(mosquito, mosquito_x, mosquito_y, 0);

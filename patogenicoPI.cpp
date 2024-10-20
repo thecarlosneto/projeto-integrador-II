@@ -26,12 +26,10 @@ int tempo = 0;
 #define venceuViremia 7
 
 
-void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char* texto,int* tempo) {
-    // Variável estática para persistir o valor do tempo entre as chamadas
-  //  static int tempo = 0;
 
-    (*tempo) += 1;  // Incrementa o tempo a cada chamada
-    printf("%d\n", *tempo);
+void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char* texto, int* tempo) {
+    (*tempo) += 1;
+    printf("Tempo: %d\n", *tempo);
 
     // Desenha a caixa de diálogo preenchida
     al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(50, 50, 50));
@@ -39,18 +37,32 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
     // Desenha a borda da caixa de diálogo
     al_draw_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(255, 255, 255), 2);
 
-    // Desenha o texto dentro da caixa de diálogo (com offset de 20 e 25 para centralização)
-    al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + (caixaAltura / 2) - (al_get_font_line_height(font) / 2), 0, texto);
+    // Desenha o texto dentro da caixa de diálogo
+    al_draw_multiline_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 20, caixaLargura - 40, al_get_font_line_height(font), 0, texto);
 
-    // Atualiza a tela
+    // Criação do botão "Avançar" para mudar o texto da caixa de dialogo
+    int largura_botao = 80;
+    int altura_botao = 30;
+    int botaoX = caixaX + caixaLargura - largura_botao - 20;
+    int botaoY = caixaY + caixaAltura - altura_botao - 10;
+
+    // Desenha o botão
+    al_draw_filled_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(100, 100, 100)); // cor interna
+    al_draw_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(255, 255, 255), 2); // cor interna
+
+    // Desenha o texto do botão
+    const char* texto_botao = "Avançar";
+    al_draw_text(font, al_map_rgb(255, 255, 255), botaoX + largura_botao / 2, botaoY + altura_botao / 2 - al_get_font_line_height(font) / 2, ALLEGRO_ALIGN_CENTER, texto_botao);
+
     al_flip_display();
 
-    // Quando o tempo for maior ou igual a 5, sai da função
-    if (*tempo >= 2) {
+    // Se o tempo atingir 5 segundos, sair da função
+    if (*tempo >= 5) {
         printf("Tempo atingido, saindo da função.\n");
         return;
     }
 }
+
 
 /*Função que gera coordenadas de X aleatorias com base no tamanho do display,
   preenchendo um array. Onde a primeira e a última posição já tem coordenadas
@@ -106,7 +118,6 @@ void linhasOnduladas(float x1, float y1, float x2, float y2, int qtdOndas) {
         al_draw_line(x, y, x + comprimentoDaOnda, y, al_map_rgb(252, 186, 3), 5.0);
     }
 }
-
 int main() {
     srand(time(NULL)); //inicializa a semente para números aleatórios
 
@@ -368,8 +379,21 @@ int main() {
             al_draw_bitmap(backgroundViremia, 0, 0, 0);
 
             while (tempo < 5) {
-                desenhar_caixa_dialogo(50, 50, 400, 60, font, "Aguarde 5 segundos...", &tempo);
+                desenhar_caixa_dialogo(50, 420, 500, 80, font, "Aguarde 5 segundos...", &tempo);
 
+                /* to tendo problema aqui o botao nao funfa de jeito nenhum  fiquei alguns bocados trabalhando nele
+                
+                if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+                    if (ev.mouse.button == 1) { // Botão esquerdo do mouse
+                     
+                        if (ev.mouse.x > 450 && ev.mouse.x < 520 && ev.mouse.y>440 && ev.mouse.y < 470) {
+                            printf("botao foi clicado");
+                        }
+                        
+                        al_flip_display();
+                    }
+                }
+                */
                 cron = cronP;
 
                 // Atualiza a tela e faz outras operações, se necessário
@@ -389,9 +413,9 @@ int main() {
                         cron = cron - 1;  // Decrementa o cronômetro
                     }
                 }
-               
-                
-              
+
+
+
 
 
                 if (cron == 0) {
@@ -549,3 +573,4 @@ int main() {
 
     return 0; // Encerrar o programa corretamente
 }
+

@@ -28,6 +28,34 @@ int tempo = 0;
 #define perdeu 8
 
 
+
+void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20) {
+    // Coordenadas e dimensões do texto "VOLTAR"
+    int textoX = 50;
+    int textoY = 50;
+    int larguraTexto = al_get_text_width(fonte_20, "VOLTAR");
+    int alturaTexto = al_get_font_line_height(fonte_20);
+
+    // Desenha o texto "VOLTAR"
+    al_draw_text(fonte_20, al_map_rgb(255, 255, 255), textoX, textoY, 0, "VOLTAR");
+
+    // Verifica se houve um clique do mouse
+    if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+        if (ev.mouse.button == 1) { // Verifica se o botão esquerdo foi clicado
+
+            // Verifica se o clique foi dentro da área do texto "VOLTAR"
+            if (ev.mouse.x > textoX && ev.mouse.x < (textoX + larguraTexto) &&
+                ev.mouse.y > textoY && ev.mouse.y < (textoY + alturaTexto)) {
+                *tela = 2; // Atualiza o valor de "tela" para voltar à tela 2
+            }
+
+            // Exibe as coordenadas do clique no console
+            printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+        }
+    }
+}
+
+
 void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char* texto,int* tempo) {
     // Variável estática para persistir o valor do tempo entre as chamadas
   //  static int tempo = 0;
@@ -516,24 +544,12 @@ int main() {
                 al_wait_for_event(event_queue, &ev);
 
 
-
-
                 sprintf_s(cron_str, "%d", cron);
 
                 al_draw_text(font, al_map_rgb(255, 255, 255), 100, 100, ALLEGRO_ALIGN_CENTER, cron_str);
 
-                al_draw_text(font, al_map_rgb(255, 255, 255), 50, 50, ALLEGRO_ALIGN_CENTER, "VOLTAR");
-
-                if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-                    if (ev.mouse.button == 1) { // Botão esquerdo do mouse
-
-                        if (ev.mouse.x > 25 && ev.mouse.x < 75 && ev.mouse.y>45 && ev.mouse.y < 60) {
-                            tela = 2;
-                        }
-
-                        printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
-                    }
-                }
+                //vai voltar para a tela de escolha
+                voltarTelaEscolha(ev, &tela, fonte_20);
 
                 // Atualiza a tela
                 al_flip_display();

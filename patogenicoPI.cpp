@@ -41,6 +41,9 @@ void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20) {
 
     // Verifica se houve um clique do mouse
     if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+
+        printf("Clique detectado (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+
         if (ev.mouse.button == 1) { // Verifica se o botão esquerdo foi clicado
 
             // Verifica se o clique foi dentro da área do texto "VOLTAR"
@@ -56,12 +59,12 @@ void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20) {
 }
 
 
-void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char* texto,int* tempo) {
-    // Variável estática para persistir o valor do tempo entre as chamadas
-  //  static int tempo = 0;
+void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char* texto, int* tempo, ALLEGRO_EVENT ev) {
 
-    (*tempo) += 1;  // Incrementa o tempo a cada chamada
-    printf("%d\n", *tempo);
+
+
+    (*tempo) += 1;
+    printf("Tempo: %d\n", *tempo);
 
     // Desenha a caixa de diálogo preenchida
     al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(50, 50, 50));
@@ -69,18 +72,43 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
     // Desenha a borda da caixa de diálogo
     al_draw_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(255, 255, 255), 2);
 
-    // Desenha o texto dentro da caixa de diálogo (com offset de 20 e 25 para centralização)
-    al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + (caixaAltura / 2) - (al_get_font_line_height(font) / 2), 0, texto);
+    // Desenha o texto dentro da caixa de diálogo
+    al_draw_multiline_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 20, caixaLargura - 40, al_get_font_line_height(font), 0, texto);
 
-    // Atualiza a tela
-    al_flip_display();
+    // Criação do botão "Avançar" para mudar o texto da caixa de dialogo
+    int largura_botao = 80;
+    int altura_botao = 30;
+    int botaoX = caixaX + caixaLargura - largura_botao - 20;
+    int botaoY = caixaY + caixaAltura - altura_botao - 10;
 
-    // Quando o tempo for maior ou igual a 5, sai da função
-    if (*tempo >= 2) {
+    // Desenha o botão
+    al_draw_filled_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(100, 100, 100)); // cor interna
+    al_draw_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(255, 255, 255), 2); // cor interna
+
+    // Desenha o texto do botão
+    const char* texto_botao = "Avançar";
+    al_draw_text(font, al_map_rgb(255, 255, 255), botaoX + largura_botao / 2, botaoY + altura_botao / 2 - al_get_font_line_height(font) / 2, ALLEGRO_ALIGN_CENTER, texto_botao);
+
+    if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+
+        printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+
+        if (ev.mouse.button == 1) { // Botão esquerdo do mouse
+
+            if (ev.mouse.x > 450 && ev.mouse.x < 520 && ev.mouse.y>440 && ev.mouse.y < 470) {
+                printf("botao foi clicado");
+            }
+
+        }
+    }
+
+    // Se o tempo atingir 5 segundos, sair da função
+    if (*tempo >= 5) {
         printf("Tempo atingido, saindo da função.\n");
         return;
     }
 }
+
 
 /*Função que gera coordenadas de X aleatorias com base no tamanho do display,
   preenchendo um array. Onde a primeira e a última posição já tem coordenadas
@@ -260,6 +288,7 @@ int main() {
     bool dentroDaLinha = false;
     // Aloca memória para o coordenadaX
     int* coordenadaX = (int*)malloc(tamanho * sizeof(int));
+
     if (coordenadaX == NULL) {
         printf("Erro ao alocar memória.\n");
         return 1; // Sai em caso de falha na alocação
@@ -410,8 +439,26 @@ int main() {
             // Desenha a imagem de fundo
             al_draw_bitmap(backgroundViremia, 0, 0, 0);
 
-            while (tempo < 3) {
-                desenhar_caixa_dialogo(50, 50, 400, 60, font, "Aguarde 5 segundos...", &tempo);
+            while (tempo < 5) {
+
+                ALLEGRO_EVENT ev;
+
+                while (al_get_next_event(event_queue, &ev)) {
+                    if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+                        printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+                        // Aqui você pode chamar sua função para lidar com o clique
+                        if (ev.mouse.button == 1) {
+                            // Adicione a lógica do clique aqui
+                            printf("Clique do botão esquerdo detectado!\n");
+                        }
+                    }
+                }
+                printf("teste");
+
+
+
+                desenhar_caixa_dialogo(50, 420, 500, 80, font, "Aguarde 5 segundos...", &tempo,ev);
+
 
                 cron = cronP;
 

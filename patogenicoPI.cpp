@@ -63,6 +63,16 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
     }
 }
 
+/*Função que gera coordenadas de Y aleatorias com base no tamanho do display,
+  preenchendo um array. Onde a primeira e a última posição já tem coordenadas
+  pré estabelecidas*/
+void geracoordenadasY(int* coordenadaY, int tamanho, int y1, int y2) {
+    coordenadaY[0] = y1;
+    coordenadaY[tamanho - 1] = y2;
+    for (int i = 1; i < tamanho - 1; i++) {
+        coordenadaY[i] = 20 + rand() % (height - 40);
+    }
+}
 
 /*Função que gera coordenadas de X aleatorias com base no tamanho do display,
   preenchendo um array. Onde a primeira e a última posição já tem coordenadas
@@ -72,17 +82,6 @@ void geracoordenadasX(int* coordenadaX, int tamanho, int x1, int x2) {
     coordenadaX[tamanho - 1] = x2;
     for (int i = 1; i < tamanho - 1; i++) {
         coordenadaX[i] = 20 + rand() % (width - 40);
-    }
-}
-
-/*Função que gera coordenadas de Y aleatorias com base no tamanho do display,
-  preenchendo um array. Onde a primeira e a última posição já tem coordenadas
-  pré estabelecidas*/
-void geracoordenadasY(int* coordenadaY, int tamanho, int y1, int y2) {
-    coordenadaY[0] = y1;
-    coordenadaY[tamanho - 1] = y2;
-    for (int i = 1; i < tamanho - 1; i++) {
-        coordenadaY[i] = 20 + rand() % (height - 40);
     }
 }
 

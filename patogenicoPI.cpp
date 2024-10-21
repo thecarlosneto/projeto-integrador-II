@@ -7,15 +7,34 @@
 #include <allegro5/allegro_image.h>
 #include <math.h>
 
+
 int tela = 1;
 int telaAnterior = 0;
+
 int width = 800;
 int height = 600;
+
 int teste = 0;
+
 int cron = 20;
 int cronP = 20; // para o cronometro do viremia 
 char cron_str[10];
+
 int tempo = 0;
+
+//variaveis usadas para fazer um array dos textos do dialogo
+
+#define MAX_TEXTO 100 // Tamanho máximo de cada texto
+#define NUM_TEXTO 5   // Número de textos que você deseja armazenar
+
+char textos[NUM_TEXTO][MAX_TEXTO] = {
+      "Este é um texto longo armazenado no array.",
+      "Outro texto grande que pode ser usado no seu programa.",
+      "Você pode armazenar até 5 textos aqui.",
+      "Cada string pode ter até 99 caracteres.",
+      "Isso é útil para gerenciar mensagens ou diálogos."
+};
+
 
 #define gameOver 0
 #define telaLoading 1
@@ -42,7 +61,7 @@ void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20) {
     // Verifica se houve um clique do mouse
     if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
 
-        printf("Clique detectado (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+        printf("Clique detectado tela escolha (%d, %d)\n", ev.mouse.x, ev.mouse.y);
 
         if (ev.mouse.button == 1) { // Verifica se o botão esquerdo foi clicado
 
@@ -50,22 +69,30 @@ void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20) {
             if (ev.mouse.x > textoX && ev.mouse.x < (textoX + larguraTexto) &&
                 ev.mouse.y > textoY && ev.mouse.y < (textoY + alturaTexto)) {
                 *tela = 2; // Atualiza o valor de "tela" para voltar à tela 2
+
             }
 
             // Exibe as coordenadas do clique no console
-            printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+            printf("Clique detectado na coordenada escolha (%d, %d)\n", ev.mouse.x, ev.mouse.y);
         }
     }
 }
 
 
-void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char* texto, int* tempo, ALLEGRO_EVENT ev) {
+void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char textos[NUM_TEXTO][MAX_TEXTO], int* tempo, ALLEGRO_EVENT_QUEUE* event_queue) {
 
+   
+    
+    ALLEGRO_EVENT ev;
 
+    int tempo_sub = 1;
 
     (*tempo) += 1;
-    printf("Tempo: %d\n", *tempo);
+  //  printf("Tempo: %d\n", *tempo);
 
+    tempo_sub= *tempo/3 +1;
+
+    printf("Tempo sub: %d\n", tempo_sub);
     // Desenha a caixa de diálogo preenchida
     al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(50, 50, 50));
 
@@ -73,7 +100,14 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
     al_draw_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(255, 255, 255), 2);
 
     // Desenha o texto dentro da caixa de diálogo
-    al_draw_multiline_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 20, caixaLargura - 40, al_get_font_line_height(font), 0, texto);
+   // for (int i = 0; i < 1; i++) {
+    //    printf("i : %d", i);
+
+
+        al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 20 + (0* al_get_font_line_height(font)), 0, textos[tempo_sub]);
+        al_flip_display();
+
+ //   }
 
     // Criação do botão "Avançar" para mudar o texto da caixa de dialogo
     int largura_botao = 80;
@@ -89,21 +123,27 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
     const char* texto_botao = "Avançar";
     al_draw_text(font, al_map_rgb(255, 255, 255), botaoX + largura_botao / 2, botaoY + altura_botao / 2 - al_get_font_line_height(font) / 2, ALLEGRO_ALIGN_CENTER, texto_botao);
 
-    if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+    while (al_get_next_event(event_queue, &ev)) {
+        if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && ev.mouse.button == 1) {
+            if (ev.mouse.x > botaoX && ev.mouse.x < botaoX + largura_botao &&
+                ev.mouse.y > botaoY && ev.mouse.y < botaoY + altura_botao) {
+                printf("botao foi clicado\n");
 
-        printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+                *tempo += 3;
+                tempo_sub = *tempo / 3 ;
 
-        if (ev.mouse.button == 1) { // Botão esquerdo do mouse
-
-            if (ev.mouse.x > 450 && ev.mouse.x < 520 && ev.mouse.y>440 && ev.mouse.y < 470) {
-                printf("botao foi clicado");
+        
+                if (tempo_sub >= NUM_TEXTO) {
+                    tempo_sub = NUM_TEXTO - 1; // Limita o valor de tempo_sub
+                }
             }
-
         }
     }
+    
+ 
 
     // Se o tempo atingir 5 segundos, sair da função
-    if (*tempo >= 5) {
+    if (*tempo >= 15) {
         printf("Tempo atingido, saindo da função.\n");
         return;
     }
@@ -372,6 +412,8 @@ int main() {
             break;
         case telaInicial:
 
+            tempo = 0;
+
             telaAnterior = tela;
 
             // Desenha a imagem de fundo na tela (na posição (0, 0))
@@ -384,7 +426,7 @@ int main() {
                         tela = seletorFase;
                     }
 
-                    printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+                    printf("Clique detectado na coordenada primeiro (%d, %d)\n", ev.mouse.x, ev.mouse.y);
                 }
             }
             // Desenhar o texto na tela usando a fonte embutida
@@ -425,7 +467,7 @@ int main() {
 
                     tempo = 0;
 
-                    printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+                    printf("Clique detectado na coordenada 123 (%d, %d)\n", ev.mouse.x, ev.mouse.y);
                 }
             }
 
@@ -439,25 +481,11 @@ int main() {
             // Desenha a imagem de fundo
             al_draw_bitmap(backgroundViremia, 0, 0, 0);
 
-            while (tempo < 5) {
+            while (tempo < 15) {
 
-                ALLEGRO_EVENT ev;
+             
 
-                while (al_get_next_event(event_queue, &ev)) {
-                    if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-                        printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
-                        // Aqui você pode chamar sua função para lidar com o clique
-                        if (ev.mouse.button == 1) {
-                            // Adicione a lógica do clique aqui
-                            printf("Clique do botão esquerdo detectado!\n");
-                        }
-                    }
-                }
-                printf("teste");
-
-
-
-                desenhar_caixa_dialogo(50, 420, 500, 80, font, "Aguarde 5 segundos...", &tempo,ev);
+                desenhar_caixa_dialogo(50, 420, 500, 80, font, textos, &tempo,event_queue);
 
 
                 cron = cronP;

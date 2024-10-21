@@ -7,11 +7,6 @@
 #include <allegro5/allegro_image.h>
 #include <math.h>
 
-int tela = 1;
-int width = 800;
-int height = 600;
-int teste = 0;
-
 #define gameOver 0
 #define telaLoading 1
 #define telaInicial 2
@@ -20,6 +15,19 @@ int teste = 0;
 #define fagocitose 5
 #define viremia 6
 #define venceuViremia 7
+
+int tela = 1;
+int width = 800;
+int height = 600;
+int teste = 0;
+
+const int qtdCd8 = 5;
+
+typedef struct {
+    ALLEGRO_BITMAP* cd8Viremia;
+    float x, y, velocidade;
+    int direcao; // -1 para cima, 1 para baixo
+} obstaculoViremia;
 
 /*Função que gera coordenadas de X aleatorias com base no tamanho do display,
   preenchendo um array. Onde a primeira e a última posição já tem coordenadas
@@ -108,6 +116,7 @@ int main() {
     ALLEGRO_BITMAP* background2 = al_load_bitmap("img/tela2Teste.png");
     ALLEGRO_BITMAP* backgroundViremia = al_load_bitmap("img/backgroundViremia.png");
     ALLEGRO_BITMAP* virusViremia = al_load_bitmap("img/virus.png");
+    ALLEGRO_BITMAP* cd8Viremia = al_load_bitmap("img/cd8Viremia.png");
 
     if (!display) {
         printf("Erro ao criar a janela.\n");
@@ -183,7 +192,7 @@ int main() {
     int nivelViremia = 1;
 
     int tamanho = 4;
-    int espessuraLinha = 15.0;
+    int espessuraLinha = 18.0;
     bool dentroDaLinha = false;
     // Aloca memória para o coordenadaX
     int* coordenadaX = (int*)malloc(tamanho * sizeof(int));
@@ -206,6 +215,21 @@ int main() {
     // Variáveis para o movimento circular
     float angle = 0; //variável de ângulo será incrementada a cada frame para simular o movimento circular
     float radius = 50;
+
+    // Criar um array para armazenar as informações das imagens
+    obstaculoViremia linfocitoCd8[qtdCd8];
+
+    // Inicializar as imagens
+    for (int i = 0; i < qtdCd8; i++) {
+        linfocitoCd8[i].cd8Viremia = al_clone_bitmap(cd8Viremia);
+        linfocitoCd8[i].x = - ((2 * al_get_bitmap_width(cd8Viremia)) * i);
+        // Coordenada Y inicial entre 340 e 600
+        linfocitoCd8[i].y = 340 + rand() % (600 - 340 + 1);
+        linfocitoCd8[i].velocidade = 0.5 + (float)i / 10.0;
+        // Direção inicial para baixo (para garantir que as imagens comecem descendo)
+        linfocitoCd8[i].direcao = 1;
+    }
+
     // - - - - - - -FIM DAS VARIÁVEIS PARA VIREMIA - - - - - - -
 
     // Loop de eventos
@@ -388,7 +412,9 @@ int main() {
                     }
                 }
                 // Desenhar o texto na tela usando a fonte embutida
-                al_draw_textf(font, al_map_rgb(255, 255, 255), 700, 10, ALLEGRO_ALIGN_CENTER, "Nível %d/3", nivelViremia);
+                al_draw_textf(font, al_map_rgb(255, 255, 255), 700, 10, ALLEGRO_ALIGN_CENTER, "Nível: %d/3", nivelViremia);
+
+                
 
                 //Desenha as linhas chamando a função
                 gerarLinhas(coordenadaX, coordenadaY, tamanho, espessuraLinha);
@@ -413,6 +439,31 @@ int main() {
                 // Incrementa o ângulo
                 angle += 0.03;
 
+                // Desenhar as imagens e atualizar as posições
+                for (int i = 0; i < qtdCd8; i++) {
+                    linfocitoCd8[i].x += linfocitoCd8[i].velocidade;
+                    linfocitoCd8[i].y += linfocitoCd8[i].velocidade * linfocitoCd8[i].direcao;
+
+                   if (linfocitoCd8[i].y > height) {
+                       linfocitoCd8[i].y = height; // Limitar a coordenada Y máxima
+                       linfocitoCd8[i].direcao = -1; // Mudar a direção para baixo
+                   }
+                   // Verificar se a imagem atingiu a faixa vertical final
+                   if (linfocitoCd8[i].y <= 250) {
+                       // Se a imagem estiver subindo e atingiu a faixa final, inverter a direção
+                       linfocitoCd8[i].direcao = -1;
+                   }
+
+                   al_draw_bitmap(linfocitoCd8[i].cd8Viremia, linfocitoCd8[i].x, linfocitoCd8[i].y, 0);
+
+                   // Se a imagem atingir o topo, reinicializa
+                   if (linfocitoCd8[i].y < -20 || linfocitoCd8[i].x > 820) {
+                       linfocitoCd8[i].x = -al_get_bitmap_width(cd8Viremia);
+                       linfocitoCd8[i].y = 340 + rand() % (600 - 340 + 1);
+                       linfocitoCd8[i].direcao = 1;
+                   }
+                }
+
                 // Atualiza a tela
                 al_flip_display();
             }
@@ -428,13 +479,18 @@ int main() {
         }
     }
 
-    // Limpeza dos recursos
+    // Liberar a memória
     al_destroy_event_queue(event_queue);
     al_destroy_display(display);
     al_destroy_timer(timer);
     al_destroy_bitmap(background); 
     al_destroy_bitmap(background2);
     al_destroy_bitmap(backgroundViremia);
+    al_destroy_bitmap(cd8Viremia);
+    for (int i = 0; i < qtdCd8; i++) {
+        al_destroy_bitmap(linfocitoCd8[i].cd8Viremia);
+    }
+    al_shutdown_image_addon();
 
     // Libera a memória alocada
     free(coordenadaX);

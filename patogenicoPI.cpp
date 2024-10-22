@@ -30,6 +30,17 @@ void geracoordenadasX(int* coordenadaX, int tamanho, int x1, int x2) {
     }
 }
 
+bool colisaoCirculoDentro(int xA, int yA, int rA, int xB, int yB, int rB) {
+    //geometria analítica para descobrir o tamanho de uma reta (norma)
+    int dx = xA - xB;
+    int dy = yA - yB;
+    int normaAB = sqrt(dx * dx + dy * dy);
+
+    if (normaAB + rA <= rB)
+        return true;
+    return false;
+
+}
 /*Função que gera coordenadas de Y aleatorias com base no tamanho do display,
   preenchendo um array. Onde a primeira e a última posição já tem coordenadas
   pré estabelecidas*/
@@ -204,12 +215,15 @@ int main() {
 
     int mosquito_x = 600; // Posição fixa em X
     int mosquito_y = 0; // Declaração de Y
+    int mosquito_raio = al_get_bitmap_width(mosquito)/2;
 
     int teia_x = width;
     int teia_y = rand() % (height - 20) + 10;
+    int teia_raio = 5;
 
     float mao_x = 0; // Posição fixa em X
     float mao_y = rand() % (height - 20) + 10; // Posição inicial aleatória em Y
+    int mao_raio = 5;
     float velocidade_x = (rand() % 6 + 5);  // Define uma velocidade aleatória inicial entre 5 e 10
     float amplitude; // Amplitude da parábola
     float offset; // Deslocamento Y inicial
@@ -420,15 +434,14 @@ int main() {
                 mao_y = padroesMovimento[indice_padroes](mao_x, amplitude);
 
                 // Verifica colisão com o mosquito
-                if (mao_x + 10 >= mosquito_x && mao_x - 10 <= mosquito_x + al_get_bitmap_width(mosquito) &&
-                    mao_y + 10 >= mosquito_y && mao_y - 10 <= mosquito_y + al_get_bitmap_height(mosquito)) {
-                    mosquito_x -= 100; // Lógica de colisão com a mao
+                if (colisaoCirculoDentro(mao_x, mao_y, mao_raio, mosquito_x + mosquito_raio, mosquito_y + mosquito_raio, mosquito_raio)) {
+                    mosquito_x -= 100; // Lógica de colisão com a mão
                 }
                 // Verifica colisão com a teia
-                if (teia_x + 10 >= mosquito_x && teia_x - 10 <= mosquito_x + al_get_bitmap_width(mosquito) &&
-                    teia_y + 10 >= mosquito_y && teia_y - 10 <= mosquito_y + al_get_bitmap_height(mosquito)) {
+                if (colisaoCirculoDentro(teia_x, teia_y, teia_raio, mosquito_x + mosquito_raio, mosquito_y + mosquito_raio, mosquito_raio)) {
                     mosquito_x -= 100; // Lógica de colisão com a teia
                 }
+
                 // Desenha a mão
                 al_draw_filled_circle(mao_x, mao_y, 10, al_map_rgb(255, 255, 0));
 

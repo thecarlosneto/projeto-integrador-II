@@ -961,6 +961,8 @@ int main() {
                     }
                 }
 
+                al_wait_for_event(event_queue, &ev);
+
                 voltarTelaEscolha(ev, &tela, fonte_20);
 
                 // Atualiza a tela

@@ -27,6 +27,36 @@
 
 #define PI 3.14159265358979323846
 
+//função voltar
+void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20) {
+    // Coordenadas e dimensões do texto "VOLTAR"
+    int textoX = 50;
+    int textoY = 50;
+    int larguraTexto = al_get_text_width(fonte_20, "VOLTAR");
+    int alturaTexto = al_get_font_line_height(fonte_20);
+
+    // Desenha o texto "VOLTAR"
+    al_draw_text(fonte_20, al_map_rgb(0, 0, 0), textoX, textoY, 0, "VOLTAR");
+    // Verifica se houve um clique do mouse
+    if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+
+        printf("Clique detectado tela escolha (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+
+        if (ev.mouse.button == 1) { // Verifica se o botão esquerdo foi clicado
+
+            // Verifica se o clique foi dentro da área do texto "VOLTAR"
+            if (ev.mouse.x > textoX && ev.mouse.x < (textoX + larguraTexto) &&
+                ev.mouse.y > textoY && ev.mouse.y < (textoY + alturaTexto)) {
+                *tela = 2; // Atualiza o valor de "tela" para voltar à tela 2
+            }
+
+            // Exibe as coordenadas do clique no console
+            printf("Clique detectado na coordenada escolha (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+        }
+    }
+}
+
+
 
 // Funções de movimento da mão - Ataque Mosquito
 float movimento_senoidal(float x, float amplitude) {
@@ -290,6 +320,8 @@ int main() {
     //fontes de texto
     ALLEGRO_FONT* fonteHUD = al_load_ttf_font("font/fonteWindowsRegular.ttf", 30, 0);
     ALLEGRO_FONT* font = al_create_builtin_font();
+    ALLEGRO_FONT* fonte_20 = al_load_font("font/fonte.TTF", 20, 0);
+
     // imagens
     ALLEGRO_BITMAP* loading = al_load_bitmap("img/telaLoading.png");
     ALLEGRO_BITMAP* background = al_load_bitmap("img/telaTeste.png");
@@ -333,6 +365,7 @@ int main() {
 
     // - - - - - - - VARIÁVEIS GERAIS - - - - - - -
     int tela = 1;
+    int telaAnterior = 0;
     // - - - - - - -FIM DAS VARIÁVEIS GERAIS - - - - - - -
 
     // - - - - - - - VARIÁVEIS PARA A TELA LOADING - - - - - - -
@@ -511,6 +544,7 @@ int main() {
             running = false;  // Sai do loop e encerra o programa
         }
 
+        telaAnterior = tela;
         switch (tela) {
         case telaLoading:
         {
@@ -560,7 +594,6 @@ int main() {
         {
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(background, 0, 0, 0);
-
             if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
                 if (ev.mouse.button == 1) { // Botão esquerdo do mouse
 
@@ -581,7 +614,6 @@ int main() {
         case seletorFase:
         {
             al_draw_bitmap(background2, 0, 0, 0);
-
             if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
                 if (ev.mouse.button == 1) { // Botão esquerdo do mouse
 
@@ -606,12 +638,17 @@ int main() {
                     printf("Clique detectado na coordenada (%d, %d)\n", ev.mouse.x, ev.mouse.y);
                 }
             }
+
+            //vai voltar para a tela de escolha
+            voltarTelaEscolha(ev, &tela, fonte_20);
+
             al_flip_display();
         }
         break;
         case ataqueMosquito:
             // Desenha a imagem de fundo
             al_draw_bitmap(background2, 0, 0, 0);
+
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 // Checa o estado do teclado
                 ALLEGRO_KEYBOARD_STATE kState;
@@ -675,19 +712,26 @@ int main() {
                 if (colisaoCirculoDentro(teia_x, teia_y, teia_raio, mosquito_x + mosquito_raio, mosquito_y + mosquito_raio, mosquito_raio)) {
                     mosquito_x -= 100; // Lógica de colisão com a teia
                 }
+            }
 
-                // Desenha a mão
-                al_draw_filled_circle(mao_x, mao_y, 10, al_map_rgb(255, 255, 0));
+            // Desenha a mão
+            al_draw_filled_circle(mao_x, mao_y, 10, al_map_rgb(255, 255, 0));
 
-                //Desenha a teia
-                al_draw_bitmap(teia, teia_x, teia_y, 0);
+            //Desenha a teia
+            al_draw_bitmap(teia, teia_x, teia_y, 0);
 
-                // Desenha o mosquito
-                al_draw_bitmap(mosquito, mosquito_x, mosquito_y, 0);
+            // Desenha o mosquito
+            al_draw_bitmap(mosquito, mosquito_x, mosquito_y, 0);
 
-                // Atualiza o display
-                al_flip_display();
-                break;
+            
+
+            al_get_mouse_state(&mState);
+            voltarTelaEscolha(ev, &tela, fonte_20);
+
+            // Atualiza o display
+            al_flip_display();
+
+            break;
 
         case fagocitose:
         {
@@ -791,6 +835,8 @@ int main() {
             // HUD
             al_draw_textf(fonteHUD, BLACK, 10, 0, ALLEGRO_ALIGN_LEFT, "pontos = %d", control_fago.pontuacao);
             al_draw_textf(fonteHUD, BLACK, 10, 34, ALLEGRO_ALIGN_LEFT, "vidas = %d", control_fago.tentativas);
+
+            voltarTelaEscolha(ev, &tela, fonte_20);
 
             /*****FIM DESENHO*****/
             al_flip_display();
@@ -915,13 +961,14 @@ int main() {
                     }
                 }
 
+                voltarTelaEscolha(ev, &tela, fonte_20);
+
                 // Atualiza a tela
                 al_flip_display();
             }
         }
         break;
             }
-        }
         }
 
         // Liberar a memória
@@ -934,6 +981,7 @@ int main() {
         al_destroy_bitmap(backgroundViremia);
         al_destroy_bitmap(fundoBitmap);
         al_destroy_font(font);
+        al_destroy_font(fonte_20);
         al_destroy_font(fonteHUD);
         al_destroy_bitmap(cd8Viremia);
         al_destroy_bitmap(virusViremia);

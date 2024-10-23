@@ -24,6 +24,7 @@
 #define fagocitose 5
 #define viremia 6
 #define venceuViremia 7
+#define perdeu 8
 
 #define PI 3.14159265358979323846
 
@@ -334,6 +335,7 @@ int main() {
     ALLEGRO_BITMAP* cd8Viremia = al_load_bitmap("img/cd8Viremia.png");
     ALLEGRO_BITMAP* mosquito = al_load_bitmap("img/mosquito.png");
     ALLEGRO_BITMAP* teia = al_load_bitmap("img/teia.png");
+    ALLEGRO_BITMAP* telaPerdeu = al_load_bitmap("img/telaPerdeu.png");
 
     ALLEGRO_BITMAP* fundoBitmap = al_create_bitmap(displayWidth, displayHeight);
     //cores
@@ -371,6 +373,7 @@ int main() {
     // - - - - - - - VARIÁVEIS GERAIS - - - - - - -
     int tela = 1;
     int telaAnterior = 0;
+    int tempo_perdeu = 0;
     // - - - - - - -FIM DAS VARIÁVEIS GERAIS - - - - - - -
 
     // - - - - - - - VARIÁVEIS PARA A TELA LOADING - - - - - - -
@@ -558,7 +561,7 @@ int main() {
             running = false;  // Sai do loop e encerra o programa
         }
 
-        telaAnterior = tela;
+       
         switch (tela) {
         case telaLoading:
         {
@@ -660,6 +663,9 @@ int main() {
         }
         break;
         case ataqueMosquito:
+
+            telaAnterior = tela;
+
             // Desenha a imagem de fundo
             al_draw_bitmap(background2, 0, 0, 0);
 
@@ -749,6 +755,8 @@ int main() {
 
         case fagocitose:
         {
+            telaAnterior = tela;
+
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 al_get_mouse_state(&mState);
                 // Calcula a direção e a distância até a posição do mouse
@@ -798,7 +806,9 @@ int main() {
                 //se as vidas acabarem
                 if (control_fago.tentativas <= 0) {
                     control_fago.gameover = true;
-                    tela = gameOver;
+                    tela = perdeu;
+                    control_fago.tentativas = 3;
+                    control_fago.pontuacao = 0;
                 }
                 if (control_fago.pontuacao >= 10 * 100) {
                     control_fago.venceu = true;
@@ -859,6 +869,9 @@ int main() {
 
         case viremia:
         {
+
+            telaAnterior = tela;
+
             // Desenha a imagem de fundo
             al_draw_bitmap(backgroundViremia, 0, 0, 0);
 
@@ -916,7 +929,7 @@ int main() {
                         al_draw_text(font, al_map_rgb(255, 255, 255), 100, 200, ALLEGRO_ALIGN_CENTER, "GAME OVER");
                         cron = cronP;
 
-                      //  tela = perdeu;
+                        tela = perdeu;
                         circle_x = x1 + 10;
                         circle_y = y1 + 10;
                     
@@ -1015,6 +1028,54 @@ int main() {
             }
         }
         break;
+
+        case perdeu:
+
+
+            al_draw_bitmap(telaPerdeu, 0, 0, 0);
+
+            if (ev.type == ALLEGRO_EVENT_TIMER) {
+
+                if (ev.type == ALLEGRO_EVENT_TIMER && ev.timer.source == countdown_timer) {
+
+
+                    if (tempo_perdeu >= 0) {
+                        tempo_perdeu = tempo_perdeu + 1;  // Decrementa o cronômetro
+                        printf("%d\n", tempo_perdeu);
+                    }
+                }
+            }
+
+            if (tempo_perdeu % 2 == 1) {
+
+                al_draw_text(fonte_20, al_map_rgb(255, 255, 255), 370, 550, -20, "S/N");
+            }
+            else {
+                al_draw_text(fonte_20, al_map_rgb(255, 0, 0), 370, 550, 0, "S/N");
+            }
+
+
+            if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
+
+
+                if (ev.keyboard.keycode == ALLEGRO_KEY_S) {
+                    tela = telaAnterior;
+
+                }
+                else if (ev.keyboard.keycode == ALLEGRO_KEY_N) {
+                    tela = telaInicial;
+                }
+            }
+
+            al_flip_display();
+
+
+
+            break;
+
+
+
+
             }
         }
 
@@ -1034,6 +1095,7 @@ int main() {
         al_destroy_bitmap(virusViremia);
         al_destroy_bitmap(mosquito);
         al_destroy_bitmap(teia);
+        al_destroy_bitmap(telaPerdeu);
 
         for (int i = 0; i < qtdCd8; i++) {
             al_destroy_bitmap(linfocitoCd8[i].cd8Viremia);

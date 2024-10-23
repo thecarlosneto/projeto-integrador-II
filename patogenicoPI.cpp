@@ -219,11 +219,12 @@ typedef struct {
 //Se os valores da instância A estiverem dentro da instância B, retorna verdadeiro.
 //inserir coord A PARTIR DO CANTO SUPERIOR ESQUERDO, igual no p5js
 bool colisaoQuadradoDentro(int xA, int yA, int widthA, int heightA, int xB, int yB, int widthB, int heightB) {
-    if ((xB < xA && xA < xB + widthA) && (yB < yA && yA < yB + heightB)
-        &&
-        (xB < xA + widthA && xA + widthA < xB + widthB) && (yB < yA + heightA && yA + heightA < yB + heightB))
-        return true;
-    return false;
+    // Verifica se há sobreposição nos eixos x e y
+    bool colisaoX = xA < xB + widthB && xA + widthA > xB;
+    bool colisaoY = yA < yB + heightB && yA + heightA > yB;
+
+    // Se houver sobreposição nos dois eixos, há colisão
+    return colisaoX && colisaoY;
 }
 
 //retorna verdadeiro se o círculo A estiver dentro do círculo B
@@ -813,11 +814,11 @@ int main() {
                 mao_y = padroesMovimento[indice_padroes](mao_x, amplitude);
 
                 // Verifica colisão com o mosquito
-                if (colisaoCirculoDentro(mao_x, mao_y, mao_raio, mosquito_x + mosquito_raio, mosquito_y + mosquito_raio, mosquito_raio)) {
+                if (colisaoQuadradoDentro(mao_x, mao_y, mao_raio, mao_raio, mosquito_x, mosquito_y, al_get_bitmap_width(mosquito), al_get_bitmap_height(mosquito))){
                     mosquito_x -= 100; // Lógica de colisão com a mão
                 }
                 // Verifica colisão com a teia
-                if (colisaoCirculoDentro(teia_x, teia_y, teia_raio, mosquito_x + mosquito_raio, mosquito_y + mosquito_raio, mosquito_raio)) {
+                if (colisaoQuadradoDentro(teia_x, teia_y, al_get_bitmap_width(teia), al_get_bitmap_height(teia), mosquito_x, mosquito_y, al_get_bitmap_width(mosquito) / 2, al_get_bitmap_height(mosquito))) {
                     mosquito_x -= 100; // Lógica de colisão com a teia
                 }
             }

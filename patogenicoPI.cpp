@@ -16,6 +16,11 @@
 #define nColunas (displayWidth / espacoEntreGrade)
 #define nLinhas (displayHeight / espacoEntreGrade)
 
+//variaveis usadas para fazer um array dos textos do dialogo
+
+#define MAX_TEXTO 100 // Tamanho máximo de cada texto
+#define NUM_TEXTO 5   // Número de textos que você deseja armazenar
+
 #define gameOver 0
 #define telaLoading 1
 #define telaInicial 2
@@ -27,6 +32,16 @@
 #define perdeu 8
 
 #define PI 3.14159265358979323846
+
+// textos dentro da caixa de dialogo
+
+char textos[NUM_TEXTO][MAX_TEXTO] = {
+      "Este é um texto longo armazenado no array.",
+      "Outro texto grande que pode ser usado no seu programa.",
+      "Você pode armazenar até 5 textos aqui.",
+      "Cada string pode ter até 99 caracteres.",
+      "Isso é útil para gerenciar mensagens ou diálogos."
+};
 
 //função voltar
 void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20) {
@@ -54,6 +69,76 @@ void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20) {
             // Exibe as coordenadas do clique no console
             printf("Clique detectado na coordenada escolha (%d, %d)\n", ev.mouse.x, ev.mouse.y);
         }
+    }
+}
+
+void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char textos[NUM_TEXTO][MAX_TEXTO], int* tempo_perdeu, ALLEGRO_EVENT_QUEUE* event_queue) {
+
+
+
+    ALLEGRO_EVENT ev;
+
+    int tempo_sub = 1;
+
+    (*tempo_perdeu) += 1;
+    //  printf("Tempo: %d\n", *tempo);
+
+    tempo_sub = *tempo_perdeu / 3 + 1;
+
+    printf("Tempo sub: %d\n", tempo_sub);
+    // Desenha a caixa de diálogo preenchida
+    al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(50, 50, 50));
+
+    // Desenha a borda da caixa de diálogo
+    al_draw_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(255, 255, 255), 2);
+
+    // Desenha o texto dentro da caixa de diálogo
+   // for (int i = 0; i < 1; i++) {
+    //    printf("i : %d", i);
+
+
+    al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 20 + (0 * al_get_font_line_height(font)), 0, textos[tempo_sub]);
+    al_flip_display();
+
+    //   }
+
+       // Criação do botão "Avançar" para mudar o texto da caixa de dialogo
+    int largura_botao = 80;
+    int altura_botao = 30;
+    int botaoX = caixaX + caixaLargura - largura_botao - 20;
+    int botaoY = caixaY + caixaAltura - altura_botao - 10;
+
+    // Desenha o botão
+    al_draw_filled_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(100, 100, 100)); // cor interna
+    al_draw_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(255, 255, 255), 2); // cor interna
+
+    // Desenha o texto do botão
+    const char* texto_botao = "Avançar";
+    al_draw_text(font, al_map_rgb(255, 255, 255), botaoX + largura_botao / 2, botaoY + altura_botao / 2 - al_get_font_line_height(font) / 2, ALLEGRO_ALIGN_CENTER, texto_botao);
+
+    while (al_get_next_event(event_queue, &ev)) {
+        if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && ev.mouse.button == 1) {
+            if (ev.mouse.x > botaoX && ev.mouse.x < botaoX + largura_botao &&
+                ev.mouse.y > botaoY && ev.mouse.y < botaoY + altura_botao) {
+                printf("botao foi clicado\n");
+
+                *tempo_perdeu += 3;
+                tempo_sub = *tempo_perdeu / 3;
+
+
+                if (tempo_sub >= NUM_TEXTO) {
+                    tempo_sub = NUM_TEXTO - 1; // Limita o valor de tempo_sub
+                }
+            }
+        }
+    }
+
+
+
+    // Se o tempo atingir 5 segundos, sair da função
+    if (*tempo_perdeu >= 15) {
+        printf("Tempo atingido, saindo da função.\n");
+        return;
     }
 }
 
@@ -609,6 +694,9 @@ int main() {
         }
         case telaInicial:
         {
+            // ele faz a caixa de dialogo começar toda vez que vc entrar em uma fase
+            tempo_perdeu = 0;
+
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(background, 0, 0, 0);
             if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
@@ -874,6 +962,21 @@ int main() {
 
             // Desenha a imagem de fundo
             al_draw_bitmap(backgroundViremia, 0, 0, 0);
+
+         //   caixa de dialogo
+            while (tempo_perdeu < 15) {
+
+                desenhar_caixa_dialogo(50, 420, 500, 80, font, textos, &tempo_perdeu, event_queue);
+
+
+                cron = cronP;
+
+                // Atualiza a tela e faz outras operações, se necessário
+                al_flip_display();
+
+                // Espera um segundo para dar tempo para o tempo ser incrementado
+                al_rest(1.0);
+            }
 
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {

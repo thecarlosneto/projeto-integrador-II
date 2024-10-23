@@ -58,6 +58,8 @@ void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20) {
 
 
 
+
+
 // Funções de movimento da mão - Ataque Mosquito
 float movimento_senoidal(float x, float amplitude) {
     return (displayHeight / 2) + amplitude * sin((x / displayWidth) * (2 * PI)) * 0.5; // Reduz a amplitude para não sair da tela
@@ -316,6 +318,7 @@ int main() {
 
     // define o FPS
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 60.0);
+    ALLEGRO_TIMER* countdown_timer = al_create_timer(1.0);
 
     //fontes de texto
     ALLEGRO_FONT* fonteHUD = al_load_ttf_font("font/fonteWindowsRegular.ttf", 30, 0);
@@ -354,8 +357,10 @@ int main() {
     al_register_event_source(event_queue, al_get_timer_event_source(timer));
     al_register_event_source(event_queue, al_get_mouse_event_source());
     al_register_event_source(event_queue, al_get_keyboard_event_source());
+    al_register_event_source(event_queue, al_get_timer_event_source(countdown_timer));
 
     al_start_timer(timer);
+    al_start_timer(countdown_timer);
 
 
 
@@ -492,6 +497,15 @@ int main() {
     int tamanho = 4;
     int espessuraLinha = 18.0;
     bool dentroDaLinha = false;
+
+    //para o cronometro
+
+    int cron = 20;
+    int cronP = 20; // para o cronometro do viremia 
+    char cron_str[10];
+   // int tempo = 0;
+    
+
     // Aloca memória para o coordenadaX
     int* coordenadaX = (int*)malloc(tamanho * sizeof(int));
     if (coordenadaX == NULL) {
@@ -850,6 +864,22 @@ int main() {
 
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {
+
+                if (ev.type == ALLEGRO_EVENT_TIMER && ev.timer.source == countdown_timer) {
+
+
+                    if (cron > 0) {
+                        cron = cron - 1;  // Decrementa o cronômetro
+                    }
+                }
+            
+                if (cron == 0) {
+                    al_draw_text(font, al_map_rgb(255, 255, 255), 100, 200, ALLEGRO_ALIGN_CENTER, "GAME OVER");
+                    cron = cronP;
+                    circle_x = x1 + 10;
+                    circle_y = y1 + 10;
+                }
+
                 // Estado do mouse
                 ALLEGRO_MOUSE_STATE mState;
                 al_get_mouse_state(&mState);
@@ -859,7 +889,9 @@ int main() {
                     mState.y >= circle_y - 10 && mState.y <= circle_y + 10) {
 
                     startJogo = true;
-                };
+                }else {
+                    startJogo = false;
+                }
                 // Reiniciar a cada iteração
                 dentroDaLinha = false;
 
@@ -882,6 +914,12 @@ int main() {
                     if (!dentroDaLinha) {
                         //deixar comentado por enquanto => tela = gameOver;
                         al_draw_text(font, al_map_rgb(255, 255, 255), 100, 200, ALLEGRO_ALIGN_CENTER, "GAME OVER");
+                        cron = cronP;
+
+                      //  tela = perdeu;
+                        circle_x = x1 + 10;
+                        circle_y = y1 + 10;
+                    
                     }
                     if (nivelViremia == 1 || nivelViremia == 3) {
                         xChegada = x2;
@@ -900,6 +938,9 @@ int main() {
                         //Diminui a espessura da linha
                         espessuraLinha -= espessuraLinha * 0.12;
                         nivelViremia++;
+
+                        // cronometro vai receber os segundos dnv
+                        cron = cronP;
 
                         //Reseta mudouDeNivel
                         mudouDeNivel = false;
@@ -960,6 +1001,10 @@ int main() {
                         linfocitoCd8[i].direcao = 1;
                     }
                 }
+
+                sprintf_s(cron_str, "%d", cron);
+
+                al_draw_text(font, al_map_rgb(255, 255, 255), 100, 100, ALLEGRO_ALIGN_CENTER, cron_str);
 
                 al_wait_for_event(event_queue, &ev);
 

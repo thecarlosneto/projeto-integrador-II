@@ -260,9 +260,11 @@ void mapearNutrientes(nutriente* pNutrientes, const int raioNutriente, int iNutr
     pGridMap[posicaoNaGrid][pQtdNutrientes[posicaoNaGrid]] = iNutriente; //no espaço X na grid, envia o index do nutriente 
 }
 
-void colisaoPlayerNutriente(player_fagocitose* pPlayer_fago, nutriente* pNutrientes, int raioNutriente, short int* pQtdNutrientes, short int(*pGridMap)[10], int indexNutriente) {
+void colisaoPlayerNutriente(player_fagocitose* pPlayer_fago, nutriente* pNutrientes, int raioNutriente, short int* pQtdNutrientes, short int(*pGridMap)[10], int indexNutriente, controle_fagocitose* pControl_fago) {
     if ((indexNutriente >= 0 && indexNutriente <= 100) && colisaoCirculoDentro(pNutrientes[indexNutriente].x, pNutrientes[indexNutriente].y, raioNutriente, pPlayer_fago->x, pPlayer_fago->y, pPlayer_fago->raio)) {
         pPlayer_fago->raio++; //aumenta tamanho do player
+        pControl_fago->pontuacao += 10;
+
         // descobre qual espaço o nutriente  está na grid e o remove de lá
         int posicaoNutrienteGrid = pegaPosicaoGrid(pNutrientes[indexNutriente].x, pNutrientes[indexNutriente].y);
         pQtdNutrientes[posicaoNutrienteGrid]--;
@@ -281,7 +283,7 @@ void colisaoPlayerNutriente(player_fagocitose* pPlayer_fago, nutriente* pNutrien
     }
 }
 
-void checaColisaoVizinhos(short int(*pGridMap)[10], short int* pQtdNutrientes, nutriente* pNutrientes, int raioNutriente, player_fagocitose* pPlayer_fago, int posicaoPlayerGrid) {
+void checaColisaoVizinhos(short int(*pGridMap)[10], short int* pQtdNutrientes, nutriente* pNutrientes, int raioNutriente, player_fagocitose* pPlayer_fago, int posicaoPlayerGrid, controle_fagocitose* pControl_fago) {
     /*
     percorre os 9 espaços ao redor do player:
 
@@ -301,7 +303,7 @@ void checaColisaoVizinhos(short int(*pGridMap)[10], short int* pQtdNutrientes, n
                     //para cada nutriente em um espaço na grid
                     for (int k = 0; k <= pQtdNutrientes[pos]; k++) {
                         int indexNutriente = pGridMap[pos][k];
-                        colisaoPlayerNutriente(pPlayer_fago, pNutrientes, raioNutriente, pQtdNutrientes, pGridMap, indexNutriente);
+                        colisaoPlayerNutriente(pPlayer_fago, pNutrientes, raioNutriente, pQtdNutrientes, pGridMap, indexNutriente, pControl_fago);
                     }
                 }
             }
@@ -559,7 +561,7 @@ int main() {
     fago_pong.y = posicaoAleatoria(displayHeight, fago_pong.raio * 2);
     fago_pong.vel = 7;
     int pong_velX = 1; //controla se o fagocito pong
-    int pong_velY = 1;  //vai subir ou descer
+    int pong_velY = 1; //vai subir ou descer
 
     /*****FIM SETUP DO JOGO*****/
 
@@ -693,6 +695,7 @@ int main() {
             al_flip_display();
             break;
         }
+
         case telaInicial:
         {
             // ele faz a caixa de dialogo começar toda vez que vc entrar em uma fase
@@ -751,8 +754,9 @@ int main() {
             al_flip_display();
         }
         break;
-        case ataqueMosquito:
 
+        case ataqueMosquito:
+        {
             telaAnterior = tela;
 
             // Desenha a imagem de fundo
@@ -814,7 +818,7 @@ int main() {
                 mao_y = padroesMovimento[indice_padroes](mao_x, amplitude);
 
                 // Verifica colisão com o mosquito
-                if (colisaoQuadradoDentro(mao_x, mao_y, mao_raio, mao_raio, mosquito_x, mosquito_y, al_get_bitmap_width(mosquito), al_get_bitmap_height(mosquito))){
+                if (colisaoQuadradoDentro(mao_x, mao_y, mao_raio, mao_raio, mosquito_x, mosquito_y, al_get_bitmap_width(mosquito), al_get_bitmap_height(mosquito))) {
                     mosquito_x -= 100; // Lógica de colisão com a mão
                 }
                 // Verifica colisão com a teia
@@ -832,7 +836,7 @@ int main() {
             // Desenha o mosquito
             al_draw_bitmap(mosquito, mosquito_x, mosquito_y, 0);
 
-            
+
 
             al_get_mouse_state(&mState);
             voltarTelaEscolha(ev, &tela, fonte_20);
@@ -841,7 +845,8 @@ int main() {
             al_flip_display();
 
             break;
-
+        }
+        
         case fagocitose:
         {
             telaAnterior = tela;
@@ -881,10 +886,11 @@ int main() {
                 fago_pong.x += fago_pong.vel * pong_velX;
                 fago_pong.y += fago_pong.vel * pong_velY;
 
+
                 //COLISÕES
                 //PLAYER X NUTRIENTE
-                checaColisaoVizinhos(gridMap, qtdNutrientesGrid, nutrientes, raioNutriente, &player_fago, posicaoPlayerGrid);
-                printf("checou colisao vizinhos\n");
+                checaColisaoVizinhos(gridMap, qtdNutrientesGrid, nutrientes, raioNutriente, &player_fago, posicaoPlayerGrid, &control_fago);
+
                 //PLAYER X INIMIGO
                 if (!control_fago.morto && colisaoCirculoDentro(player_fago.x, player_fago.y, player_fago.raio, fago_pong.x, fago_pong.y, fago_pong.raio)) {
                     control_fago.morto = true;
@@ -895,11 +901,11 @@ int main() {
                 //se as vidas acabarem
                 if (control_fago.tentativas <= 0) {
                     control_fago.gameover = true;
-                    tela = perdeu;
                     control_fago.tentativas = 3;
                     control_fago.pontuacao = 0;
+                    tela = perdeu;
                 }
-                if (control_fago.pontuacao >= 10 * 100) {
+                if (control_fago.pontuacao >= 2500) {
                     control_fago.venceu = true;
                     tela = viremia;
                 }
@@ -916,7 +922,6 @@ int main() {
                 //reseta tamanho do player
                 if (player_fago.raio >= player_fago.raio_max) {
                     player_fago.raio = player_fago.raio_min;
-                    control_fago.pontuacao += 100;
                 }
                 //diminui constantemente o tamanho do player
                 if (player_fago.raio > player_fago.raio_min)
@@ -924,6 +929,8 @@ int main() {
                 else
                     player_fago.raio = player_fago.raio_min;
             }
+
+
             /*****DESENHO*****/
             al_draw_bitmap(fundoBitmap, 0, 0, 0);
             //desenha nutrientes
@@ -1134,7 +1141,7 @@ int main() {
         break;
 
         case perdeu:
-
+        {
 
             al_draw_bitmap(telaPerdeu, 0, 0, 0);
 
@@ -1176,14 +1183,10 @@ int main() {
 
 
             break;
-
-
-
-
-            }
         }
+        } // <- fim switch
+    }
 
-        // Liberar a memória
         al_destroy_event_queue(event_queue);
         al_destroy_display(display);
         al_destroy_timer(timer);
@@ -1206,10 +1209,9 @@ int main() {
         }
         al_shutdown_image_addon();
 
-        // Libera a memória alocada
         free(coordenadaX);
         free(coordenadaY);
         free(nutrientes);
 
-        return 0; // Encerrar o programa corretamente 
+        return 0;
     }

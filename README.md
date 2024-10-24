@@ -6,7 +6,9 @@
 - [Sobre](#sobre)
 - [A biologia por trás](#biologia)
 - [Algoritmos e programação](#algoritmos)
+- [Links externos](#links)
 - [Última Atualização](#atualizacoes)
+
 
 ## Sobre <a name="sobre"></a>
 
@@ -56,5 +58,9 @@ Como haveriam muitas bolinhas na tela, um sistema de colisão mais eficiente tev
 
 Aqui o jogador controla o vírus no processo de infecção completa do ser-humano: linhas são geradas aleatoriamente na tela, e o objetivo é evitar que o mouse saia de dentro dessas linhas. Toda vez que se chega do outro lado da tela, no "destino", um novo padrão de linhas é gerado, e o destino agora é outro. Cada vez que se atinge o destino, a espessura das linhas diminui, aumentando a dificuldade.
 
+## Links externos <a name="links"></a>
+- Roteiro de falas: [google docs](https://docs.google.com/document/d/16gaW1oDv8f9qrr2GSL31v_34xzxDkxPBFBPKD5Qkxgo/edit?usp=sharing)
+- Moodboard: [canva](https://www.canva.com/design/DAGRo9KRR6Q/Fd1EgLr0FTRXVkg5y6Y6Zg/edit?utm_content=DAGRo9KRR6Q&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+
 ## Última atualização <a name="atualizacoes"></a>
-Este documento foi atualizado pela última vez no dia 11/10.
+Este documento foi atualizado pela última vez no dia 24/10.

@@ -425,6 +425,7 @@ int main() {
 
     ALLEGRO_BITMAP* mosquitao = al_load_bitmap("img/estrofulo/mosquitao.png");
     ALLEGRO_BITMAP* teia_img = al_load_bitmap("img/estrofulo/teia.png");
+    ALLEGRO_BITMAP* spray_img = al_load_bitmap("img/estrofulo/spray.png");
     ALLEGRO_BITMAP* background_estrofulo = al_load_bitmap("img/estrofulo/fundoestrofulo.png");
    
 
@@ -498,11 +499,12 @@ int main() {
 
     inimigo_estrofulo teia;
     inimigo_estrofulo mao;
+    inimigo_estrofulo spray;
 
     player_estrofulo player_mosquito;
 
     player_mosquito.x = 600;
-    player_mosquito.y = 0;
+    player_mosquito.y = 300;
     player_mosquito.raio = al_get_bitmap_width(mosquitao) / 2;
 
     teia.x = DISPLAY_WIDTH;
@@ -513,7 +515,12 @@ int main() {
     mao.y = rand() % (DISPLAY_HEIGHT - 20) + 10; // Posição inicial aleatória em Y
     mao.raio = 5;
 
+    spray.x = 50; // posicao inicial e fixa de X do spray
+    spray.y = 220; //posicao inicial Y do spray
+    spray.raio = al_get_bitmap_width(spray_img)/2;
+
     float velocidade_x = (rand() % 6 + 5);  // Define uma velocidade aleatória inicial entre 5 e 10
+    float suavidade = 0.020;  // Define uma velocidade a qual sera usada para efeito de suavização
     float amplitude; // Amplitude da parábola
     float offset; // Deslocamento Y inicial
     float tempo = 0; // Tempo para calcular a posição
@@ -828,8 +835,13 @@ int main() {
                 if (colisao_quadrado_dentro(teia.x, teia.y, al_get_bitmap_width(teia_img), al_get_bitmap_height(teia_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
                     player_mosquito.x -= 100; // Lógica de colisão com a teia
                 }
+                // Verifica colisao com o spray
+                if (colisao_quadrado_dentro(spray.x, spray.y, al_get_bitmap_width(spray_img), al_get_bitmap_height(spray_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
+                    tela = GAME_OVER;
+                    player_mosquito.x = 600;
+                }
             }
-
+            spray.y += (player_mosquito.y - 70 - spray.y) * suavidade;
             // Desenha a mão
             al_draw_filled_circle(mao.x, mao.y, 10, al_map_rgb(255, 255, 0));
 
@@ -838,6 +850,9 @@ int main() {
 
             // Desenha o mosquito
             al_draw_bitmap(mosquitao, player_mosquito.x, player_mosquito.y, 0);
+
+            //Desenha o spray
+            al_draw_bitmap(spray_img, spray.x, spray.y, 0);
 
 
 
@@ -1206,6 +1221,7 @@ int main() {
     al_destroy_bitmap(virus_viremia);
     al_destroy_bitmap(mosquitao);
     al_destroy_bitmap(teia_img);
+    al_destroy_bitmap(spray_img);
     al_destroy_bitmap(background_estrofulo);
     al_destroy_bitmap(tela_perdeu);
 

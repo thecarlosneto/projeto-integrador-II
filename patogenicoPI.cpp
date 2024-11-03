@@ -94,7 +94,7 @@ typedef struct {
 // textos dentro da caixa de dialogo
 
 char textos[NUM_TEXTO][MAX_TEXTO] = {
-      "Este é um texto longo armazenado no array.",
+      "Array sendo utilizada.",
       "Outro texto grande que pode ser usado no seu programa.",
       "Você pode armazenar até 5 textos aqui.",
       "Cada string pode ter até 99 caracteres.",
@@ -134,53 +134,46 @@ void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20) {
 
 void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char textos[NUM_TEXTO][MAX_TEXTO], int* tempo_perdeu, ALLEGRO_EVENT_QUEUE* event_queue) {
     ALLEGRO_EVENT ev;
-    int tempo_sub = 1;
+    int tempo_sub = *tempo_perdeu / 3;
 
-    *tempo_perdeu += 1;
-    //  printf("Tempo: %d\n", *tempo);
+    // Limita o valor de tempo_sub para que não ultrapasse o número de textos disponíveis
+    if (tempo_sub >= NUM_TEXTO) {
+        tempo_sub = NUM_TEXTO - 1;
+    }
 
-    tempo_sub = *tempo_perdeu / 3 + 1;
-
-    printf("Tempo sub: %d\n", tempo_sub);
     // Desenha a caixa de diálogo preenchida
     al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(50, 50, 50));
 
     // Desenha a borda da caixa de diálogo
     al_draw_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(255, 255, 255), 2);
 
-    // Desenha o texto dentro da caixa de diálogo
-    // for (int i = 0; i < 1; i++) {
-    //    printf("i : %d", i);
-
-
-    al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 20 + (0 * al_get_font_line_height(font)), 0, textos[tempo_sub]);
+    // Desenha o texto correspondente ao valor atual de tempo_sub
+    al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 20, 0, textos[tempo_sub]);
     al_flip_display();
 
-    //   }
-
-       // Criação do botão "Avançar" para mudar o texto da caixa de dialogo
+    // Variaveis do botão "Avançar" para mudar o texto da caixa de dialogo
     int largura_botao = 80;
     int altura_botao = 30;
     int botaoX = caixaX + caixaLargura - largura_botao - 20;
     int botaoY = caixaY + caixaAltura - altura_botao - 10;
 
     // Desenha o botão
-    al_draw_filled_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(100, 100, 100)); // cor interna
-    al_draw_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(255, 255, 255), 2); // cor interna
+    al_draw_filled_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(100, 100, 100));
+    al_draw_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(255, 255, 255), 2);
 
     // Desenha o texto do botão
     const char* texto_botao = "Avançar";
     al_draw_text(font, al_map_rgb(255, 255, 255), botaoX + largura_botao / 2, botaoY + altura_botao / 2 - al_get_font_line_height(font) / 2, ALLEGRO_ALIGN_CENTER, texto_botao);
 
+    // Verifica se o botão foi clicado
     while (al_get_next_event(event_queue, &ev)) {
         if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && ev.mouse.button == 1) {
             if (ev.mouse.x > botaoX && ev.mouse.x < botaoX + largura_botao &&
                 ev.mouse.y > botaoY && ev.mouse.y < botaoY + altura_botao) {
                 printf("botao foi clicado\n");
 
-                *tempo_perdeu += 3;
+                *tempo_perdeu += 3; // Avança para o próximo texto
                 tempo_sub = *tempo_perdeu / 3;
-
 
                 if (tempo_sub >= NUM_TEXTO) {
                     tempo_sub = NUM_TEXTO - 1; // Limita o valor de tempo_sub
@@ -189,17 +182,12 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
         }
     }
 
-
-
-    // Se o tempo atingir 5 segundos, sair da função
+    // Se o tempo atingir o limite, sair da função
     if (*tempo_perdeu >= 15) {
         printf("Tempo atingido, saindo da função.\n");
         return;
     }
 }
-
-
-
 
 
 // Funções de movimento da mão - Ataque Mosquito
@@ -219,7 +207,7 @@ float movimento_inverso_cosenoidal(float x, float amplitude) {
     return (DISPLAY_HEIGHT / 2) - amplitude * cos((x / DISPLAY_WIDTH) * (2 * PI)) * 0.5;
 }
 
-float (*padroesMovimento[4])(float, float) = {
+float (*padrao_movimento[4])(float, float) = {
     movimento_senoidal,
     movimento_cosenoidal,
     movimento_inverso_senoidal,
@@ -437,6 +425,8 @@ int main() {
 
     ALLEGRO_BITMAP* mosquitao = al_load_bitmap("img/estrofulo/mosquitao.png");
     ALLEGRO_BITMAP* teia_img = al_load_bitmap("img/estrofulo/teia.png");
+    ALLEGRO_BITMAP* background_estrofulo = al_load_bitmap("img/estrofulo/fundoestrofulo.png");
+   
 
     ALLEGRO_BITMAP* background_viremia = al_load_bitmap("img/viremia/backgroundViremia.png");
     ALLEGRO_BITMAP* cd8_viremia = al_load_bitmap("img/viremia/cd8Viremia.png");
@@ -478,7 +468,7 @@ int main() {
 
     // - - - - - - - VARIÁVEIS GERAIS - - - - - - -
     int tela = 1;
-    int telaAnterior = 0;
+    int tela_anterior = 0;
     int tempo_perdeu = 0;
     // - - - - - - -FIM DAS VARIÁVEIS GERAIS - - - - - - -
 
@@ -773,10 +763,10 @@ int main() {
 
         case ATAQUE_MOSQUITO:
         {
-            telaAnterior = tela;
+            tela_anterior = tela;
 
             // Desenha a imagem de fundo
-            al_draw_bitmap(background_fases, 0, 0, 0);
+            al_draw_bitmap(background_estrofulo, 0, 0, 0);
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
 
@@ -828,7 +818,7 @@ int main() {
                 }
 
                 // Calcula a posição Y da mão usando o padrão atual
-                mao.y = padroesMovimento[indice_padroes](mao.x, amplitude);
+                mao.y = padrao_movimento[indice_padroes](mao.x, amplitude);
 
                 // Verifica colisão com o mosquito
                 if (colisao_quadrado_dentro(mao.x, mao.y, mao.raio, mao.raio, player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao), al_get_bitmap_height(mosquitao))) {
@@ -862,7 +852,7 @@ int main() {
 
         case FAGOCITOSE:
         {
-            telaAnterior = tela;
+            tela_anterior = tela;
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 al_get_mouse_state(&mState);
@@ -979,7 +969,7 @@ int main() {
         case VIREMIA:
         {
 
-            telaAnterior = tela;
+            tela_anterior = tela;
 
             // Desenha a imagem de fundo
             al_draw_bitmap(background_viremia, 0, 0, 0);
@@ -1184,7 +1174,7 @@ int main() {
 
 
                 if (ev.keyboard.keycode == ALLEGRO_KEY_S) {
-                    tela = telaAnterior;
+                    tela = tela_anterior;
 
                 }
                 else if (ev.keyboard.keycode == ALLEGRO_KEY_N) {
@@ -1216,6 +1206,7 @@ int main() {
     al_destroy_bitmap(virus_viremia);
     al_destroy_bitmap(mosquitao);
     al_destroy_bitmap(teia_img);
+    al_destroy_bitmap(background_estrofulo);
     al_destroy_bitmap(tela_perdeu);
 
     for (int i = 0; i < qtdCd8; i++) {

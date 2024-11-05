@@ -105,25 +105,38 @@ char textos[NUM_TEXTO][MAX_TEXTO] = {
 
 // FUNÇÕES GERAIS
 
+
+bool colisao_mouse(ALLEGRO_MOUSE_STATE mouse, int x, int y, int width, int height) {
+    bool colisao_x = x <= mouse.x && mouse.x <= x + width;
+    bool colisao_y = y <= mouse.y && mouse.y <= y + height;
+
+    return colisao_x && colisao_y;
+}
+
+
 //cria um botão que, ao ser clicado, volta para o menu
-void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20) {
+void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20, bool* jogo_pausa) {
+    
+    char msg[] = { "SAIR" };
+
     // Coordenadas e dimensões do texto "VOLTAR"
-    int textoX = 20;
-    int textoY = 75;
-    int larguraTexto = al_get_text_width(fonte_20, "VOLTAR");
+    int larguraTexto = al_get_text_width(fonte_20, msg);
     int alturaTexto = al_get_font_line_height(fonte_20);
+    int textoX = DISPLAY_WIDTH / 2 - larguraTexto / 2;
+    int textoY = DISPLAY_HEIGHT / 2 - alturaTexto / 2;
 
     // Desenha o texto "VOLTAR"
-    al_draw_text(fonte_20, al_map_rgb(0, 0, 0), textoX, textoY, 0, "VOLTAR");
+    al_draw_text(fonte_20, al_map_rgb(255, 255, 255), textoX, textoY, 0, msg);
     // Verifica se houve um clique do mouse
     if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
 
         if (ev.mouse.button == 1) { // Verifica se o botão esquerdo foi clicado
 
-            // Verifica se o clique foi dentro da área do texto "VOLTAR"
+            // Verifica se o clique foi dentro da área do texto "SAIR"
             if (ev.mouse.x > textoX && ev.mouse.x < (textoX + larguraTexto) &&
                 ev.mouse.y > textoY && ev.mouse.y < (textoY + alturaTexto)) {
                 *tela = 2; // Atualiza o valor de "tela" para voltar à tela 2
+                *jogo_pausa = false;
             }
 
             // Exibe as coordenadas do clique no console
@@ -131,6 +144,19 @@ void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20) {
         }
     }
 }
+
+//desenha o que sobrepõe a tela ao pausar jogo
+void cria_fundo_pausa(ALLEGRO_DISPLAY * disp, ALLEGRO_BITMAP * bitmap){
+    al_set_target_bitmap(bitmap);
+
+    int width = al_get_display_width(disp);
+    int height = al_get_display_height(disp);
+    ALLEGRO_COLOR pretoTransparente = al_map_rgba(0, 0, 0, 900);
+    al_draw_filled_rectangle(0, 0, width, height, pretoTransparente);
+
+    al_set_target_bitmap(al_get_backbuffer(disp));
+}
+
 
 void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char textos[NUM_TEXTO][MAX_TEXTO], int* tempo_perdeu, ALLEGRO_EVENT_QUEUE* event_queue) {
     ALLEGRO_EVENT ev;
@@ -395,7 +421,6 @@ void linhasOnduladas(float x1, float y1, float x2, float y2, int qtdOndas) {
 
 
 
-
 int main() {
     //atribui uma seed aleatória. Caso o jogo crashe ou algo do tipo, essa é uma boa forma de debug
     //tutorial de como usar a seed:
@@ -430,7 +455,10 @@ int main() {
 
     // imagens
     ALLEGRO_BITMAP* loading = al_load_bitmap("img/menus/telaLoading.png");
+
     ALLEGRO_BITMAP* background_desktop = al_load_bitmap("img/menus/bgDesktop.png");
+    ALLEGRO_BITMAP* botao_play = al_load_bitmap("img/menus/Controle jogar.png");
+
     ALLEGRO_BITMAP* background_fases = al_load_bitmap("img/menus/bgFases.png");
     ALLEGRO_BITMAP* virus_viremia = al_load_bitmap("img/menus/virus.png");
     ALLEGRO_BITMAP* tela_perdeu = al_load_bitmap("img/menus/telaPerdeu.png");
@@ -441,7 +469,9 @@ int main() {
     ALLEGRO_BITMAP* background_viremia = al_load_bitmap("img/viremia/backgroundViremia.png");
     ALLEGRO_BITMAP* cd8_viremia = al_load_bitmap("img/viremia/cd8Viremia.png");
 
+    ALLEGRO_BITMAP* bg_pausa = al_create_bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT);
     ALLEGRO_BITMAP* bg_fagocitose_bitmap = al_create_bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT);
+
     //cores
     ALLEGRO_COLOR BLACK = al_map_rgb(0, 0, 0);
     ALLEGRO_COLOR WHITE = al_map_rgb(255, 255, 255);
@@ -471,15 +501,19 @@ int main() {
     al_start_timer(countdown_timer);
 
 
-
+    
     /*****FIM SETUP DO ALLEGRO*****/
 
 
 
     // - - - - - - - VARIÁVEIS GERAIS - - - - - - -
+    cria_fundo_pausa(display, bg_pausa);
+    
     int tela = 1;
     int telaAnterior = 0;
     int tempo_perdeu = 0;
+
+    bool jogo_pausado = false;
     // - - - - - - -FIM DAS VARIÁVEIS GERAIS - - - - - - -
 
     // - - - - - - - VARIÁVEIS PARA A TELA LOADING - - - - - - -
@@ -663,7 +697,7 @@ int main() {
         if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
             running = false;  // Sai do loop e encerra o programa
         }
-
+        al_get_mouse_state(&mState);
         al_get_keyboard_state(&kState);
 
         switch (tela) {
@@ -719,6 +753,8 @@ int main() {
 
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(background_desktop, 0, 0, 0);
+            al_draw_bitmap(botao_play, 0, 0, 0);
+
             if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
                 if (ev.mouse.button == 1) { // Botão esquerdo do mouse
 
@@ -765,7 +801,7 @@ int main() {
             }
 
             //vai voltar para a tela de escolha
-            voltarTelaEscolha(ev, &tela, fonte_20);
+            //voltarTelaEscolha(ev, &tela, fonte_20);
 
             al_flip_display();
         }
@@ -852,7 +888,7 @@ int main() {
 
 
             al_get_mouse_state(&mState);
-            voltarTelaEscolha(ev, &tela, fonte_20);
+            //voltarTelaEscolha(ev, &tela, fonte_20);
 
             // Atualiza o display
             al_flip_display();
@@ -941,10 +977,42 @@ int main() {
                     player_fago.raio -= 0.03;
                 else
                     player_fago.raio = player_fago.raio_min;
+
+
+
+
+                /*
+                al_draw_bitmap(bg_fagocitose_bitmap, 0, 0, 0);
+                //desenha nutrientes
+                for (int i = 0; i < num_nutrientes; i++) {
+                    int opcaoCor = i % 3; //numero de opcoes de cores
+                    ALLEGRO_COLOR corNutriente;
+                    if (opcaoCor == 0)
+                        corNutriente = PINK;
+                    else if (opcaoCor == 1)
+                        corNutriente = BLUE;
+                    else {
+                        corNutriente = GREEN;
+                    }
+                    al_draw_filled_circle(nutrientes[i].x, nutrientes[i].y, raio_nutriente, corNutriente);
+                }
+                // Desenha player
+                al_draw_filled_circle(player_fago.x, player_fago.y, player_fago.raio, RED);
+
+                // desenha inimigo (elipse)
+                al_draw_filled_circle(fago_pong.x, fago_pong.y, fago_pong.raio, BLACK);
+
+                // HUD
+                al_draw_textf(fonte_HUD, BLACK, 10, 0, ALLEGRO_ALIGN_LEFT, "pontos = %d", control_fago.pontuacao);
+                al_draw_textf(fonte_HUD, BLACK, 10, 34, ALLEGRO_ALIGN_LEFT, "vidas = %d", control_fago.tentativas);
+*/
+
+
             }
 
-
             /*****DESENHO*****/
+            
+            
             al_draw_bitmap(bg_fagocitose_bitmap, 0, 0, 0);
             //desenha nutrientes
             for (int i = 0; i < num_nutrientes; i++) {
@@ -968,11 +1036,16 @@ int main() {
             // HUD
             al_draw_textf(fonte_HUD, BLACK, 10, 0, ALLEGRO_ALIGN_LEFT, "pontos = %d", control_fago.pontuacao);
             al_draw_textf(fonte_HUD, BLACK, 10, 34, ALLEGRO_ALIGN_LEFT, "vidas = %d", control_fago.tentativas);
+            
+            //voltarTelaEscolha(ev, &tela, fonte_20);
 
-            voltarTelaEscolha(ev, &tela, fonte_20);
+            //PAUSA JOGO
+            
+
 
             /*****FIM DESENHO*****/
-            al_flip_display();
+            //al_flip_display();
+
         }
         break;
 
@@ -1001,7 +1074,6 @@ int main() {
 
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {
-
                 if (ev.type == ALLEGRO_EVENT_TIMER && ev.timer.source == countdown_timer) {
 
 
@@ -1018,8 +1090,6 @@ int main() {
                 }
 
                 // Estado do mouse
-                ALLEGRO_MOUSE_STATE mState;
-                al_get_mouse_state(&mState);
 
                 // Verifica se o mouse está sobre o círculo
                 if (mState.x >= circle_x - 10 && mState.x <= circle_x + 10 &&
@@ -1144,12 +1214,12 @@ int main() {
 
                 al_draw_text(font, WHITE, 100, 100, ALLEGRO_ALIGN_CENTER, cron_str);
 
-                al_wait_for_event(event_queue, &ev);
+                //al_wait_for_event(event_queue, &ev);
 
-                voltarTelaEscolha(ev, &tela, fonte_20);
+                //voltarTelaEscolha(ev, &tela, fonte_20);
 
                 // Atualiza a tela
-                al_flip_display();
+                //al_flip_display();
             }
         }
         break;
@@ -1199,6 +1269,27 @@ int main() {
             break;
         }
         } // <- fim switch
+
+        if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
+            if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+            {
+                jogo_pausado = !jogo_pausado;
+            }
+        }
+        if (!jogo_pausado) {
+            al_resume_timer(timer);
+            al_resume_timer(countdown_timer);
+            //printf("despausou\n");
+        }
+
+        if (jogo_pausado) {
+            //printf("pausou\n");
+            al_draw_bitmap(bg_pausa, 0, 0, 0);
+            voltarTelaEscolha(ev, &tela, fonte_20, &jogo_pausado);
+            al_stop_timer(timer);
+            al_stop_timer(countdown_timer);
+        }
+        al_flip_display();
     }
 
     al_destroy_event_queue(event_queue);

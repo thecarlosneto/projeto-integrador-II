@@ -666,6 +666,7 @@ int main() {
         }
 
         al_get_keyboard_state(&kState);
+        al_get_mouse_state(&mState);
 
         switch (tela) {
         case TELA_LOADING:
@@ -858,9 +859,6 @@ int main() {
             //Desenha o spray
             al_draw_bitmap(spray_img, spray.x, spray.y, 0);
 
-
-
-            al_get_mouse_state(&mState);
             voltarTelaEscolha(ev, &tela, fonte_20);
 
             // Atualiza o display
@@ -874,7 +872,6 @@ int main() {
             tela_anterior = tela;
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
-                al_get_mouse_state(&mState);
                 // Calcula a direção e a distância até a posição do mouse
                 float dx = mState.x - player_fago.x;
                 float dy = mState.y - player_fago.y;
@@ -1026,9 +1023,6 @@ int main() {
                     circle_y = y1 + 10;
                 }
 
-                // Estado do mouse
-                ALLEGRO_MOUSE_STATE mState;
-                al_get_mouse_state(&mState);
 
                 // Verifica se o mouse está sobre o círculo
                 if (mState.x >= circle_x - 10 && mState.x <= circle_x + 10 &&
@@ -1153,7 +1147,6 @@ int main() {
 
                 al_draw_text(font, WHITE, 100, 100, ALLEGRO_ALIGN_CENTER, cron_str);
 
-                al_wait_for_event(event_queue, &ev);
 
                 voltarTelaEscolha(ev, &tela, fonte_20);
 

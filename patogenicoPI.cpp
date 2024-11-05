@@ -776,9 +776,6 @@ int main() {
         {
             tela_anterior = tela;
 
-            // Desenha a imagem de fundo
-            al_draw_bitmap(background_estrofulo, 0, 0, 0);
-
             if (ev.type == ALLEGRO_EVENT_TIMER) {
 
                 // Atualiza a posição do mosquito com base nas teclas W e S
@@ -846,6 +843,11 @@ int main() {
                 }
             }
             spray.y += (player_mosquito.y - 70 - spray.y) * suavidade;
+
+
+            // Desenha a imagem de fundo
+            al_draw_bitmap(background_estrofulo, 0, 0, 0);
+
             // Desenha a mão
             al_draw_filled_circle(mao.x, mao.y, 10, al_map_rgb(255, 255, 0));
 

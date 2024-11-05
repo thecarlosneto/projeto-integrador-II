@@ -349,11 +349,7 @@ void gera_coordenadas_Y(int* coordenadaY, int tamanho, int y1, int y2) {
     }
 }
 
-<<<<<<< HEAD
-//Função que gera retas colineares de acordo com as coordenadas 
-=======
 //Função que gera linhas curvadas e colineares de acordo com as coordenadas que confam o caminho 
->>>>>>> carlos
 void gerar_Linhas(int* coordenadaX, int* coordenadaY, int tamanho, int espessuraLinha) {
     for (int i = 0; i < tamanho - 1; i++) {
         al_draw_rounded_rectangle(coordenadaX[i], coordenadaY[i],
@@ -435,13 +431,7 @@ int main() {
     ALLEGRO_BITMAP* teia_img = al_load_bitmap("img/estrofulo/teia.png");
     ALLEGRO_BITMAP* spray_img = al_load_bitmap("img/estrofulo/spray.png");
     ALLEGRO_BITMAP* background_estrofulo = al_load_bitmap("img/estrofulo/fundoestrofulo.png");
-<<<<<<< HEAD
-   
 
-=======
-
-
->>>>>>> carlos
     ALLEGRO_BITMAP* background_viremia = al_load_bitmap("img/viremia/backgroundViremia.png");
     ALLEGRO_BITMAP* cd8_viremia = al_load_bitmap("img/viremia/cd8Viremia.png");
 
@@ -530,11 +520,7 @@ int main() {
 
     spray.x = 50; // posicao inicial e fixa de X do spray
     spray.y = 220; //posicao inicial Y do spray
-<<<<<<< HEAD
     spray.raio = al_get_bitmap_width(spray_img)/2;
-=======
-    spray.raio = al_get_bitmap_width(spray_img) / 2;
->>>>>>> carlos
 
     float velocidade_x = (rand() % 6 + 5);  // Define uma velocidade aleatória inicial entre 5 e 10
     float suavidade = 0.020;  // Define uma velocidade a qual sera usada para efeito de suavização
@@ -679,10 +665,7 @@ int main() {
         }
 
         al_get_keyboard_state(&kState);
-<<<<<<< HEAD
-=======
         al_get_mouse_state(&mState);
->>>>>>> carlos
 
         switch (tela) {
         case TELA_LOADING:
@@ -875,12 +858,6 @@ int main() {
             //Desenha o spray
             al_draw_bitmap(spray_img, spray.x, spray.y, 0);
 
-<<<<<<< HEAD
-
-
-            al_get_mouse_state(&mState);
-=======
->>>>>>> carlos
             voltarTelaEscolha(ev, &tela, fonte_20);
 
             // Atualiza o display
@@ -894,10 +871,7 @@ int main() {
             tela_anterior = tela;
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
-<<<<<<< HEAD
-                al_get_mouse_state(&mState);
-=======
->>>>>>> carlos
+
                 // Calcula a direção e a distância até a posição do mouse
                 float dx = mState.x - player_fago.x;
                 float dy = mState.y - player_fago.y;
@@ -1049,13 +1023,6 @@ int main() {
                     circle_y = y1 + 10;
                 }
 
-<<<<<<< HEAD
-                // Estado do mouse
-                ALLEGRO_MOUSE_STATE mState;
-                al_get_mouse_state(&mState);
-=======
->>>>>>> carlos
-
                 // Verifica se o mouse está sobre o círculo
                 if (mState.x >= circle_x - 10 && mState.x <= circle_x + 10 &&
                     mState.y >= circle_y - 10 && mState.y <= circle_y + 10) {
@@ -1084,24 +1051,15 @@ int main() {
                     }
 
                     //Fora da linha
-<<<<<<< HEAD
-                    if (!dentro_da_linha) {
-=======
                     /*if (!dentro_da_linha) {
->>>>>>> carlos
                         //deixar comentado por enquanto => tela = gameOver;
                         al_draw_text(font, WHITE, 100, 200, ALLEGRO_ALIGN_CENTER, "GAME OVER");
                         cron = cronP;
-
                         tela = GAME_OVER;
                         circle_x = x1 + 10;
                         circle_y = y1 + 10;
-
-<<<<<<< HEAD
-                    }
-=======
                     }*/
->>>>>>> carlos
+
                     if (nivel_viremia == 1 || nivel_viremia == 3) {
                         x_chegada = x2;
                         y_chegada = y2;
@@ -1186,12 +1144,6 @@ int main() {
                 sprintf_s(cron_str, "%d", cron);
 
                 al_draw_text(font, WHITE, 100, 100, ALLEGRO_ALIGN_CENTER, cron_str);
-
-<<<<<<< HEAD
-                al_wait_for_event(event_queue, &ev);
-=======
->>>>>>> carlos
-
                 voltarTelaEscolha(ev, &tela, fonte_20);
 
                 // Atualiza a tela

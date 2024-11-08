@@ -83,10 +83,18 @@ typedef struct {
 } Retangulo;
 
 typedef struct {
+    ALLEGRO_BITMAP* celula_viremia;
+    float x;
+    float y;
+    float diferenca;
+} player_viremia;
+
+
+typedef struct {
     ALLEGRO_BITMAP* cd8_viremia;
     float x, y, velocidade;
     int direcao; // -1 para cima, 1 para baixo
-} obstaculoViremia;
+} obstaculo_viremia;
 
 
 
@@ -387,7 +395,6 @@ void linhas_Onduladas(float x1, float y1, float x2, float y2, int qtdOndas) {
 
 
 
-
 int main() {
     //atribui uma seed aleatória. Caso o jogo crashe ou algo do tipo, essa é uma boa forma de debug
     //tutorial de como usar a seed:
@@ -434,6 +441,7 @@ int main() {
 
     ALLEGRO_BITMAP* background_viremia = al_load_bitmap("img/viremia/backgroundViremia.png");
     ALLEGRO_BITMAP* cd8_viremia = al_load_bitmap("img/viremia/cd8Viremia.png");
+    ALLEGRO_BITMAP* celula_viremia = al_load_bitmap("img/viremia/player_viremia.png");
 
     ALLEGRO_BITMAP* bg_fagocitose_bitmap = al_create_bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT);
     //cores
@@ -594,13 +602,18 @@ int main() {
 
 
     // - - - - - - - VARIÁVEIS PARA VIREMIA - - - - - - -
+    //Setando os structs
+    player_viremia player_vire;
+    obstaculo_viremia* linfocito_CD8;
+
     //Coordenadas pré estabelecidas 
     int x1 = 50, y1 = 535;
     int x2 = 740, y2 = 50;
 
-    // Posição inicial do círculo
-    int circle_x = x1 + 10;
-    int circle_y = y1 + 10;
+    // Posição inicial do círculo player
+    player_vire.x = x1 - 5;
+    player_vire.y = y1 - 5;  
+    player_vire.diferenca = 15;
 
     int x_chegada;
     int y_chegada;
@@ -614,8 +627,8 @@ int main() {
     bool dentro_da_linha = false;
 
     //para o cronometro
-    int cron = 20;
-    int cronP = 20; // para o cronometro do viremia 
+    int cron = 0;
+    int cronP = 0; // para o cronometro do viremia 
     char cron_str[10];
     // int tempo = 0;
 
@@ -633,10 +646,9 @@ int main() {
     float raio_viremia = 50;
 
     const int quantidade_CD8 = 5;
-    obstaculoViremia* linfocito_CD8;
 
     // Criar um array para armazenar as informações das imagens
-    linfocito_CD8 = (obstaculoViremia*)malloc(quantidade_CD8 * sizeof(obstaculoViremia));
+    linfocito_CD8 = (obstaculo_viremia*)malloc(quantidade_CD8 * sizeof(obstaculo_viremia));
 
     // Inicializar as imagens
     for (int i = 0; i < quantidade_CD8; i++) {
@@ -992,7 +1004,7 @@ int main() {
             // Desenha a imagem de fundo
             al_draw_bitmap(background_viremia, 0, 0, 0);
 
-            //   caixa de dialogo
+            /*//   caixa de dialogo
             while (tempo_perdeu < 15) {
 
                 desenhar_caixa_dialogo(50, 420, 500, 80, font, textos, &tempo_perdeu, event_queue);
@@ -1005,7 +1017,7 @@ int main() {
 
                 // Espera um segundo para dar tempo para o tempo ser incrementado
                 al_rest(1.0);
-            }
+            }*/
 
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {
@@ -1013,23 +1025,19 @@ int main() {
                 if (ev.type == ALLEGRO_EVENT_TIMER && ev.timer.source == countdown_timer) {
 
 
-                    if (cron > 0) {
-                        cron = cron - 1;  // Decrementa o cronômetro
+                    if (cron >= 0) {
+                        cron = cron + 1;  // Decrementa o cronômetro
                     }
                 }
 
-                if (cron == 0) {
-                    al_draw_text(font, WHITE, 100, 200, ALLEGRO_ALIGN_CENTER, "GAME OVER");
-                    cron = cronP;
-                    circle_x = x1 + 10;
-                    circle_y = y1 + 10;
-                }
-
                 // Verifica se o mouse está sobre o círculo
-                if (mState.x >= circle_x - 10 && mState.x <= circle_x + 10 &&
-                    mState.y >= circle_y - 10 && mState.y <= circle_y + 10) {
+
+                if (mState.x >= player_vire.x && mState.x <= player_vire.x + al_get_bitmap_width(celula_viremia) && 
+                    mState.y >= player_vire.y && mState.y <= player_vire.y + al_get_bitmap_height(celula_viremia)){
 
                     startJogo = true;
+                    player_vire.x = mState.x - al_get_bitmap_width(celula_viremia) / 2;
+                    player_vire.y = mState.y - al_get_bitmap_height(celula_viremia) / 2;
                 }
                 else {
                     startJogo = false;
@@ -1039,28 +1047,27 @@ int main() {
 
                 //Fase viremia começou
                 if (startJogo == true) {
-                    circle_x = mState.x;
-                    circle_y = mState.y;
                     //Verifica se o círculo está em cima de alguma linha ou dos quadrados brancos
                     for (int i = 0; i < tamanho - 1; i++) {
-                        if (!fora_Da_Linha(circle_x, circle_y, coordenada_X[i], coordenada_Y[i], coordenada_X[i + 1],
+                        if (!fora_Da_Linha(player_vire.x, player_vire.y, coordenada_X[i], coordenada_Y[i], coordenada_X[i + 1],
                             coordenada_Y[i + 1], espessura_linha)
-                            || circle_x >= x1 && circle_x <= x1 + 20 && circle_y >= y1 && circle_y <= y1 + 20
-                            || circle_x >= x2 && circle_x <= x2 + 20 && circle_y >= y2 && circle_y <= y2 + 20) {
+                            || player_vire.x >= x1 && player_vire.x <= x1 + 20 && player_vire.y >= y1 && player_vire.y <= y1 + 20
+                            || player_vire.x >= x2 && player_vire.x <= x2 + 20 && player_vire.y >= y2 && player_vire.y <= y2 + 20) {
                             dentro_da_linha = true;
                             break; // Se o cursor estiver sobre uma linha, não precisa verificar as demais
                         }
                     }
 
+                    for (int i = 0; i < quantidade_CD8; i++) {
+                        if (colisao_quadrado_dentro(player_vire.x, player_vire.y, al_get_bitmap_width(celula_viremia),
+                            al_get_bitmap_height(celula_viremia), linfocito_CD8[i].x, linfocito_CD8[i].y, al_get_bitmap_width(cd8_viremia),
+                            al_get_bitmap_height(cd8_viremia))) {
+                            tela = GAME_OVER;
+                        }
+                    }
+
                     //Fora da linha
-                    /*if (!dentro_da_linha) {
-                        //deixar comentado por enquanto => tela = gameOver;
-                        al_draw_text(font, WHITE, 100, 200, ALLEGRO_ALIGN_CENTER, "GAME OVER");
-                        cron = cronP;
-                        tela = GAME_OVER;
-                        circle_x = x1 + 10;
-                        circle_y = y1 + 10;
-                    }*/
+                    
 
                     if (nivel_viremia == 1 || nivel_viremia == 3) {
                         x_chegada = x2;
@@ -1070,7 +1077,7 @@ int main() {
                         x_chegada = x1;
                         y_chegada = y1;
                     }
-                    if (nivel_viremia < 3 && (circle_x >= x_chegada && circle_x <= x_chegada + 20 && circle_y >= y_chegada && circle_y <= y_chegada + 20)) {
+                    if (nivel_viremia < 3 && (mState.x >= x_chegada && mState.x <= x_chegada + 20 && mState.y >= y_chegada && mState.y <= y_chegada + 20)) {
                         mudou_de_nivel_viremia = true;
                     }
                     if (mudou_de_nivel_viremia == true) {
@@ -1080,16 +1087,16 @@ int main() {
                         espessura_linha -= espessura_linha * 0.12;
                         nivel_viremia++;
 
-                        // cronometro vai receber os segundos dnv
-                        cron = cronP;
-
                         //Reseta mudouDeNivel
                         mudou_de_nivel_viremia = false;
                     }
-                    if (nivel_viremia == 3 && (circle_x >= x2 && circle_x <= x2 + 20 && circle_y >= y2 && circle_y <= y2 + 20)) {
+                    if (nivel_viremia == 3 && (mState.x >= x2 && mState.x <= x2 + 20 && mState.y >= y2 && mState.y <= y2 + 20)) {
                         tela = VENCEU_VIREMIA;
                     }
                 }
+
+
+                // - - - - - - - DESENHO - - - - - - -
                 // Desenhar o texto na tela usando a fonte embutida
                 al_draw_textf(font, WHITE, 700, 10, ALLEGRO_ALIGN_CENTER, "Nível: %d/3", nivel_viremia);
 
@@ -1103,17 +1110,18 @@ int main() {
                 al_draw_filled_rectangle(x2, y2, x2 + 20, y2 + 20, WHITE);
 
                 // Calcula a posição da imagem no círculo
-                float x_virus_viremia = circle_x + raio_viremia * cos(angulo_viremia);
-                float y_virus_viremia = circle_y + raio_viremia * sin(angulo_viremia);
+                float x_virus_viremia = player_vire.x + raio_viremia * cos(angulo_viremia);
+                float y_virus_viremia = player_vire.y + raio_viremia * sin(angulo_viremia);
 
                 //Desenha as linhas onduladas a partir da Função seno
-                linhas_Onduladas(circle_x, circle_y, x_virus_viremia, y_virus_viremia, 40);
+                linhas_Onduladas(player_vire.x + player_vire.diferenca, player_vire.y + player_vire.diferenca, x_virus_viremia, y_virus_viremia, 40);
 
                 // Desenha a imagem
                 al_draw_bitmap(virus_viremia, x_virus_viremia - al_get_bitmap_width(virus_viremia) / 2, y_virus_viremia - al_get_bitmap_height(virus_viremia) / 2, 0);
 
-                // Desenha o círculo na nova posição
-                al_draw_filled_circle(circle_x, circle_y, 10, RED);
+                // Desenha o player na nova posição
+                al_draw_bitmap(celula_viremia, player_vire.x, player_vire.y,0);
+                //al_draw_filled_circle(player_vire.x, player_vire.y, player_vire.raio, RED);
 
                 // Incrementa o ângulo
                 angulo_viremia += 0.03;
@@ -1143,11 +1151,11 @@ int main() {
                     }
                 }
 
-                sprintf_s(cron_str, "%d", cron);
+                sprintf_s(cron_str, "Tempo: %d", cron);
 
                 al_draw_text(font, WHITE, 100, 100, ALLEGRO_ALIGN_CENTER, cron_str);
                 voltarTelaEscolha(ev, &tela, fonte_20);
-
+                // - - - - - - - FIM DOS DESENHOS - - - - - - -
                 // Atualiza a tela
                 al_flip_display();
             }
@@ -1219,6 +1227,8 @@ int main() {
     al_destroy_bitmap(spray_img);
     al_destroy_bitmap(background_estrofulo);
     al_destroy_bitmap(tela_perdeu);
+    al_destroy_bitmap(celula_viremia);
+
 
     for (int i = 0; i < quantidade_CD8; i++) {
         al_destroy_bitmap(linfocito_CD8[i].cd8_viremia);

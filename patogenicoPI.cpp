@@ -1054,23 +1054,20 @@ int main() {
 
             telaAnterior = tela;
 
-            // Desenha a imagem de fundo
-            al_draw_bitmap(background_viremia, 0, 0, 0);
-
             //   caixa de dialogo
-            while (tempo_perdeu < 15) {
+            //while (tempo_perdeu < 15) {
 
-                desenhar_caixa_dialogo(50, 420, 500, 80, font, textos, &tempo_perdeu, event_queue);
+                //desenhar_caixa_dialogo(50, 420, 500, 80, font, textos, &tempo_perdeu, event_queue);
 
 
-                cron = cronP;
+                //cron = cronP;
 
                 // Atualiza a tela e faz outras operações, se necessário
-                al_flip_display();
+                //al_flip_display();
 
                 // Espera um segundo para dar tempo para o tempo ser incrementado
-                al_rest(1.0);
-            }
+                //al_rest(1.0);
+            //}
 
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {
@@ -1157,35 +1154,7 @@ int main() {
                         tela = VENCEU_VIREMIA;
                     }
                 }
-                // Desenhar o texto na tela usando a fonte embutida
-                al_draw_textf(font, WHITE, 700, 10, ALLEGRO_ALIGN_CENTER, "Nível: %d/3", nivelViremia);
-
-
-
-                //Desenha as linhas chamando a função
-                gerarLinhas(coordenadaX, coordenadaY, tamanho, espessuraLinha);
-
-                //Desenha os quadrados brancos
-                al_draw_filled_rectangle(x1, y1, x1 + 20, y1 + 20, WHITE);
-                al_draw_filled_rectangle(x2, y2, x2 + 20, y2 + 20, WHITE);
-
-                // Calcula a posição da imagem no círculo
-                float x = circle_x + radius * cos(angle);
-                float y = circle_y + radius * sin(angle);
-
-                //Desenha as linhas onduladas a partir da Função seno
-                linhasOnduladas(circle_x, circle_y, x, y, 40);
-
-                // Desenha a imagem
-                al_draw_bitmap(virus_viremia, x - al_get_bitmap_width(virus_viremia) / 2, y - al_get_bitmap_height(virus_viremia) / 2, 0);
-
-                // Desenha o círculo na nova posição
-                al_draw_filled_circle(circle_x, circle_y, 10, RED);
-
-                // Incrementa o ângulo
-                angle += 0.03;
-
-                // Desenhar as imagens e atualizar as posições
+                // Controla onde desenha o texto na tela usando a fonte embutida
                 for (int i = 0; i < qtdCd8; i++) {
                     linfocitoCd8[i].x += linfocitoCd8[i].velocidade;
                     linfocitoCd8[i].y += linfocitoCd8[i].velocidade * linfocitoCd8[i].direcao;
@@ -1200,8 +1169,6 @@ int main() {
                         linfocitoCd8[i].direcao = -1;
                     }
 
-                    al_draw_bitmap(linfocitoCd8[i].cd8_viremia, linfocitoCd8[i].x, linfocitoCd8[i].y, 0);
-
                     // Se a imagem atingir o topo, reinicializa
                     if (linfocitoCd8[i].y < -50 || linfocitoCd8[i].x > 850) {
                         linfocitoCd8[i].x = -al_get_bitmap_width(cd8_viremia);
@@ -1209,18 +1176,47 @@ int main() {
                         linfocitoCd8[i].direcao = 1;
                     }
                 }
-
-                sprintf_s(cron_str, "%d", cron);
-
-                al_draw_text(font, WHITE, 100, 100, ALLEGRO_ALIGN_CENTER, cron_str);
-
-                //al_wait_for_event(event_queue, &ev);
-
-                //voltarTelaEscolha(ev, &tela, fonte_20);
-
-                // Atualiza a tela
-                //al_flip_display();
+                // Incrementa o ângulo
+                angle += 0.03;
             }
+            
+            /*DESENHO*/
+
+            // Desenha a imagem de fundo
+            al_draw_bitmap(background_viremia, 0, 0, 0);
+
+            al_draw_textf(font, WHITE, 700, 10, ALLEGRO_ALIGN_CENTER, "Nível: %d/3", nivelViremia);
+                                   
+            //Desenha as linhas chamando a função
+            gerarLinhas(coordenadaX, coordenadaY, tamanho, espessuraLinha);
+
+            //Desenha os quadrados brancos
+            al_draw_filled_rectangle(x1, y1, x1 + 20, y1 + 20, WHITE);
+            al_draw_filled_rectangle(x2, y2, x2 + 20, y2 + 20, WHITE);
+
+            // Calcula a posição da imagem no círculo
+            float x = circle_x + radius * cos(angle);
+            float y = circle_y + radius * sin(angle);
+
+            //Desenha as linhas onduladas a partir da Função seno
+            linhasOnduladas(circle_x, circle_y, x, y, 40);
+
+            // Desenha a imagem
+            al_draw_bitmap(virus_viremia, x - al_get_bitmap_width(virus_viremia) / 2, y - al_get_bitmap_height(virus_viremia) / 2, 0);
+
+            // Desenha o círculo na nova posição
+            al_draw_filled_circle(circle_x, circle_y, 10, RED);
+
+            
+
+            // Desenhar as imagens e atualizar as posições
+            
+            for (int i = 0; i < qtdCd8; i++) {
+                al_draw_bitmap(linfocitoCd8[i].cd8_viremia, linfocitoCd8[i].x, linfocitoCd8[i].y, 0);
+            }
+            sprintf_s(cron_str, "%d", cron);
+
+            al_draw_text(font, WHITE, 100, 100, ALLEGRO_ALIGN_CENTER, cron_str);
         }
         break;
 
@@ -1271,7 +1267,7 @@ int main() {
         } // <- fim switch
 
         if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
-            if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+            if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE && (tela == ATAQUE_MOSQUITO || (tela == FAGOCITOSE || tela == VIREMIA)))
             {
                 jogo_pausado = !jogo_pausado;
             }
@@ -1282,8 +1278,7 @@ int main() {
             //printf("despausou\n");
         }
 
-        if (jogo_pausado) {
-            //printf("pausou\n");
+        if (jogo_pausado ) {
             al_draw_bitmap(bg_pausa, 0, 0, 0);
             voltarTelaEscolha(ev, &tela, fonte_20, &jogo_pausado);
             al_stop_timer(timer);

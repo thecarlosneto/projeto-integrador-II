@@ -28,7 +28,7 @@
 #define ATAQUE_MOSQUITO 4
 #define FAGOCITOSE 5
 #define VIREMIA 6
-#define VENCEU_VIREMIA 7
+#define VENCEU_VIREMIA 7 //tela inexistente
 
 #define PI 3.14159265358979323846
 
@@ -89,11 +89,15 @@ typedef struct {
     float diferenca;
 } player_viremia;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9862076e67fab11b4ac7c26c1af1e473221a3c8a
 typedef struct {
     ALLEGRO_BITMAP* cd8_viremia;
     float x, y, velocidade;
     int direcao; // -1 para cima, 1 para baixo
-} obstaculoViremia;
+} obstaculo_viremia;
 
 
 
@@ -420,7 +424,13 @@ void linhas_Onduladas(float x1, float y1, float x2, float y2, int qtdOndas) {
 
 void pontuacao_viremia(int tempo, int pontuacao) {
     pontuacao = 250000 / tempo;
+<<<<<<< HEAD
 }
+=======
+};
+
+
+>>>>>>> 9862076e67fab11b4ac7c26c1af1e473221a3c8a
 
 int main() {
     //atribui uma seed aleatória. Caso o jogo crashe ou algo do tipo, essa é uma boa forma de debug
@@ -638,9 +648,15 @@ int main() {
 
 
     // - - - - - - - VARIÁVEIS PARA VIREMIA - - - - - - -
+<<<<<<< HEAD
 
     //Setando os structs
     player_viremia player_vire;
+=======
+    //Setando os structs
+    player_viremia player_vire;
+    obstaculo_viremia* linfocito_CD8;
+>>>>>>> 9862076e67fab11b4ac7c26c1af1e473221a3c8a
 
     //Coordenadas pré estabelecidas 
     int x1 = 50, y1 = 535;
@@ -648,7 +664,11 @@ int main() {
 
     // Posição inicial do círculo player
     player_vire.x = x1 - 5;
+<<<<<<< HEAD
     player_vire.y = y1 - 5;
+=======
+    player_vire.y = y1 - 5;  
+>>>>>>> 9862076e67fab11b4ac7c26c1af1e473221a3c8a
     player_vire.diferenca = 15;
 
     int x_chegada;
@@ -682,10 +702,9 @@ int main() {
     float raio_viremia = 50;
 
     const int quantidade_CD8 = 5;
-    obstaculoViremia* linfocito_CD8;
 
     // Criar um array para armazenar as informações das imagens
-    linfocito_CD8 = (obstaculoViremia*)malloc(quantidade_CD8 * sizeof(obstaculoViremia));
+    linfocito_CD8 = (obstaculo_viremia*)malloc(quantidade_CD8 * sizeof(obstaculo_viremia));
 
     // Inicializar as imagens
     for (int i = 0; i < quantidade_CD8; i++) {
@@ -1050,7 +1069,14 @@ int main() {
                 }
 
                 // Verifica se o mouse está sobre o círculo
+<<<<<<< HEAD
                 if (colisao_mouse(mState, player_vire.x, player_vire.y, al_get_bitmap_width(celula_viremia), al_get_bitmap_height(celula_viremia) )) {
+=======
+
+                if (mState.x >= player_vire.x && mState.x <= player_vire.x + al_get_bitmap_width(celula_viremia) && 
+                    mState.y >= player_vire.y && mState.y <= player_vire.y + al_get_bitmap_height(celula_viremia)){
+
+>>>>>>> 9862076e67fab11b4ac7c26c1af1e473221a3c8a
                     startJogo = true;
                     player_vire.x = mState.x - al_get_bitmap_width(celula_viremia) / 2;
                     player_vire.y = mState.y - al_get_bitmap_height(celula_viremia) / 2;
@@ -1083,7 +1109,11 @@ int main() {
                     }
 
                     //Fora da linha
+<<<<<<< HEAD
 
+=======
+                    
+>>>>>>> 9862076e67fab11b4ac7c26c1af1e473221a3c8a
 
                     if (nivel_viremia == 1 || nivel_viremia == 3) {
                         x_chegada = x2;
@@ -1111,6 +1141,33 @@ int main() {
                         tela = VENCEU_VIREMIA;
                     }
                 }
+<<<<<<< HEAD
+=======
+
+
+                // - - - - - - - DESENHO - - - - - - -
+                //Desenha as linhas chamando a função
+                gerar_Linhas(coordenada_X, coordenada_Y, tamanho, espessura_linha);
+
+                //Desenha os quadrados brancos
+                al_draw_filled_rectangle(x1, y1, x1 + 20, y1 + 20, WHITE);
+                al_draw_filled_rectangle(x2, y2, x2 + 20, y2 + 20, WHITE);
+
+                // Calcula a posição da imagem no círculo
+                float x_virus_viremia = player_vire.x + raio_viremia * cos(angulo_viremia);
+                float y_virus_viremia = player_vire.y + raio_viremia * sin(angulo_viremia);
+
+                //Desenha as linhas onduladas a partir da Função seno
+                linhas_Onduladas(player_vire.x + player_vire.diferenca, player_vire.y + player_vire.diferenca, x_virus_viremia, y_virus_viremia, 40);
+
+                // Desenha a imagem
+                al_draw_bitmap(virus_viremia, x_virus_viremia - al_get_bitmap_width(virus_viremia) / 2, y_virus_viremia - al_get_bitmap_height(virus_viremia) / 2, 0);
+
+                // Desenha o player na nova posição
+                al_draw_bitmap(celula_viremia, player_vire.x, player_vire.y,0);
+                //al_draw_filled_circle(player_vire.x, player_vire.y, player_vire.raio, RED);
+
+>>>>>>> 9862076e67fab11b4ac7c26c1af1e473221a3c8a
                 // Incrementa o ângulo
                 angulo_viremia += 0.03;
                 // atualiza as posições dos linfócitos
@@ -1135,6 +1192,18 @@ int main() {
                         linfocito_CD8[i].direcao = 1;
                     }
                 }
+<<<<<<< HEAD
+=======
+                // Desenhar o texto na tela usando a fonte embutida
+                al_draw_textf(font, WHITE, 700, 10, ALLEGRO_ALIGN_CENTER, "Nível: %d/3", nivel_viremia);
+
+                sprintf_s(cronometro_str, "0%d'", cronometro);
+                al_draw_text(font, WHITE, 400, 10, ALLEGRO_ALIGN_CENTER, cronometro_str);
+                voltarTelaEscolha(ev, &tela, fonte_20);
+                // - - - - - - - FIM DOS DESENHOS - - - - - - -
+                // Atualiza a tela
+                al_flip_display();
+>>>>>>> 9862076e67fab11b4ac7c26c1af1e473221a3c8a
             }
             // - - - - - - - DESENHO - - - - - - -
             //Desenha as linhas chamando a função
@@ -1251,6 +1320,10 @@ int main() {
     al_destroy_bitmap(background_estrofulo);
     al_destroy_bitmap(tela_perdeu);
     al_destroy_bitmap(celula_viremia);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9862076e67fab11b4ac7c26c1af1e473221a3c8a
 
     for (int i = 0; i < quantidade_CD8; i++) {
         al_destroy_bitmap(linfocito_CD8[i].cd8_viremia);

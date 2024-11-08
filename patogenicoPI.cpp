@@ -83,6 +83,13 @@ typedef struct {
 } Retangulo;
 
 typedef struct {
+    ALLEGRO_BITMAP* celula_viremia;
+    float x;
+    float y;
+    float diferenca;
+} player_viremia;
+
+typedef struct {
     ALLEGRO_BITMAP* cd8_viremia;
     float x, y, velocidade;
     int direcao; // -1 para cima, 1 para baixo
@@ -94,7 +101,7 @@ typedef struct {
 // textos dentro da caixa de dialogo
 
 char textos[NUM_TEXTO][MAX_TEXTO] = {
-      "Este é um texto longo armazenado no array.",
+      "Array sendo utilizada.",
       "Outro texto grande que pode ser usado no seu programa.",
       "Você pode armazenar até 5 textos aqui.",
       "Cada string pode ter até 99 caracteres.",
@@ -116,7 +123,7 @@ bool colisao_mouse(ALLEGRO_MOUSE_STATE mouse, int x, int y, int width, int heigh
 
 //cria um botão que, ao ser clicado, volta para o menu
 void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20, bool* jogo_pausa) {
-    
+
     char msg[] = { "SAIR" };
 
     // Coordenadas e dimensões do texto "VOLTAR"
@@ -146,7 +153,7 @@ void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20, bool
 }
 
 //desenha o que sobrepõe a tela ao pausar jogo
-void cria_fundo_pausa(ALLEGRO_DISPLAY * disp, ALLEGRO_BITMAP * bitmap){
+void cria_fundo_pausa(ALLEGRO_DISPLAY* disp, ALLEGRO_BITMAP* bitmap) {
     al_set_target_bitmap(bitmap);
 
     int width = al_get_display_width(disp);
@@ -160,53 +167,46 @@ void cria_fundo_pausa(ALLEGRO_DISPLAY * disp, ALLEGRO_BITMAP * bitmap){
 
 void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char textos[NUM_TEXTO][MAX_TEXTO], int* tempo_perdeu, ALLEGRO_EVENT_QUEUE* event_queue) {
     ALLEGRO_EVENT ev;
-    int tempo_sub = 1;
+    int tempo_sub = *tempo_perdeu / 3;
 
-    *tempo_perdeu += 1;
-    //  printf("Tempo: %d\n", *tempo);
+    // Limita o valor de tempo_sub para que não ultrapasse o número de textos disponíveis
+    if (tempo_sub >= NUM_TEXTO) {
+        tempo_sub = NUM_TEXTO - 1;
+    }
 
-    tempo_sub = *tempo_perdeu / 3 + 1;
-
-    printf("Tempo sub: %d\n", tempo_sub);
     // Desenha a caixa de diálogo preenchida
     al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(50, 50, 50));
 
     // Desenha a borda da caixa de diálogo
     al_draw_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(255, 255, 255), 2);
 
-    // Desenha o texto dentro da caixa de diálogo
-    // for (int i = 0; i < 1; i++) {
-    //    printf("i : %d", i);
-
-
-    al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 20 + (0 * al_get_font_line_height(font)), 0, textos[tempo_sub]);
+    // Desenha o texto correspondente ao valor atual de tempo_sub
+    al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 20, 0, textos[tempo_sub]);
     al_flip_display();
 
-    //   }
-
-       // Criação do botão "Avançar" para mudar o texto da caixa de dialogo
+    // Variaveis do botão "Avançar" para mudar o texto da caixa de dialogo
     int largura_botao = 80;
     int altura_botao = 30;
     int botaoX = caixaX + caixaLargura - largura_botao - 20;
     int botaoY = caixaY + caixaAltura - altura_botao - 10;
 
     // Desenha o botão
-    al_draw_filled_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(100, 100, 100)); // cor interna
-    al_draw_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(255, 255, 255), 2); // cor interna
+    al_draw_filled_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(100, 100, 100));
+    al_draw_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(255, 255, 255), 2);
 
     // Desenha o texto do botão
     const char* texto_botao = "Avançar";
     al_draw_text(font, al_map_rgb(255, 255, 255), botaoX + largura_botao / 2, botaoY + altura_botao / 2 - al_get_font_line_height(font) / 2, ALLEGRO_ALIGN_CENTER, texto_botao);
 
+    // Verifica se o botão foi clicado
     while (al_get_next_event(event_queue, &ev)) {
         if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && ev.mouse.button == 1) {
             if (ev.mouse.x > botaoX && ev.mouse.x < botaoX + largura_botao &&
                 ev.mouse.y > botaoY && ev.mouse.y < botaoY + altura_botao) {
                 printf("botao foi clicado\n");
 
-                *tempo_perdeu += 3;
+                *tempo_perdeu += 3; // Avança para o próximo texto
                 tempo_sub = *tempo_perdeu / 3;
-
 
                 if (tempo_sub >= NUM_TEXTO) {
                     tempo_sub = NUM_TEXTO - 1; // Limita o valor de tempo_sub
@@ -215,17 +215,12 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
         }
     }
 
-
-
-    // Se o tempo atingir 5 segundos, sair da função
+    // Se o tempo atingir o limite, sair da função
     if (*tempo_perdeu >= 15) {
         printf("Tempo atingido, saindo da função.\n");
         return;
     }
 }
-
-
-
 
 
 // Funções de movimento da mão - Ataque Mosquito
@@ -245,7 +240,7 @@ float movimento_inverso_cosenoidal(float x, float amplitude) {
     return (DISPLAY_HEIGHT / 2) - amplitude * cos((x / DISPLAY_WIDTH) * (2 * PI)) * 0.5;
 }
 
-float (*padroesMovimento[4])(float, float) = {
+float (*padrao_movimento[4])(float, float) = {
     movimento_senoidal,
     movimento_cosenoidal,
     movimento_inverso_senoidal,
@@ -368,7 +363,7 @@ void criar_bg_fagocitose(ALLEGRO_DISPLAY* display, ALLEGRO_BITMAP* bitmap, ALLEG
 /*Função que gera coordenadas de X aleatorias com base no tamanho do display,
   preenchendo um array. Onde a primeira e a última posição já tem coordenadas
   pré estabelecidas*/
-void geracoordenadasX(int* coordenadaX, int tamanho, int x1, int x2) {
+void gera_coordenadas_X(int* coordenadaX, int tamanho, int x1, int x2) {
     coordenadaX[0] = x1;
     coordenadaX[tamanho - 1] = x2;
     for (int i = 1; i < tamanho - 1; i++) {
@@ -379,7 +374,7 @@ void geracoordenadasX(int* coordenadaX, int tamanho, int x1, int x2) {
 /*Função que gera coordenadas de Y aleatorias com base no tamanho do display,
   preenchendo um array. Onde a primeira e a última posição já tem coordenadas
   pré estabelecidas*/
-void geracoordenadasY(int* coordenadaY, int tamanho, int y1, int y2) {
+void gera_coordenadas_Y(int* coordenadaY, int tamanho, int y1, int y2) {
     coordenadaY[0] = y1;
     coordenadaY[tamanho - 1] = y2;
     for (int i = 1; i < tamanho - 1; i++) {
@@ -387,15 +382,19 @@ void geracoordenadasY(int* coordenadaY, int tamanho, int y1, int y2) {
     }
 }
 
-//Função que gera retas colineares de acordo com as coordenadas 
-void gerarLinhas(int* coordenadaX, int* coordenadaY, int tamanho, int espessuraLinha) {
+//Função que gera linhas curvadas e colineares de acordo com as coordenadas que confam o caminho 
+void gerar_Linhas(int* coordenadaX, int* coordenadaY, int tamanho, int espessuraLinha) {
     for (int i = 0; i < tamanho - 1; i++) {
-        al_draw_line(coordenadaX[i], coordenadaY[i], coordenadaX[i + 1], coordenadaY[i + 1], al_map_rgb(119, 25, 15), espessuraLinha);
-    };
+        al_draw_rounded_rectangle(coordenadaX[i], coordenadaY[i],
+            coordenadaX[i + 1], coordenadaY[i + 1],
+            espessuraLinha / 2, espessuraLinha / 2,
+            al_map_rgb(119, 25, 15), espessuraLinha);
+    }
 }
 
+
 // Função para verificar se o círculo está sobre uma linha com espessura
-bool foraDaLinha(float x, float y, float x1, float y1, float x2, float y2, float espessura) {
+bool fora_Da_Linha(float x, float y, float x1, float y1, float x2, float y2, float espessura) {
     // Calcular a distância perpendicular do ponto à reta
     float A = y2 - y1;
     float B = x1 - x2;
@@ -406,7 +405,7 @@ bool foraDaLinha(float x, float y, float x1, float y1, float x2, float y2, float
 }
 
 //função que cria linhas onduladas por meio do calculo da Função Seno
-void linhasOnduladas(float x1, float y1, float x2, float y2, int qtdOndas) {
+void linhas_Onduladas(float x1, float y1, float x2, float y2, int qtdOndas) {
     float dx = x2 - x1;
     float dy = y2 - y1;
     float comprimentoDaOnda = dx / qtdOndas;
@@ -419,7 +418,9 @@ void linhasOnduladas(float x1, float y1, float x2, float y2, int qtdOndas) {
     }
 }
 
-
+void pontuacao_viremia(int tempo, int pontuacao) {
+    pontuacao = 250000 / tempo;
+}
 
 int main() {
     //atribui uma seed aleatória. Caso o jogo crashe ou algo do tipo, essa é uma boa forma de debug
@@ -465,9 +466,12 @@ int main() {
 
     ALLEGRO_BITMAP* mosquitao = al_load_bitmap("img/estrofulo/mosquitao.png");
     ALLEGRO_BITMAP* teia_img = al_load_bitmap("img/estrofulo/teia.png");
+    ALLEGRO_BITMAP* spray_img = al_load_bitmap("img/estrofulo/spray.png");
+    ALLEGRO_BITMAP* background_estrofulo = al_load_bitmap("img/estrofulo/fundoestrofulo.png");
 
     ALLEGRO_BITMAP* background_viremia = al_load_bitmap("img/viremia/backgroundViremia.png");
     ALLEGRO_BITMAP* cd8_viremia = al_load_bitmap("img/viremia/cd8Viremia.png");
+    ALLEGRO_BITMAP* celula_viremia = al_load_bitmap("img/viremia/player_viremia.png");
 
     ALLEGRO_BITMAP* bg_pausa = al_create_bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT);
     ALLEGRO_BITMAP* bg_fagocitose_bitmap = al_create_bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -501,31 +505,31 @@ int main() {
     al_start_timer(countdown_timer);
 
 
-    
+
     /*****FIM SETUP DO ALLEGRO*****/
 
 
 
     // - - - - - - - VARIÁVEIS GERAIS - - - - - - -
     cria_fundo_pausa(display, bg_pausa);
-    
+
     int tela = 1;
-    int telaAnterior = 0;
+    int tela_anterior = 0;
     int tempo_perdeu = 0;
 
     bool jogo_pausado = false;
     // - - - - - - -FIM DAS VARIÁVEIS GERAIS - - - - - - -
 
     // - - - - - - - VARIÁVEIS PARA A TELA LOADING - - - - - - -
-    int contadorDeFrames = 0;
-    const int frameSegundo = 60;
-    const int intervaloSegundo = 2;
+    int contador_de_frames = 0;
+    const int frame_segundo = 60;
+    const int intervalo_segundo = 2;
 
-    int opacidadeTexto = 255;
+    int opacidade_texto = 255;
 
-    const int widthLoading = 8;
-    const int heightLoading = 10;
-    const int distanciaLoading = 2; // Distância entre os retângulos
+    const int width_Loading = 8;
+    const int height_Loading = 10;
+    const int distancia_Loading = 2; // Distância entre os retângulos
 
     // Lista de retângulos
     Retangulo retangulos[100];
@@ -534,19 +538,20 @@ int main() {
     // Primeiro retângulo
     retangulos[0].x_loading = 380;
     retangulos[0].y_loading = 295;
-    retangulos[0].w_loading = widthLoading;
-    retangulos[0].h_loading = heightLoading;
+    retangulos[0].w_loading = width_Loading;
+    retangulos[0].h_loading = height_Loading;
     //  - - - - - - - FIM DAS VARIÁVEIS PARA A TELA LOADING - - - - - - -
 
     // - - - - - - - VARIÁVEIS PARA MOSQUITO - - - - - - -
 
     inimigo_estrofulo teia;
     inimigo_estrofulo mao;
+    inimigo_estrofulo spray;
 
     player_estrofulo player_mosquito;
 
     player_mosquito.x = 600;
-    player_mosquito.y = 0;
+    player_mosquito.y = 300;
     player_mosquito.raio = al_get_bitmap_width(mosquitao) / 2;
 
     teia.x = DISPLAY_WIDTH;
@@ -557,7 +562,12 @@ int main() {
     mao.y = rand() % (DISPLAY_HEIGHT - 20) + 10; // Posição inicial aleatória em Y
     mao.raio = 5;
 
+    spray.x = 50; // posicao inicial e fixa de X do spray
+    spray.y = 220; //posicao inicial Y do spray
+    spray.raio = al_get_bitmap_width(spray_img) / 2;
+
     float velocidade_x = (rand() % 6 + 5);  // Define uma velocidade aleatória inicial entre 5 e 10
+    float suavidade = 0.020;  // Define uma velocidade a qual sera usada para efeito de suavização
     float amplitude; // Amplitude da parábola
     float offset; // Deslocamento Y inicial
     float tempo = 0; // Tempo para calcular a posição
@@ -628,59 +638,64 @@ int main() {
 
 
     // - - - - - - - VARIÁVEIS PARA VIREMIA - - - - - - -
+
+    //Setando os structs
+    player_viremia player_vire;
+
     //Coordenadas pré estabelecidas 
     int x1 = 50, y1 = 535;
     int x2 = 740, y2 = 50;
 
-    // Posição inicial do círculo
-    int circle_x = x1 + 10;
-    int circle_y = y1 + 10;
+    // Posição inicial do círculo player
+    player_vire.x = x1 - 5;
+    player_vire.y = y1 - 5;
+    player_vire.diferenca = 15;
 
-    int xChegada;
-    int yChegada;
+    int x_chegada;
+    int y_chegada;
 
     bool startJogo = false;
-    bool mudouDeNivel = false;
-    int nivelViremia = 1;
+    bool mudou_de_nivel_viremia = false;
+    int nivel_viremia = 1;
 
     int tamanho = 4;
-    int espessuraLinha = 18.0;
-    bool dentroDaLinha = false;
+    int espessura_linha = 18.0;
+    bool dentro_da_linha = false;
 
     //para o cronometro
-    int cron = 20;
-    int cronP = 20; // para o cronometro do viremia 
-    char cron_str[10];
-    // int tempo = 0;
+    int cronometro = 0;
+    int cronometro_reset = 0; // para o cronometro do viremia 
+    char cronometro_str[10];
+    int pontos_viremia = 0;
 
 
      // Aloca memória para as coordenadas
-    int* coordenadaX = (int*)malloc(tamanho * sizeof(int));
-    int* coordenadaY = (int*)malloc(tamanho * sizeof(int));
+    int* coordenada_X = (int*)malloc(tamanho * sizeof(int));
+    int* coordenada_Y = (int*)malloc(tamanho * sizeof(int));
 
     // Chama a função para preencher o array com números aleatórios
-    geracoordenadasX(coordenadaX, tamanho, x1, x2);
-    geracoordenadasY(coordenadaY, tamanho, y1, y2);
+    gera_coordenadas_X(coordenada_X, tamanho, x1, x2);
+    gera_coordenadas_Y(coordenada_Y, tamanho, y1, y2);
 
     // Variáveis para o movimento circular
-    float angle = 0; //variável de ângulo será incrementada a cada frame para simular o movimento circular
-    float radius = 50;
+    float angulo_viremia = 0; //variável de ângulo será incrementada a cada frame para simular o movimento circular
+    float raio_viremia = 50;
 
-    const int qtdCd8 = 5;
-    obstaculoViremia* linfocitoCd8;
+    const int quantidade_CD8 = 5;
+    obstaculoViremia* linfocito_CD8;
 
     // Criar um array para armazenar as informações das imagens
-    linfocitoCd8 = (obstaculoViremia*)malloc(qtdCd8 * sizeof(obstaculoViremia));
+    linfocito_CD8 = (obstaculoViremia*)malloc(quantidade_CD8 * sizeof(obstaculoViremia));
 
     // Inicializar as imagens
-    for (int i = 0; i < qtdCd8; i++) {
-        linfocitoCd8[i].cd8_viremia = al_clone_bitmap(cd8_viremia);
-        linfocitoCd8[i].x = -((2 * al_get_bitmap_width(cd8_viremia)) * i);
+    for (int i = 0; i < quantidade_CD8; i++) {
+        linfocito_CD8[i].cd8_viremia = al_clone_bitmap(cd8_viremia);
+        linfocito_CD8[i].x = -((2 * al_get_bitmap_width(cd8_viremia)) * i);
         // Coordenada Y inicial entre 340 e 600
-        linfocitoCd8[i].y = 340 + rand() % (600 - 340 + 1);
-        linfocitoCd8[i].velocidade = 0.5 + (float)i / 10.0;
+        linfocito_CD8[i].y = 340 + rand() % (600 - 340 + 1);
+        linfocito_CD8[i].velocidade = 0.5 + (float)i / 10.0;
         // Direção inicial para baixo (para garantir que as imagens comecem descendo)
-        linfocitoCd8[i].direcao = 1;
+        linfocito_CD8[i].direcao = 1;
     }
 
     // - - - - - - -FIM DAS VARIÁVEIS PARA VIREMIA - - - - - - -
@@ -699,6 +714,7 @@ int main() {
         }
         al_get_mouse_state(&mState);
         al_get_keyboard_state(&kState);
+        al_get_mouse_state(&mState);
 
         switch (tela) {
         case TELA_LOADING:
@@ -708,22 +724,22 @@ int main() {
                 tela = TELA_INICIAL;
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
-                contadorDeFrames++;
+                contador_de_frames++;
                 //Verifica o timer a cada meio segundo'
-                if (contadorDeFrames % (frameSegundo / intervaloSegundo) == 0) {
+                if (contador_de_frames % (frame_segundo / intervalo_segundo) == 0) {
 
                     // Criar um novo retângulo
                     if (num_retangulos <= 7) {
                         /*Calcula a posição x do novo retângulo,
                         baseada na posição x do último,
                         adicionando a largura e a distância entre eles.*/
-                        retangulos[num_retangulos].x_loading = retangulos[num_retangulos - 1].x_loading + widthLoading + distanciaLoading;
+                        retangulos[num_retangulos].x_loading = retangulos[num_retangulos - 1].x_loading + width_Loading + distancia_Loading;
                         retangulos[num_retangulos].y_loading = retangulos[0].y_loading; // Manter a mesma posição
-                        retangulos[num_retangulos].w_loading = widthLoading;
-                        retangulos[num_retangulos].h_loading = heightLoading;
+                        retangulos[num_retangulos].w_loading = width_Loading;
+                        retangulos[num_retangulos].h_loading = height_Loading;
                         num_retangulos++;
                     }
-                    opacidadeTexto = opacidadeTexto * (-1);
+                    opacidade_texto = opacidade_texto * (-1);
                 }
             }
 
@@ -739,10 +755,10 @@ int main() {
             }
             if (num_retangulos >= 8) {
                 // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
-                al_draw_textf(font, al_map_rgb(opacidadeTexto, opacidadeTexto, opacidadeTexto), 400, 565, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA INICIAR");
+                al_draw_textf(font, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 565, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA INICIAR");
             }
-            break;
         }
+        break;
 
         case TELA_INICIAL:
         {
@@ -801,7 +817,7 @@ int main() {
 
         case ATAQUE_MOSQUITO:
         {
-            telaAnterior = tela;
+            tela_anterior = tela;
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
 
@@ -853,7 +869,7 @@ int main() {
                 }
 
                 // Calcula a posição Y da mão usando o padrão atual
-                mao.y = padroesMovimento[indice_padroes](mao.x, amplitude);
+                mao.y = padrao_movimento[indice_padroes](mao.x, amplitude);
 
                 // Verifica colisão com o mosquito
                 if (colisao_quadrado_dentro(mao.x, mao.y, mao.raio, mao.raio, player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao), al_get_bitmap_height(mosquitao))) {
@@ -863,9 +879,16 @@ int main() {
                 if (colisao_quadrado_dentro(teia.x, teia.y, al_get_bitmap_width(teia_img), al_get_bitmap_height(teia_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
                     player_mosquito.x -= 100; // Lógica de colisão com a teia
                 }
+                // Verifica colisao com o spray
+                if (colisao_quadrado_dentro(spray.x, spray.y, al_get_bitmap_width(spray_img), al_get_bitmap_height(spray_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
+                    tela = GAME_OVER;
+                    player_mosquito.x = 600;
+                }
+                spray.y += (player_mosquito.y - 70 - spray.y) * suavidade;
             }
+
             // Desenha a imagem de fundo
-            al_draw_bitmap(background_fases, 0, 0, 0);
+            al_draw_bitmap(background_estrofulo, 0, 0, 0);
 
             // Desenha a mão
             al_draw_filled_circle(mao.x, mao.y, 10, al_map_rgb(255, 255, 0));
@@ -876,12 +899,14 @@ int main() {
             // Desenha o mosquito
             al_draw_bitmap(mosquitao, player_mosquito.x, player_mosquito.y, 0);
 
-            break;
+            //Desenha o spray
+            al_draw_bitmap(spray_img, spray.x, spray.y, 0);
         }
+        break;
 
         case FAGOCITOSE:
         {
-            telaAnterior = tela;
+            tela_anterior = tela;
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 // Calcula a direção e a distância até a posição do mouse
@@ -962,7 +987,7 @@ int main() {
             }
 
             /*****DESENHO*****/
-            
+
             al_draw_bitmap(bg_fagocitose_bitmap, 0, 0, 0);
             //desenha nutrientes
             for (int i = 0; i < num_nutrientes; i++) {
@@ -993,175 +1018,159 @@ int main() {
 
         case VIREMIA:
         {
+            tela_anterior = tela;
 
-            telaAnterior = tela;
+            // Desenha a imagem de fundo
+            al_draw_bitmap(background_viremia, 0, 0, 0);
 
-            //   caixa de dialogo
-            //while (tempo_perdeu < 15) {
+            /*//   caixa de dialogo
+            while (tempo_perdeu < 15) {
 
-                //desenhar_caixa_dialogo(50, 420, 500, 80, font, textos, &tempo_perdeu, event_queue);
+                desenhar_caixa_dialogo(50, 420, 500, 80, font, textos, &tempo_perdeu, event_queue);
 
 
-                //cron = cronP;
+                cron = cronP;
 
                 // Atualiza a tela e faz outras operações, se necessário
-                //al_flip_display();
+                al_flip_display();
 
                 // Espera um segundo para dar tempo para o tempo ser incrementado
-                //al_rest(1.0);
-            //}
+                al_rest(1.0);
+            }*/
 
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {
+
                 if (ev.type == ALLEGRO_EVENT_TIMER && ev.timer.source == countdown_timer) {
 
 
-                    if (cron > 0) {
-                        cron = cron - 1;  // Decrementa o cronômetro
+                    if (cronometro >= 0) {
+                        cronometro = cronometro + 1;
                     }
                 }
 
-                if (cron == 0) {
-                    al_draw_text(font, WHITE, 100, 200, ALLEGRO_ALIGN_CENTER, "GAME OVER");
-                    cron = cronP;
-                    circle_x = x1 + 10;
-                    circle_y = y1 + 10;
-                }
-
-                // Estado do mouse
-
                 // Verifica se o mouse está sobre o círculo
-                if (mState.x >= circle_x - 10 && mState.x <= circle_x + 10 &&
-                    mState.y >= circle_y - 10 && mState.y <= circle_y + 10) {
-
+                if (colisao_mouse(mState, player_vire.x, player_vire.y, al_get_bitmap_width(celula_viremia), al_get_bitmap_height(celula_viremia) )) {
                     startJogo = true;
+                    player_vire.x = mState.x - al_get_bitmap_width(celula_viremia) / 2;
+                    player_vire.y = mState.y - al_get_bitmap_height(celula_viremia) / 2;
                 }
                 else {
                     startJogo = false;
                 }
                 // Reiniciar a cada iteração
-                dentroDaLinha = false;
+                dentro_da_linha = false;
 
                 //Fase viremia começou
                 if (startJogo == true) {
-                    circle_x = mState.x;
-                    circle_y = mState.y;
                     //Verifica se o círculo está em cima de alguma linha ou dos quadrados brancos
                     for (int i = 0; i < tamanho - 1; i++) {
-                        if (!foraDaLinha(circle_x, circle_y, coordenadaX[i], coordenadaY[i], coordenadaX[i + 1],
-                            coordenadaY[i + 1], espessuraLinha)
-                            || circle_x >= x1 && circle_x <= x1 + 20 && circle_y >= y1 && circle_y <= y1 + 20
-                            || circle_x >= x2 && circle_x <= x2 + 20 && circle_y >= y2 && circle_y <= y2 + 20) {
-                            dentroDaLinha = true;
+                        if (!fora_Da_Linha(player_vire.x, player_vire.y, coordenada_X[i], coordenada_Y[i], coordenada_X[i + 1],
+                            coordenada_Y[i + 1], espessura_linha)
+                            || player_vire.x >= x1 && player_vire.x <= x1 + 20 && player_vire.y >= y1 && player_vire.y <= y1 + 20
+                            || player_vire.x >= x2 && player_vire.x <= x2 + 20 && player_vire.y >= y2 && player_vire.y <= y2 + 20) {
+                            dentro_da_linha = true;
                             break; // Se o cursor estiver sobre uma linha, não precisa verificar as demais
                         }
                     }
 
+                    for (int i = 0; i < quantidade_CD8; i++) {
+                        if (colisao_quadrado_dentro(player_vire.x, player_vire.y, al_get_bitmap_width(celula_viremia),
+                            al_get_bitmap_height(celula_viremia), linfocito_CD8[i].x, linfocito_CD8[i].y, al_get_bitmap_width(cd8_viremia),
+                            al_get_bitmap_height(cd8_viremia))) {
+                            tela = GAME_OVER;
+                        }
+                    }
+
                     //Fora da linha
-                    if (!dentroDaLinha) {
-                        //deixar comentado por enquanto => tela = gameOver;
-                        al_draw_text(font, WHITE, 100, 200, ALLEGRO_ALIGN_CENTER, "GAME OVER");
-                        cron = cronP;
 
-                        tela = GAME_OVER;
-                        circle_x = x1 + 10;
-                        circle_y = y1 + 10;
 
+                    if (nivel_viremia == 1 || nivel_viremia == 3) {
+                        x_chegada = x2;
+                        y_chegada = y2;
                     }
-                    if (nivelViremia == 1 || nivelViremia == 3) {
-                        xChegada = x2;
-                        yChegada = y2;
+                    else if (nivel_viremia == 2) {
+                        x_chegada = x1;
+                        y_chegada = y1;
                     }
-                    else if (nivelViremia == 2) {
-                        xChegada = x1;
-                        yChegada = y1;
+                    if (nivel_viremia < 3 && (mState.x >= x_chegada && mState.x <= x_chegada + 20 && mState.y >= y_chegada && mState.y <= y_chegada + 20)) {
+                        mudou_de_nivel_viremia = true;
                     }
-                    if (nivelViremia < 3 && (circle_x >= xChegada && circle_x <= xChegada + 20 && circle_y >= yChegada && circle_y <= yChegada + 20)) {
-                        mudouDeNivel = true;
-                    }
-                    if (mudouDeNivel == true) {
-                        geracoordenadasX(coordenadaX, tamanho, x1, x2);
-                        geracoordenadasY(coordenadaY, tamanho, y1, y2);
+                    if (mudou_de_nivel_viremia == true) {
+                        gera_coordenadas_X(coordenada_X, tamanho, x1, x2);
+                        gera_coordenadas_Y(coordenada_Y, tamanho, y1, y2);
                         //Diminui a espessura da linha
-                        espessuraLinha -= espessuraLinha * 0.12;
-                        nivelViremia++;
-
-                        // cronometro vai receber os segundos dnv
-                        cron = cronP;
+                        espessura_linha -= espessura_linha * 0.12;
+                        nivel_viremia++;
 
                         //Reseta mudouDeNivel
-                        mudouDeNivel = false;
+                        mudou_de_nivel_viremia = false;
                     }
-                    if (nivelViremia == 3 && (circle_x >= x2 && circle_x <= x2 + 20 && circle_y >= y2 && circle_y <= y2 + 20)) {
+                    if (nivel_viremia == 3 && (mState.x >= x2 && mState.x <= x2 + 20 && mState.y >= y2 && mState.y <= y2 + 20)) {
+                        pontuacao_viremia(cronometro, pontos_viremia);
                         tela = VENCEU_VIREMIA;
                     }
                 }
-                // Controla onde desenha o texto na tela usando a fonte embutida
-                for (int i = 0; i < qtdCd8; i++) {
-                    linfocitoCd8[i].x += linfocitoCd8[i].velocidade;
-                    linfocitoCd8[i].y += linfocitoCd8[i].velocidade * linfocitoCd8[i].direcao;
+                // Incrementa o ângulo
+                angulo_viremia += 0.03;
+                // atualiza as posições dos linfócitos
+                for (int i = 0; i < quantidade_CD8; i++) {
+                    linfocito_CD8[i].x += linfocito_CD8[i].velocidade;
+                    linfocito_CD8[i].y += linfocito_CD8[i].velocidade * linfocito_CD8[i].direcao;
 
-                    if (linfocitoCd8[i].y > DISPLAY_HEIGHT) {
-                        linfocitoCd8[i].y = DISPLAY_HEIGHT; // Limitar a coordenada Y máxima
-                        linfocitoCd8[i].direcao = -1; // Mudar a direção para baixo
+                    if (linfocito_CD8[i].y > DISPLAY_HEIGHT) {
+                        linfocito_CD8[i].y = DISPLAY_HEIGHT; // Limitar a coordenada Y máxima
+                        linfocito_CD8[i].direcao = -1; // Mudar a direção para baixo
                     }
                     // Verificar se a imagem atingiu a faixa vertical final
-                    if (linfocitoCd8[i].y <= 250) {
+                    if (linfocito_CD8[i].y <= 250) {
                         // Se a imagem estiver subindo e atingiu a faixa final, inverter a direção
-                        linfocitoCd8[i].direcao = -1;
+                        linfocito_CD8[i].direcao = -1;
                     }
 
                     // Se a imagem atingir o topo, reinicializa
-                    if (linfocitoCd8[i].y < -50 || linfocitoCd8[i].x > 850) {
-                        linfocitoCd8[i].x = -al_get_bitmap_width(cd8_viremia);
-                        linfocitoCd8[i].y = 340 + rand() % (600 - 340 + 1);
-                        linfocitoCd8[i].direcao = 1;
+                    if (linfocito_CD8[i].y < -50 || linfocito_CD8[i].x > 850) {
+                        linfocito_CD8[i].x = -al_get_bitmap_width(cd8_viremia);
+                        linfocito_CD8[i].y = 340 + rand() % (600 - 340 + 1);
+                        linfocito_CD8[i].direcao = 1;
                     }
                 }
-                // Incrementa o ângulo
-                angle += 0.03;
             }
-            
-            /*DESENHO*/
-
-            // Desenha a imagem de fundo
-            al_draw_bitmap(background_viremia, 0, 0, 0);
-
-            al_draw_textf(font, WHITE, 700, 10, ALLEGRO_ALIGN_CENTER, "Nível: %d/3", nivelViremia);
-                                   
+            // - - - - - - - DESENHO - - - - - - -
             //Desenha as linhas chamando a função
-            gerarLinhas(coordenadaX, coordenadaY, tamanho, espessuraLinha);
-
+            gerar_Linhas(coordenada_X, coordenada_Y, tamanho, espessura_linha);
+            
             //Desenha os quadrados brancos
             al_draw_filled_rectangle(x1, y1, x1 + 20, y1 + 20, WHITE);
             al_draw_filled_rectangle(x2, y2, x2 + 20, y2 + 20, WHITE);
 
             // Calcula a posição da imagem no círculo
-            float x = circle_x + radius * cos(angle);
-            float y = circle_y + radius * sin(angle);
+            float x_virus_viremia = player_vire.x + raio_viremia * cos(angulo_viremia);
+            float y_virus_viremia = player_vire.y + raio_viremia * sin(angulo_viremia);
 
             //Desenha as linhas onduladas a partir da Função seno
-            linhasOnduladas(circle_x, circle_y, x, y, 40);
+            linhas_Onduladas(player_vire.x + player_vire.diferenca, player_vire.y + player_vire.diferenca, x_virus_viremia, y_virus_viremia, 40);
 
             // Desenha a imagem
-            al_draw_bitmap(virus_viremia, x - al_get_bitmap_width(virus_viremia) / 2, y - al_get_bitmap_height(virus_viremia) / 2, 0);
+            al_draw_bitmap(virus_viremia, x_virus_viremia - al_get_bitmap_width(virus_viremia) / 2, y_virus_viremia - al_get_bitmap_height(virus_viremia) / 2, 0);
 
-            // Desenha o círculo na nova posição
-            al_draw_filled_circle(circle_x, circle_y, 10, RED);
+            // Desenha o player na nova posição
+            al_draw_bitmap(celula_viremia, player_vire.x, player_vire.y, 0);
 
-            
-
-            // Desenhar as imagens e atualizar as posições
-            
-            for (int i = 0; i < qtdCd8; i++) {
-                al_draw_bitmap(linfocitoCd8[i].cd8_viremia, linfocitoCd8[i].x, linfocitoCd8[i].y, 0);
+            // desenha linfócitos
+            for (int i = 0; i < quantidade_CD8; i++) {
+                al_draw_bitmap(linfocito_CD8[i].cd8_viremia, linfocito_CD8[i].x, linfocito_CD8[i].y, 0);
             }
-            sprintf_s(cron_str, "%d", cron);
+            
+            // Desenhar o texto na tela usando a fonte embutida
+            al_draw_textf(font, WHITE, 700, 10, ALLEGRO_ALIGN_CENTER, "Nível: %d/3", nivel_viremia);
 
-            al_draw_text(font, WHITE, 100, 100, ALLEGRO_ALIGN_CENTER, cron_str);
+            sprintf_s(cronometro_str, "0%d'", cronometro);
+            al_draw_text(font, WHITE, 400, 10, ALLEGRO_ALIGN_CENTER, cronometro_str);
+            // - - - - - - - FIM DOS DESENHOS - - - - - - -
         }
         break;
-
+        
         case GAME_OVER:
         {
             if (ev.type == ALLEGRO_EVENT_TIMER) {
@@ -1174,6 +1183,22 @@ int main() {
                     }
                 }
             }
+            
+            if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
+
+
+                if (ev.keyboard.keycode == ALLEGRO_KEY_S) {
+                    tela = tela_anterior;
+
+                }
+                else if (ev.keyboard.keycode == ALLEGRO_KEY_N) {
+                    tela = TELA_INICIAL;
+                }
+            }
+            //DESENHO
+            //fundo
+            al_draw_bitmap(tela_perdeu, 0, 0, 0);
+            //texto piscando pra continuar ("Deseja continuar - sim ou nao")
             if (tempo_perdeu % 2 == 1) {
 
                 al_draw_text(fonte_20, WHITE, 370, 550, -20, "S/N");
@@ -1181,21 +1206,8 @@ int main() {
             else {
                 al_draw_text(fonte_20, RED, 370, 550, 0, "S/N");
             }
-            if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
-
-
-                if (ev.keyboard.keycode == ALLEGRO_KEY_S) {
-                    tela = telaAnterior;
-
-                }
-                else if (ev.keyboard.keycode == ALLEGRO_KEY_N) {
-                    tela = TELA_INICIAL;
-                }
-            }
-            al_draw_bitmap(tela_perdeu, 0, 0, 0);
-
-            break;
         }
+        break;
         } // <- fim switch
 
 
@@ -1211,7 +1223,7 @@ int main() {
             //printf("despausou\n");
         }
 
-        if (jogo_pausado ) {
+        if (jogo_pausado) {
             al_draw_bitmap(bg_pausa, 0, 0, 0);
             voltarTelaEscolha(ev, &tela, fonte_20, &jogo_pausado);
             al_stop_timer(timer);
@@ -1235,17 +1247,20 @@ int main() {
     al_destroy_bitmap(virus_viremia);
     al_destroy_bitmap(mosquitao);
     al_destroy_bitmap(teia_img);
+    al_destroy_bitmap(spray_img);
+    al_destroy_bitmap(background_estrofulo);
     al_destroy_bitmap(tela_perdeu);
+    al_destroy_bitmap(celula_viremia);
 
-    for (int i = 0; i < qtdCd8; i++) {
-        al_destroy_bitmap(linfocitoCd8[i].cd8_viremia);
+    for (int i = 0; i < quantidade_CD8; i++) {
+        al_destroy_bitmap(linfocito_CD8[i].cd8_viremia);
     }
     al_shutdown_image_addon();
 
-    free(coordenadaX);
-    free(coordenadaY);
+    free(coordenada_X);
+    free(coordenada_Y);
     free(nutrientes);
-    free(linfocitoCd8);
-    
+    free(linfocito_CD8);
+
     return 0;
 }

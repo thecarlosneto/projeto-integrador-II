@@ -28,7 +28,7 @@
 #define ATAQUE_MOSQUITO 4
 #define FAGOCITOSE 5
 #define VIREMIA 6
-#define VENCEU_VIREMIA 7
+#define VENCEU_VIREMIA 7 //tela inexistente
 
 #define PI 3.14159265358979323846
 
@@ -393,6 +393,10 @@ void linhas_Onduladas(float x1, float y1, float x2, float y2, int qtdOndas) {
     }
 }
 
+void pontuacao_viremia(int tempo, int pontuacao) {
+    pontuacao = 250000 / tempo;
+};
+
 
 
 int main() {
@@ -627,10 +631,10 @@ int main() {
     bool dentro_da_linha = false;
 
     //para o cronometro
-    int cron = 0;
-    int cronP = 0; // para o cronometro do viremia 
-    char cron_str[10];
-    // int tempo = 0;
+    int cronometro = 0;
+    int cronometro_reset = 0; // para o cronometro do viremia 
+    char cronometro_str[10];
+    int pontos_viremia = 0;
 
 
      // Aloca memória para as coordenadas
@@ -1025,8 +1029,8 @@ int main() {
                 if (ev.type == ALLEGRO_EVENT_TIMER && ev.timer.source == countdown_timer) {
 
 
-                    if (cron >= 0) {
-                        cron = cron + 1;  // Decrementa o cronômetro
+                    if (cronometro >= 0) {
+                        cronometro = cronometro + 1;
                     }
                 }
 
@@ -1091,17 +1095,13 @@ int main() {
                         mudou_de_nivel_viremia = false;
                     }
                     if (nivel_viremia == 3 && (mState.x >= x2 && mState.x <= x2 + 20 && mState.y >= y2 && mState.y <= y2 + 20)) {
+                        pontuacao_viremia(cronometro, pontos_viremia);
                         tela = VENCEU_VIREMIA;
                     }
                 }
 
 
                 // - - - - - - - DESENHO - - - - - - -
-                // Desenhar o texto na tela usando a fonte embutida
-                al_draw_textf(font, WHITE, 700, 10, ALLEGRO_ALIGN_CENTER, "Nível: %d/3", nivel_viremia);
-
-
-
                 //Desenha as linhas chamando a função
                 gerar_Linhas(coordenada_X, coordenada_Y, tamanho, espessura_linha);
 
@@ -1150,10 +1150,11 @@ int main() {
                         linfocito_CD8[i].direcao = 1;
                     }
                 }
+                // Desenhar o texto na tela usando a fonte embutida
+                al_draw_textf(font, WHITE, 700, 10, ALLEGRO_ALIGN_CENTER, "Nível: %d/3", nivel_viremia);
 
-                sprintf_s(cron_str, "Tempo: %d", cron);
-
-                al_draw_text(font, WHITE, 100, 100, ALLEGRO_ALIGN_CENTER, cron_str);
+                sprintf_s(cronometro_str, "0%d'", cronometro);
+                al_draw_text(font, WHITE, 400, 10, ALLEGRO_ALIGN_CENTER, cronometro_str);
                 voltarTelaEscolha(ev, &tela, fonte_20);
                 // - - - - - - - FIM DOS DESENHOS - - - - - - -
                 // Atualiza a tela

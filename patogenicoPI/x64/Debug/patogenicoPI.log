@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 ﻿  patogenicoPI.cpp
 C:\Users\User\source\repos\PI2-patogenico\patogenicoPI.cpp(161,60): warning C4309: 'argumento': truncamento de valor constante
 C:\Users\User\source\repos\PI2-patogenico\patogenicoPI.cpp(572,11): warning C4101: 'offset': variável local não referenciada
   patogenicoPI.vcxproj -> C:\Users\User\source\repos\PI2-patogenico\x64\Debug\patogenicoPI.exe
-=======
-﻿  patogenicoPI.vcxproj -> C:\Users\carlo\source\repos\projeto-integrador-II\x64\Debug\patogenicoPI.exe
->>>>>>> 9862076e67fab11b4ac7c26c1af1e473221a3c8a

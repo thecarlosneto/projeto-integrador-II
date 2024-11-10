@@ -1276,6 +1276,7 @@ int main() {
     al_destroy_bitmap(cd8_viremia);
     al_destroy_bitmap(virus_viremia);
     al_destroy_bitmap(mosquitao);
+    al_destroy_bitmap(iconmosquitao);
     al_destroy_bitmap(teia_img);
     al_destroy_bitmap(spray_img);
     al_destroy_bitmap(background_estrofulo);

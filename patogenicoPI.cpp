@@ -43,6 +43,7 @@ typedef struct {
     float x;
     float y;
     float raio;
+    float velocidade;
 } inimigo_estrofulo;
 
 //fagocitose
@@ -465,6 +466,7 @@ int main() {
     ALLEGRO_BITMAP* tela_perdeu = al_load_bitmap("img/menus/telaPerdeu.png");
 
     ALLEGRO_BITMAP* mosquitao = al_load_bitmap("img/estrofulo/mosquitao.png");
+    ALLEGRO_BITMAP* iconmosquitao = al_load_bitmap("img/estrofulo/iconmosquitao.png");
     ALLEGRO_BITMAP* teia_img = al_load_bitmap("img/estrofulo/teia.png");
     ALLEGRO_BITMAP* spray_img = al_load_bitmap("img/estrofulo/spray.png");
     ALLEGRO_BITMAP* background_estrofulo = al_load_bitmap("img/estrofulo/fundoestrofulo.png");
@@ -570,7 +572,11 @@ int main() {
     float suavidade = 0.020;  // Define uma velocidade a qual sera usada para efeito de suavização
     float amplitude; // Amplitude da parábola
     float offset; // Deslocamento Y inicial
-    float tempo = 0; // Tempo para calcular a posição
+    float tempo_segundos = 0.0; // Variavel de tempo para adicionar na barra de progresso e para aumentar a velocidade
+    float tempo_max = 20.0; // Variavel de tempo para ditar o tempo maximo para o jogo "Estrofulo"
+
+ 
+
 
     // Inicializar a amplitude e o padrão de movimento
     amplitude = rand() % (DISPLAY_HEIGHT / 2) + (DISPLAY_HEIGHT / 2); // Amplitude
@@ -821,6 +827,9 @@ int main() {
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
 
+                tempo_segundos += 1.0 / 60;
+
+
                 // Atualiza a posição do mosquito com base nas teclas W e S
                 if (al_key_down(&kState, ALLEGRO_KEY_W) || al_key_down(&kState, ALLEGRO_KEY_UP)) {
                     player_mosquito.y -= 5; // Move para cima
@@ -857,7 +866,7 @@ int main() {
                     mao.y = rand() % (DISPLAY_HEIGHT - 20) + 10;
 
                     // Atribui uma nova velocidade aleatória à mão entre 5 e 10
-                    velocidade_x = (rand() % 6 + 5); // Gera um número aleatório entre 5 e 10
+                    mao.velocidade = velocidade_x; // Gera um número aleatório entre 5 e 10
                 }
                 if (teia.x < -30) {
                     // Resetando a teia para o início
@@ -865,7 +874,7 @@ int main() {
 
                     // Nova posição Y aleatória
                     teia.y = rand() % (DISPLAY_HEIGHT - 20) + 10;
-                    velocidade_x = (rand() % 6 + 5); // Gera um número aleatório entre 5 e 10
+                    teia.velocidade = velocidade_x; // Gera um número aleatório entre 5 e 10
                 }
 
                 // Calcula a posição Y da mão usando o padrão atual
@@ -883,8 +892,10 @@ int main() {
                 if (colisao_quadrado_dentro(spray.x, spray.y, al_get_bitmap_width(spray_img), al_get_bitmap_height(spray_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
                     tela = GAME_OVER;
                     player_mosquito.x = 600;
+                    tempo_segundos = 0;
+                    
                 }
-                spray.y += (player_mosquito.y - 70 - spray.y) * suavidade;
+                spray.y += (player_mosquito.y - 50 - spray.y) * suavidade;
             }
 
             // Desenha a imagem de fundo
@@ -901,6 +912,25 @@ int main() {
 
             //Desenha o spray
             al_draw_bitmap(spray_img, spray.x, spray.y, 0);
+
+
+            float largura_barra = 760.0 - 40.0; // comprimento total da barra de progresso
+
+            float barra_progresso = (tempo_segundos / tempo_max) * largura_barra; // calculo do progresso da barra baseada no tempo de jogo
+            barra_progresso = fmin(barra_progresso, largura_barra); // comando que GARANTE que a barra não ultrapasse a largura máxima
+
+            float icone_mosquito = 40 + barra_progresso; // calculo para posicao do iconmosquitao com base no progresso da barra
+            icone_mosquito = fmin(icone_mosquito, 760); // comando que GARANTE que o icone_mosquito nao ultrapasse a largura máxima da barra
+            
+
+            al_draw_rectangle(40 - 2, 18, 760 + 2, 42, BLACK, 2); // desenha as bordas da barra de progresso
+
+            al_draw_filled_rectangle(40, 20, 40 + barra_progresso, 40, RED); // desenha a barra de progresso
+           
+            al_draw_bitmap(iconmosquitao, icone_mosquito - al_get_bitmap_width(iconmosquitao) / 2, 18, 0); // desenha o iconmosquitao sobre a barra de progresso, acompanhando seu movimento
+
+            
+
         }
         break;
 

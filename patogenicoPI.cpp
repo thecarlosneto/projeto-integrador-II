@@ -32,6 +32,14 @@
 
 #define PI 3.14159265358979323846
 
+typedef enum {
+    NORTE = 1,
+    SUL = 2,
+    LESTE = 3,
+    OESTE = 4
+} posicao_texto;
+
+
 //picada mosquito (estrofulo)
 typedef struct {
     int x;
@@ -112,6 +120,48 @@ char textos[NUM_TEXTO][MAX_TEXTO] = {
 
 
 // FUNÇÕES GERAIS
+
+void criar_bitmap_botao(ALLEGRO_BITMAP* imagem, ALLEGRO_FONT* fonte, const char *txt, int margem, posicao_texto posicao, float x, float y) {
+    int largura_botao = al_get_bitmap_width(imagem);
+    int altura_botao = al_get_bitmap_height(imagem);
+
+
+    al_draw_bitmap(imagem, x, y, 0); // desenha o bitmap do botão na posição dado por x e y
+
+    // variáveis para as posições do texto
+    float pos_texto_x = x;
+    float pos_texto_y = y;
+
+    switch (posicao) {        // cada valor de 'posicao' simboliza uma area diferente a qual o texto sera gerado
+
+    case NORTE:  // NORTE = 1 - define a posicao do texto para CIMA da imagem
+        pos_texto_x = x + largura_botao / 2;
+        pos_texto_y = y - margem - al_get_font_ascent(fonte);
+        al_draw_text(fonte, al_map_rgb(255, 255, 255), pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_CENTER, txt);
+        break;
+
+    case SUL: // SUL = 2 - define a posicao do texto para BAIXO da imagem
+        pos_texto_x = x + largura_botao / 2;
+        pos_texto_y = y + altura_botao + margem;
+        al_draw_text(fonte, al_map_rgb(255, 255, 255), pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_CENTER, txt);
+        break;
+
+    case LESTE: // LESTE = 3 - define a posicao do texto a DIREITA da imagem
+        pos_texto_x = x + largura_botao + margem;
+        pos_texto_y = y + altura_botao / 2 - al_get_font_ascent(fonte) / 2;
+        al_draw_text(fonte, al_map_rgb(255, 255, 255), pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_LEFT, txt);
+        break;
+
+    case OESTE: // OESTE = 4 - define a posicao do texto a ESQUERDA da imagem
+        pos_texto_x = x - margem;
+        pos_texto_y = y + altura_botao / 2 - al_get_font_ascent(fonte) / 2;
+        al_draw_text(fonte, al_map_rgb(255, 255, 255), pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_RIGHT, txt);
+        break;
+    }
+        
+    }
+
+
 
 
 bool colisao_mouse(ALLEGRO_MOUSE_STATE mouse, int x, int y, int width, int height) {
@@ -768,6 +818,9 @@ int main() {
 
         case TELA_INICIAL:
         {
+
+          
+
             // ele faz a caixa de dialogo começar toda vez que vc entrar em uma fase
             tempo_perdeu = 0;
 
@@ -785,6 +838,13 @@ int main() {
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(background_desktop, 0, 0, 0);
             al_draw_bitmap(botao_play, 0, 0, 0);
+
+
+            //DEMONSTRAÇÃO DA FUNÇÃO criar_bitmap_botao
+            criar_bitmap_botao(botao_play, font, "reveba", 10, NORTE, 300, 250); // chamando a função e desenhando o 'botao_play' na posicao_texto NORTE, passado os parametros de x e y
+            criar_bitmap_botao(botao_play, font, "recebas", 10, SUL, 300, 250); // chamando a função e desenhando o 'botao_play' na posicao_texto SUL, passado os parametros de x e y
+            criar_bitmap_botao(botao_play, font, "recebas", 10, LESTE, 300, 250); // chamando a função e desenhando o 'botao_play' na posicao_texto LESTE, passado os parametros de x e y
+            criar_bitmap_botao(botao_play, font, "recebas", 10, OESTE, 300, 250); // chamando a função e desenhando o 'botao_play' na posicao_texto OESTE, passado os parametros de x e y
 
             // Desenhar o texto na tela usando a fonte embutida
             al_draw_text(fonte_20, WHITE, 600, 300, ALLEGRO_ALIGN_CENTER, "jogar");

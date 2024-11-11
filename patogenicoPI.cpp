@@ -29,6 +29,7 @@
 #define FAGOCITOSE 5
 #define VIREMIA 6
 #define VENCEU_VIREMIA 7
+#define TUTORIAL_ESTROFULO 8
 
 #define PI 3.14159265358979323846
 
@@ -575,6 +576,9 @@ int main() {
     ALLEGRO_FONT* fonte_HUD = al_load_ttf_font("font/fonteWindowsRegular.ttf", 30, 0);
     ALLEGRO_FONT* font = al_create_builtin_font();
     ALLEGRO_FONT* fonte_20 = al_load_font("font/fonte.TTF", 20, 0);
+    ALLEGRO_FONT* fonte_texto = al_load_font("font/fonteWindowsRegular.ttf", 25, 0);
+    ALLEGRO_FONT* fonte_titulo = al_load_ttf_font("font/fonteWindowsRegular.ttf", 50, 0);
+
 
     // imagens
     ALLEGRO_BITMAP* loading = al_load_bitmap("img/menus/telaLoading.png");
@@ -585,6 +589,8 @@ int main() {
     ALLEGRO_BITMAP* background_fases = al_load_bitmap("img/menus/bgFases.png");
     ALLEGRO_BITMAP* virus_viremia = al_load_bitmap("img/menus/virus.png");
     ALLEGRO_BITMAP* tela_perdeu = al_load_bitmap("img/menus/telaPerdeu.png");
+    ALLEGRO_BITMAP* tela_tutorial = al_load_bitmap("img/menus/telaTutorial.png");
+    ALLEGRO_BITMAP* teclas_tutorial = al_load_bitmap("img/menus/teclas_tutorial.png");
 
     ALLEGRO_BITMAP* mosquitao = al_load_bitmap("img/estrofulo/mosquitao.png");
     ALLEGRO_BITMAP* iconmosquitao = al_load_bitmap("img/estrofulo/iconmosquitao.png");
@@ -867,7 +873,7 @@ int main() {
             }
             if (num_retangulos >= 8) {
                 // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
-                al_draw_textf(font, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 565, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA INICIAR");
+                al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 420, 565, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA INICIAR");
             }
         }
         break;
@@ -913,7 +919,7 @@ int main() {
 
                         if (ev.mouse.x > 150 && ev.mouse.x < 230) {
 
-                            tela = ATAQUE_MOSQUITO;
+                            tela = TUTORIAL_ESTROFULO;
                         }
 
                         if (ev.mouse.x > 345 && ev.mouse.x < 437) {
@@ -931,6 +937,41 @@ int main() {
                 }
             }
             al_draw_bitmap(background_fases, 0, 0, 0);
+        }
+        break;
+
+        case TUTORIAL_ESTROFULO:
+        {
+            if (ev.type == ALLEGRO_EVENT_TIMER) {
+                contador_de_frames++;
+                //Verifica o timer a cada meio segundo'
+                if (contador_de_frames % (frame_segundo / intervalo_segundo) == 0)
+                opacidade_texto = opacidade_texto * (-1);
+            }
+            //se apertar espaço pula para o jogo
+            if (al_key_down(&kState, ALLEGRO_KEY_SPACE))
+                tela = ATAQUE_MOSQUITO;
+            //Desenhar
+            // Desenha a imagem de fundo na tela (na posição (0, 0))
+            al_draw_bitmap(tela_tutorial, 0, 0, 0);
+            // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
+            al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
+            
+            al_draw_bitmap(mosquitao, 622, 203, 0);
+            al_draw_line(569, 265, 710, 265, WHITE, 3.0);
+            al_draw_bitmap(teclas_tutorial, 602, 275, 0);
+            al_draw_bitmap(teia_img, 400, 440, 0);
+
+            al_draw_filled_circle(480, 460, 10, YELLOW);
+
+            //Título
+            al_draw_text(fonte_titulo, WHITE, 400,75, ALLEGRO_ALIGN_CENTER, "COMO JOGAR?");
+            
+            //Texto
+            al_draw_text(fonte_texto, WHITE, 50,167, ALLEGRO_ALIGN_LEFT, "- UTILIZE AS TECLAS 'W' E 'S' PARA MOVER O MOSQUITO");
+            al_draw_text(fonte_texto, WHITE, 50,197, ALLEGRO_ALIGN_LEFT, "- OU AS SETAS PARA CIMA E PARA BAIXO");
+            al_draw_text(fonte_texto, WHITE, 50,368, ALLEGRO_ALIGN_LEFT, "- FUJA DOS SEGUINTES OBSTÁCULOS PARA NÃO LEVAR DANO:");
+            
         }
         break;
 
@@ -1366,6 +1407,8 @@ int main() {
     al_destroy_font(font);
     al_destroy_font(fonte_20);
     al_destroy_font(fonte_HUD);
+    al_destroy_font(fonte_texto);
+    al_destroy_font(fonte_titulo);
     al_destroy_bitmap(cd8_viremia);
     al_destroy_bitmap(virus_viremia);
     al_destroy_bitmap(mosquitao);
@@ -1375,6 +1418,9 @@ int main() {
     al_destroy_bitmap(background_estrofulo);
     al_destroy_bitmap(tela_perdeu);
     al_destroy_bitmap(celula_viremia);
+    al_destroy_bitmap(teclas_tutorial);
+    al_destroy_bitmap(tela_tutorial);
+
 
     for (int i = 0; i < quantidade_CD8; i++) {
         al_destroy_bitmap(linfocito_CD8[i].cd8_viremia);

@@ -594,6 +594,7 @@ int main() {
     ALLEGRO_BITMAP* tela_tutorial = al_load_bitmap("img/menus/telaTutorial.png");
     ALLEGRO_BITMAP* teclas_tutorial = al_load_bitmap("img/menus/teclas_tutorial.png");
     ALLEGRO_BITMAP* mouse_tutorial = al_load_bitmap("img/menus/mouse.png");
+    ALLEGRO_BITMAP* spray_tutorial = al_load_bitmap("img/menus/spray_tutorial.png");
 
     ALLEGRO_BITMAP* mosquitao = al_load_bitmap("img/estrofulo/mosquitao.png");
     ALLEGRO_BITMAP* iconmosquitao = al_load_bitmap("img/estrofulo/iconmosquitao.png");
@@ -964,6 +965,7 @@ int main() {
             al_draw_line(319, 275, 460, 275, WHITE, 3.0);
             al_draw_bitmap(teclas_tutorial, 352, 285, 0);
             al_draw_bitmap(teia_img, 372, 415, 0);
+            al_draw_bitmap(spray_tutorial, 292, 415, 0);
 
             al_draw_filled_circle(480, 440, 10, YELLOW);
 
@@ -1491,6 +1493,8 @@ int main() {
     al_destroy_bitmap(celula_viremia);
     al_destroy_bitmap(teclas_tutorial);
     al_destroy_bitmap(tela_tutorial);
+    al_destroy_bitmap(mouse_tutorial);
+    al_destroy_bitmap(spray_tutorial);
 
 
     for (int i = 0; i < quantidade_CD8; i++) {

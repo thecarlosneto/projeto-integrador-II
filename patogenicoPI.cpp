@@ -593,6 +593,7 @@ int main() {
     ALLEGRO_BITMAP* tela_perdeu = al_load_bitmap("img/menus/telaPerdeu.png");
     ALLEGRO_BITMAP* tela_tutorial = al_load_bitmap("img/menus/telaTutorial.png");
     ALLEGRO_BITMAP* teclas_tutorial = al_load_bitmap("img/menus/teclas_tutorial.png");
+    ALLEGRO_BITMAP* mouse_tutorial = al_load_bitmap("img/menus/mouse.png");
 
     ALLEGRO_BITMAP* mosquitao = al_load_bitmap("img/estrofulo/mosquitao.png");
     ALLEGRO_BITMAP* iconmosquitao = al_load_bitmap("img/estrofulo/iconmosquitao.png");
@@ -955,24 +956,23 @@ int main() {
                 tela = ATAQUE_MOSQUITO;
             //Desenhar
             // Desenha a imagem de fundo na tela (na posição (0, 0))
-            al_draw_bitmap(tela_tutorial, 0, 0, 0);
+            al_draw_bitmap(background_estrofulo, 0, 0, 0);
             // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
             al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
             
-            al_draw_bitmap(mosquitao, 622, 203, 0);
-            al_draw_line(569, 265, 710, 265, WHITE, 3.0);
-            al_draw_bitmap(teclas_tutorial, 602, 275, 0);
-            al_draw_bitmap(teia_img, 400, 440, 0);
+            al_draw_bitmap(mosquitao, 372, 213, 0);
+            al_draw_line(319, 275, 460, 275, WHITE, 3.0);
+            al_draw_bitmap(teclas_tutorial, 352, 285, 0);
+            al_draw_bitmap(teia_img, 372, 415, 0);
 
-            al_draw_filled_circle(480, 460, 10, YELLOW);
+            al_draw_filled_circle(480, 440, 10, YELLOW);
 
             //Título
             al_draw_text(fonte_titulo, WHITE, 400,75, ALLEGRO_ALIGN_CENTER, "COMO JOGAR?");
             
-            //Texto
-            al_draw_text(fonte_texto, WHITE, 50,167, ALLEGRO_ALIGN_LEFT, "- UTILIZE AS TECLAS 'W' E 'S' PARA MOVER O MOSQUITO");
-            al_draw_text(fonte_texto, WHITE, 50,197, ALLEGRO_ALIGN_LEFT, "- OU AS SETAS PARA CIMA E PARA BAIXO");
-            al_draw_text(fonte_texto, WHITE, 50,368, ALLEGRO_ALIGN_LEFT, "- FUJA DOS SEGUINTES OBSTÁCULOS PARA NÃO LEVAR DANO:");
+            //Texto 
+            al_draw_text(fonte_texto, WHITE, 50,167, ALLEGRO_ALIGN_LEFT, "- MISSÃO: DOMINAR A CASA! Controle o mosquito com W e S ou as setas. ");
+            al_draw_text(fonte_texto, WHITE, 50,368, ALLEGRO_ALIGN_LEFT, "- FUJA DOS PERIGOS ABAIXO e explore cada canto da casa!");
             
         }
         break;
@@ -1107,7 +1107,7 @@ int main() {
 
             al_draw_bitmap(mosquitao, 622, 203, 0);
             al_draw_line(569, 265, 710, 265, WHITE, 3.0);
-            al_draw_bitmap(teclas_tutorial, 602, 275, 0);
+            al_draw_bitmap(mouse_tutorial, 632, 275, 0);
             
 
             //Título
@@ -1247,13 +1247,16 @@ int main() {
                 tela = VIREMIA;
             //Desenhar
             // Desenha a imagem de fundo na tela (na posição (0, 0))
-            al_draw_bitmap(tela_tutorial, 0, 0, 0);
+            al_draw_bitmap(background_viremia, 0, 0, 0);
             // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
             al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
-
-            al_draw_bitmap(mosquitao, 622, 203, 0);
+           
+            linhas_Onduladas(632 + 15, 203 + 15, 682 + 50 * cos(0.03), 183 + 50 * sin(0.03), 40);
+            al_draw_bitmap(celula_viremia, 632, 203, 0);
+            al_draw_bitmap(virus_viremia, 712, 183, 0);
             al_draw_line(569, 265, 710, 265, WHITE, 3.0);
-            al_draw_bitmap(teclas_tutorial, 602, 275, 0);
+            al_draw_bitmap(mouse_tutorial, 632, 275, 0);
+            al_draw_bitmap(cd8_viremia, 390, 450, 0);
 
 
             //Título

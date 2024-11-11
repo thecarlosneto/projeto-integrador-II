@@ -30,6 +30,8 @@
 #define VIREMIA 6
 #define VENCEU_VIREMIA 7
 #define TUTORIAL_ESTROFULO 8
+#define TUTORIAL_FAGOCITOSE 9
+#define TUTORIAL_VIREMIA 10
 
 #define PI 3.14159265358979323846
 
@@ -924,12 +926,12 @@ int main() {
 
                         if (ev.mouse.x > 345 && ev.mouse.x < 437) {
 
-                            tela = FAGOCITOSE;
+                            tela = TUTORIAL_FAGOCITOSE;
                         }
 
                         if (ev.mouse.x > 544 && ev.mouse.x < 627) {
 
-                            tela = VIREMIA;
+                            tela = TUTORIAL_VIREMIA;
                         }
                     }
 
@@ -1086,6 +1088,40 @@ int main() {
         }
         break;
 
+        case TUTORIAL_FAGOCITOSE:
+        {
+            if (ev.type == ALLEGRO_EVENT_TIMER) {
+                contador_de_frames++;
+                //Verifica o timer a cada meio segundo'
+                if (contador_de_frames % (frame_segundo / intervalo_segundo) == 0)
+                    opacidade_texto = opacidade_texto * (-1);
+            }
+            //se apertar espaço pula para o jogo
+            if (al_key_down(&kState, ALLEGRO_KEY_SPACE))
+                tela = FAGOCITOSE;
+            //Desenhar
+            // Desenha a imagem de fundo na tela (na posição (0, 0))
+            al_draw_bitmap(tela_tutorial, 0, 0, 0);
+            // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
+            al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
+
+            al_draw_bitmap(mosquitao, 622, 203, 0);
+            al_draw_line(569, 265, 710, 265, WHITE, 3.0);
+            al_draw_bitmap(teclas_tutorial, 602, 275, 0);
+            
+
+            //Título
+            al_draw_text(fonte_titulo, WHITE, 400, 75, ALLEGRO_ALIGN_CENTER, "COMO JOGAR?");
+
+            //Texto
+            al_draw_text(fonte_texto, WHITE, 50, 167, ALLEGRO_ALIGN_LEFT, "- DOMINE O CORPO! Mova célula infectada com o mouse");
+            al_draw_text(fonte_texto, WHITE, 50, 197, ALLEGRO_ALIGN_LEFT, "- COMA OS CÍRCULOS, para acumular pontos!");
+            al_draw_text(fonte_texto, WHITE, 50, 368, ALLEGRO_ALIGN_LEFT, "- FUJA DO FAGÓCITO! Seja mais rápido que o sistema imunológico");
+            al_draw_text(fonte_texto, WHITE, 50, 398, ALLEGRO_ALIGN_LEFT, "  para sobreviver!");
+
+        }
+        break;
+
         case FAGOCITOSE:
         {
             tela_anterior = tela;
@@ -1195,6 +1231,38 @@ int main() {
             al_draw_textf(fonte_HUD, BLACK, 10, 34, ALLEGRO_ALIGN_LEFT, "vidas = %d", control_fago.tentativas);
 
             /*****FIM DESENHO*****/
+        }
+        break;
+
+        case TUTORIAL_VIREMIA:
+        {
+            if (ev.type == ALLEGRO_EVENT_TIMER) {
+                contador_de_frames++;
+                //Verifica o timer a cada meio segundo'
+                if (contador_de_frames % (frame_segundo / intervalo_segundo) == 0)
+                    opacidade_texto = opacidade_texto * (-1);
+            }
+            //se apertar espaço pula para o jogo
+            if (al_key_down(&kState, ALLEGRO_KEY_SPACE))
+                tela = VIREMIA;
+            //Desenhar
+            // Desenha a imagem de fundo na tela (na posição (0, 0))
+            al_draw_bitmap(tela_tutorial, 0, 0, 0);
+            // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
+            al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
+
+            al_draw_bitmap(mosquitao, 622, 203, 0);
+            al_draw_line(569, 265, 710, 265, WHITE, 3.0);
+            al_draw_bitmap(teclas_tutorial, 602, 275, 0);
+
+
+            //Título
+            al_draw_text(fonte_titulo, WHITE, 400, 75, ALLEGRO_ALIGN_CENTER, "COMO JOGAR?");
+
+            //Texto
+            al_draw_text(fonte_texto, WHITE, 50, 167, ALLEGRO_ALIGN_LEFT, "- MISSÃO: DOMINAR O CORPO! Seu objetivo? Infectar tudo!");
+            al_draw_text(fonte_texto, WHITE, 50, 197, ALLEGRO_ALIGN_LEFT, "- Utilize o mouse para manipular a célula patogênica.");
+            al_draw_text(fonte_texto, WHITE, 50, 368, ALLEGRO_ALIGN_LEFT, "- FUJA DOS LINFÓCITOS CD8, para garantir a propagação da infecção.");
         }
         break;
 

@@ -96,8 +96,23 @@ typedef struct {
     int direcao; // -1 para cima, 1 para baixo
 } obstaculoViremia;
 
+//cores
+ALLEGRO_COLOR BLACK = al_map_rgb(0, 0, 0);
+ALLEGRO_COLOR WHITE = al_map_rgb(255, 255, 255);
+ALLEGRO_COLOR GRAY = al_map_rgb(200, 200, 200);
+ALLEGRO_COLOR RED = al_map_rgb(255, 0, 0);
+ALLEGRO_COLOR GREEN = al_map_rgb(0, 255, 0);
+ALLEGRO_COLOR BLUE = al_map_rgb(0, 0, 255);
+ALLEGRO_COLOR YELLOW = al_map_rgb(255, 255, 0);
+ALLEGRO_COLOR PINK = al_map_rgb(221, 160, 221);
+//input e output
+ALLEGRO_MOUSE_STATE mState;
+ALLEGRO_KEYBOARD_STATE kState;
+//timers
+ALLEGRO_TIMER* timer;
+ALLEGRO_TIMER* countdown_timer;
 
-
+ALLEGRO_EVENT ev;
 
 // textos dentro da caixa de dialogo
 
@@ -113,6 +128,14 @@ char textos[NUM_TEXTO][MAX_TEXTO] = {
 
 // FUNÇÕES GERAIS
 
+void pause() {
+    al_stop_timer(timer);
+    al_stop_timer(countdown_timer);
+}
+void unpause() {
+    al_resume_timer(timer);
+    al_resume_timer(countdown_timer);
+}
 
 bool colisao_mouse(ALLEGRO_MOUSE_STATE mouse, int x, int y, int width, int height) {
     bool colisao_x = x <= mouse.x && mouse.x <= x + width;
@@ -163,6 +186,54 @@ void cria_fundo_pausa(ALLEGRO_DISPLAY* disp, ALLEGRO_BITMAP* bitmap) {
     al_draw_filled_rectangle(0, 0, width, height, pretoTransparente);
 
     al_set_target_bitmap(al_get_backbuffer(disp));
+}
+// chamada de exemplo: popup_vitoria(fonte_HUD, botao_play, &tela);
+void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
+    pause();
+    int proxTela;
+    switch(*tela){
+    case ATAQUE_MOSQUITO:
+        proxTela = FAGOCITOSE;
+        break;
+    case FAGOCITOSE:
+        proxTela = VIREMIA;
+        break;
+    case VIREMIA:
+        proxTela = VENCEU_VIREMIA;
+        break; 
+    //garantia de que o jogo não vai crashar, mas em tese esse caso nunca vai acontecer
+    default:
+        proxTela = *tela;
+    }
+
+    static int popup_width = 300;
+    static int popup_height = 300;
+    static int popup_x = DISPLAY_WIDTH / 2 - popup_width / 2;
+    static int popup_y = DISPLAY_HEIGHT / 2 - popup_height / 2;
+    
+    static int margem = 30;
+
+    static int botao_width = al_get_bitmap_width(botao);
+    static int botao_height = al_get_bitmap_height(botao);
+    static int botao_x = popup_x + popup_width - botao_width - margem;
+    static int botao_y = popup_y + popup_height - botao_height - margem;
+    
+    if ((colisao_mouse(mState, botao_x, botao_y, botao_width, botao_height) && (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) && ev.mouse.button == 1)) {
+        *tela = proxTela;
+        unpause();
+    }
+    
+    //
+    //DESENHO
+    //
+    al_draw_filled_rounded_rectangle(popup_x, popup_y, popup_x + popup_width, popup_y + popup_height, 15, 15, al_map_rgb(100, 100, 100));
+    //título do popup
+    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + popup_width / 2, popup_y + margem, ALLEGRO_ALIGN_CENTER, "Fase Concluida!");
+    //pontuacao e etc
+    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + margem, popup_y + margem + 50, ALLEGRO_ALIGN_LEFT, "Pontuacao: %d", popup_y);
+    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + margem, popup_y + margem * 2 + 50, ALLEGRO_ALIGN_LEFT, "Pontuacao total: %d", popup_x);
+    //botao
+    al_draw_bitmap(botao, botao_x, botao_y, 0);
 }
 
 
@@ -447,8 +518,9 @@ int main() {
     ALLEGRO_DISPLAY* display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
     // define o FPS
-    ALLEGRO_TIMER* timer = al_create_timer(1.0 / 60.0);
-    ALLEGRO_TIMER* countdown_timer = al_create_timer(1.0);
+
+    timer = al_create_timer(1.0 / 60.0);
+    countdown_timer = al_create_timer(1.0);
 
     //fontes de texto
     ALLEGRO_FONT* fonte_HUD = al_load_ttf_font("font/fonteWindowsRegular.ttf", 30, 0);
@@ -478,23 +550,8 @@ int main() {
     ALLEGRO_BITMAP* bg_pausa = al_create_bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT);
     ALLEGRO_BITMAP* bg_fagocitose_bitmap = al_create_bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
-    //cores
-    ALLEGRO_COLOR BLACK = al_map_rgb(0, 0, 0);
-    ALLEGRO_COLOR WHITE = al_map_rgb(255, 255, 255);
-    ALLEGRO_COLOR GRAY = al_map_rgb(200, 200, 200);
-    ALLEGRO_COLOR RED = al_map_rgb(255, 0, 0);
-    ALLEGRO_COLOR GREEN = al_map_rgb(0, 255, 0);
-    ALLEGRO_COLOR BLUE = al_map_rgb(0, 0, 255);
-    ALLEGRO_COLOR YELLOW = al_map_rgb(255, 255, 0);
-    ALLEGRO_COLOR PINK = al_map_rgb(221, 160, 221);
-
-    //input e output
-    ALLEGRO_MOUSE_STATE mState;
-    ALLEGRO_KEYBOARD_STATE kState;
-
     // Cria uma fila de eventos
     ALLEGRO_EVENT_QUEUE* event_queue = al_create_event_queue();
-    ALLEGRO_EVENT ev;
 
     // Registra a fila de eventos com as fontes de eventos (display, timer, mouse)
     al_register_event_source(event_queue, al_get_display_event_source(display));
@@ -718,9 +775,9 @@ int main() {
         if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
             running = false;  // Sai do loop e encerra o programa
         }
+
         al_get_mouse_state(&mState);
         al_get_keyboard_state(&kState);
-        al_get_mouse_state(&mState);
 
         switch (tela) {
         case TELA_LOADING:
@@ -763,6 +820,7 @@ int main() {
                 // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
                 al_draw_textf(font, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 565, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA INICIAR");
             }
+            //popup_vitoria(fonte_HUD, botao_play, &tela);
         }
         break;
 
@@ -929,8 +987,6 @@ int main() {
            
             al_draw_bitmap(iconmosquitao, icone_mosquito - al_get_bitmap_width(iconmosquitao) / 2, 18, 0); // desenha o iconmosquitao sobre a barra de progresso, acompanhando seu movimento
 
-            
-
         }
         break;
 
@@ -1043,6 +1099,8 @@ int main() {
             al_draw_textf(fonte_HUD, BLACK, 10, 34, ALLEGRO_ALIGN_LEFT, "vidas = %d", control_fago.tentativas);
 
             /*****FIM DESENHO*****/
+            if(al_key_down(&kState, ALLEGRO_KEY_ENTER))
+                popup_vitoria(fonte_HUD, botao_play, &tela);
         }
         break;
 
@@ -1052,21 +1110,6 @@ int main() {
 
             // Desenha a imagem de fundo
             al_draw_bitmap(background_viremia, 0, 0, 0);
-
-            /*//   caixa de dialogo
-            while (tempo_perdeu < 15) {
-
-                desenhar_caixa_dialogo(50, 420, 500, 80, font, textos, &tempo_perdeu, event_queue);
-
-
-                cron = cronP;
-
-                // Atualiza a tela e faz outras operações, se necessário
-                al_flip_display();
-
-                // Espera um segundo para dar tempo para o tempo ser incrementado
-                al_rest(1.0);
-            }*/
 
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {
@@ -1245,20 +1288,17 @@ int main() {
         if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
             if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE && (tela == ATAQUE_MOSQUITO || (tela == FAGOCITOSE || tela == VIREMIA))) {
                 jogo_pausado = !jogo_pausado;
+                if (!jogo_pausado) {
+                    unpause();
+                }
             }
         }
-        if (!jogo_pausado) {
-            al_resume_timer(timer);
-            al_resume_timer(countdown_timer);
-            //printf("despausou\n");
-        }
-
         if (jogo_pausado) {
             al_draw_bitmap(bg_pausa, 0, 0, 0);
             voltarTelaEscolha(ev, &tela, fonte_20, &jogo_pausado);
-            al_stop_timer(timer);
-            al_stop_timer(countdown_timer);
+            pause();
         }
+
         al_flip_display();
     }
 

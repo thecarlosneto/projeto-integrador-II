@@ -137,6 +137,9 @@ ALLEGRO_EVENT ev;
 
 controle_geral controle;
 
+
+
+
 // textos dentro da caixa de dialogo
 
 char textos[NUM_TEXTO][MAX_TEXTO] = {
@@ -827,6 +830,8 @@ int main() {
     player_vire.y = y1 - 5;
     player_vire.diferenca = 15;
 
+    bool podeSeguirMouse = false;
+
     int x_chegada;
     int y_chegada;
 
@@ -1151,8 +1156,9 @@ int main() {
 
             float icone_mosquito = 40 + barra_progresso; // calculo para posicao do iconmosquitao com base no progresso da barra
             icone_mosquito = fmin(icone_mosquito, 760); // comando que GARANTE que o icone_mosquito nao ultrapasse a largura máxima da barra
-
-
+            if (barra_progresso >= 100)
+                controle.venceuJogo = true;
+            printf("%f\n", barra_progresso);
             al_draw_rectangle(40 - 2, 18, 760 + 2, 42, BLACK, 2); // desenha as bordas da barra de progresso
 
             al_draw_filled_rectangle(40, 20, 40 + barra_progresso, 40, RED); // desenha a barra de progresso
@@ -1254,7 +1260,7 @@ int main() {
                     control_fago.pontuacao = 0;
                     tela = GAME_OVER;
                 }
-                if (control_fago.pontuacao >= 2500) {
+                if (control_fago.pontuacao >= 100) {
                     controle.venceuJogo = true;
                 }
 
@@ -1348,15 +1354,9 @@ int main() {
         {
             tela_anterior = tela;
 
-            // Desenha a imagem de fundo
-            al_draw_bitmap(background_viremia, 0, 0, 0);
-
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {
-
-                if (ev.type == ALLEGRO_EVENT_TIMER && ev.timer.source == countdown_timer) {
-
-
+                if (ev.timer.source == countdown_timer) {
                     if (cronometro >= 0) {
                         cronometro = cronometro + 1;
                     }
@@ -1365,17 +1365,19 @@ int main() {
                 // Verifica se o mouse está sobre o círculo
                 if (colisao_mouse(mState, player_vire.x, player_vire.y, al_get_bitmap_width(celula_viremia), al_get_bitmap_height(celula_viremia))) {
                     startJogo = true;
-                    player_vire.x = mState.x - al_get_bitmap_width(celula_viremia) / 2;
-                    player_vire.y = mState.y - al_get_bitmap_height(celula_viremia) / 2;
                 }
                 else {
                     startJogo = false;
                 }
+
                 // Reiniciar a cada iteração
                 dentro_da_linha = false;
 
                 //Fase viremia começou
                 if (startJogo == true) {
+
+                    podeSeguirMouse = true;
+
                     //Verifica se o círculo está em cima de alguma linha ou dos quadrados brancos
                     for (int i = 0; i < tamanho - 1; i++) {
                         if (!fora_Da_Linha(player_vire.x, player_vire.y, coordenada_X[i], coordenada_Y[i], coordenada_X[i + 1],
@@ -1430,6 +1432,8 @@ int main() {
                         espessura_linha -= espessura_linha * 0.12;
                         nivel_viremia++;
 
+                        //podeSeguirMouse = false;
+
                         //Reseta mudouDeNivel
                         mudou_de_nivel_viremia = false;
                     }
@@ -1437,6 +1441,10 @@ int main() {
                         pontuacao_viremia(cronometro, pontos_viremia);
                         controle.venceuJogo = true;
                     }
+                }
+                if(podeSeguirMouse){
+                    player_vire.x = mState.x - al_get_bitmap_width(celula_viremia) / 2;
+                    player_vire.y = mState.y - al_get_bitmap_height(celula_viremia) / 2;
                 }
                 // Incrementa o ângulo
                 angulo_viremia += 0.03;
@@ -1464,6 +1472,8 @@ int main() {
                 }
             }
             // - - - - - - - DESENHO - - - - - - -
+            // Desenha a imagem de fundo
+            al_draw_bitmap(background_viremia, 0, 0, 0);
 
             //Desenha as linhas chamando a função
             gerar_Linhas(coordenada_X, coordenada_Y, tamanho, espessura_linha);

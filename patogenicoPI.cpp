@@ -96,15 +96,6 @@ typedef struct {
 
 //viremia
 typedef struct {
-    bool morto;
-    bool venceu;
-    bool gameover;
-    short int tentativas;
-    short int pontuacao;
-    bool desenhou_fundo;
-} controle_viremia;
-
-typedef struct {
     ALLEGRO_BITMAP* celula_viremia;
     float x;
     float y;
@@ -556,9 +547,8 @@ void pontuacao_viremia(int tempo, int pontuacao) {
     pontuacao = 250000 / tempo;
 }
 
-#include <allegro5/allegro.h>
-
-void substituir_imagens(ALLEGRO_BITMAP* img1, ALLEGRO_BITMAP* img2, ALLEGRO_BITMAP* img3,
+//Função que desenha uma série de imagens na tela, substituindo-as por outras, de forma sequencial, de acordo com um valor de "vida"
+void atualiza_vidas(ALLEGRO_BITMAP* img1, ALLEGRO_BITMAP* img2, ALLEGRO_BITMAP* img3,
     ALLEGRO_BITMAP* img1_subs, ALLEGRO_BITMAP* img2_subs, ALLEGRO_BITMAP* img3_subs,
     int vida, int x, int y) {
 
@@ -806,15 +796,6 @@ int main() {
     //Setando os structs
     player_viremia player_vire;
     ALLEGRO_BITMAP* vidas_viremia[5];
-    controle_viremia control_vire;
-
-    //setup dos dados do minigame
-    control_vire.pontuacao = 0;
-    control_vire.morto = false;
-    control_vire.venceu = false;
-    control_vire.gameover = false;
-    control_vire.desenhou_fundo = false;
-    control_vire.tentativas = 3;
 
     //Coordenadas pré estabelecidas 
     int x1 = 50, y1 = 535;
@@ -837,9 +818,8 @@ int main() {
     bool dentro_da_linha = false;
 
     //vidas
-    bool houve_colisao_viremia;
     bool invulneravel = false;
-    int tempo_invulnerabilidade = 120; // Ajuste o valor de acordo com a duração desejada (em frames)
+    int tempo_invulnerabilidade = 120; // invulnerabilidade de acordo com a duração desejada (em frames)
     int contador_invulnerabilidade = 0;
 
     // Inicializar as imagens
@@ -1385,7 +1365,6 @@ int main() {
                     }
 
                     //PLAYER X INIMIGO
-                    printf("vidas: %d", vidas_disponiveis_viremia);
                     for (int i = 0; i < quantidade_CD8; i++) {
                         if (colisao_quadrado_dentro(player_vire.x, player_vire.y, al_get_bitmap_width(celula_viremia),
                             al_get_bitmap_height(celula_viremia), linfocito_CD8[i].x, linfocito_CD8[i].y, al_get_bitmap_width(cd8_viremia),
@@ -1394,7 +1373,6 @@ int main() {
                                 vidas_disponiveis_viremia--;
                                 invulneravel = true;
                                 contador_invulnerabilidade = tempo_invulnerabilidade;
-                                printf("vidas: %d", vidas_disponiveis_viremia);
                             }
                         }
                     }
@@ -1406,55 +1384,9 @@ int main() {
                         }
                     }
 
-
-                   /* houve_colisao_viremia = false;
-                    for (int i = 0; i < quantidade_CD8; i++) {
-                        printf("vidas: %d", vidas_disponiveis_viremia);
-                        if (colisao_quadrado_dentro(player_vire.x, player_vire.y, al_get_bitmap_width(celula_viremia),
-                            al_get_bitmap_height(celula_viremia), linfocito_CD8[i].x, linfocito_CD8[i].y, al_get_bitmap_width(cd8_viremia),
-                            al_get_bitmap_height(cd8_viremia))) {
-                            control_vire.morto = true;
-                            vidas_disponiveis_viremia--;
-                            printf("vidas: %d", vidas_disponiveis_viremia);
-                            houve_colisao_viremia = true;
-                        }
-
-                    }
-                    //////
-                    for (int i = 0; i < quantidade_CD8; i++) {
-                        if (colisao_quadrado_dentro(player_vire.x, player_vire.y, al_get_bitmap_width(celula_viremia),
-                            al_get_bitmap_height(celula_viremia), linfocito_CD8[i].x, linfocito_CD8[i].y, al_get_bitmap_width(cd8_viremia),
-                            al_get_bitmap_height(cd8_viremia))) {
-                            control_vire.morto = true;
-                            al_clear_to_color(RED);
-                            control_vire.tentativas--;
-                            houve_colisao =  true;
-                        }
-                    }
-                    //se as vidas acabarem
-                    if (control_vire.tentativas <= 0) {
-                        control_vire.gameover = true;
-                        control_vire.tentativas = 3;
-                        control_vire.pontuacao = 0;
-                        tela = GAME_OVER;
-                    }
-
-                    //deixa o player invencível por alguns segundos após morrer
-                    if (control_vire.morto) {
-                        timer_invencibilidade++;
-                        if (timer_invencibilidade / 60 == 1) {
-                            control_vire.morto = false;
-                            timer_invencibilidade = 0;
-                        }
-                    }*/
-
                     if (vidas_disponiveis_viremia == -1) {
                         tela = GAME_OVER;
                     }
-
-                    /*if (vidas_disponiveis_viremia == 0) {
-                        tela = GAME_OVER;
-                    }*/
 
                     //niveis viremia
                     if (nivel_viremia == 1 || nivel_viremia == 3) {
@@ -1542,7 +1474,7 @@ int main() {
             sprintf_s(cronometro_str, "0%d'", cronometro);
             al_draw_text(font, WHITE, 400, 10, ALLEGRO_ALIGN_CENTER, cronometro_str);
 
-            substituir_imagens(vidas_viremia[0], vidas_viremia[1], vidas_viremia[2], vidas_viremia[3], vidas_viremia[4], vidas_viremia[5], vidas_disponiveis_viremia, vida_viremia_x, vida_viremia_y);
+            atualiza_vidas(vidas_viremia[0], vidas_viremia[1], vidas_viremia[2], vidas_viremia[3], vidas_viremia[4], vidas_viremia[5], vidas_disponiveis_viremia, vida_viremia_x, vida_viremia_y);
             // - - - - - - - FIM DOS DESENHOS - - - - - - -
         }
         break;

@@ -42,6 +42,12 @@ typedef enum {
     OESTE = 4
 } posicao_texto;
 
+//geral
+typedef struct {
+    int pontuacao[3];
+    int pontuacaoTotal;
+    bool venceuJogo;
+} controle_geral;
 
 //picada mosquito (estrofulo)
 typedef struct {
@@ -107,6 +113,9 @@ typedef struct {
     int direcao; // -1 para cima, 1 para baixo
 } obstaculoViremia;
 
+
+
+
 //cores
 ALLEGRO_COLOR BLACK = al_map_rgb(0, 0, 0);
 ALLEGRO_COLOR WHITE = al_map_rgb(255, 255, 255);
@@ -124,6 +133,8 @@ ALLEGRO_TIMER* timer;
 ALLEGRO_TIMER* countdown_timer;
 
 ALLEGRO_EVENT ev;
+
+controle_geral controle;
 
 // textos dentro da caixa de dialogo
 
@@ -272,6 +283,7 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
     
     if ((colisao_mouse(mState, botao_x, botao_y, botao_width, botao_height) && (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) && ev.mouse.button == 1)) {
         *tela = proxTela;
+        controle.venceuJogo = false;
         unpause();
     }
     
@@ -634,8 +646,15 @@ int main() {
     int tela = 1;
     int tela_anterior = 0;
     int tempo_perdeu = 0;
-
     bool jogo_pausado = false;
+
+        //setup do controle geral do jogo (struct q guarda pontuação, estado do jogo, etc)
+    controle.venceuJogo = false;
+    controle.pontuacaoTotal = 0;
+    for (int i = 0; i < 2; i++)
+        controle.pontuacao[i] = 0;
+
+    
     // - - - - - - -FIM DAS VARIÁVEIS GERAIS - - - - - - -
 
     // - - - - - - - VARIÁVEIS PARA A TELA LOADING - - - - - - -
@@ -1182,8 +1201,7 @@ int main() {
                     tela = GAME_OVER;
                 }
                 if (control_fago.pontuacao >= 2500) {
-                    control_fago.venceu = true;
-                    tela = VIREMIA;
+                    controle.venceuJogo = true;
                 }
 
                 //deixa o player invencível por alguns segundos após morrer
@@ -1348,7 +1366,7 @@ int main() {
                     }
                     if (nivel_viremia == 3 && (mState.x >= x2 && mState.x <= x2 + 20 && mState.y >= y2 && mState.y <= y2 + 20)) {
                         pontuacao_viremia(cronometro, pontos_viremia);
-                        tela = VENCEU_VIREMIA;
+                        controle.venceuJogo = true;
                     }
                 }
                 // Incrementa o ângulo
@@ -1448,6 +1466,12 @@ int main() {
             }
         }
         break;
+        default:
+        {
+            al_clear_to_color(WHITE);
+            al_draw_text(fonte_HUD, BLACK, 50, 50, 0, "Erro 404: Tela nao encontrada");
+        }
+        break;
         } // <- fim switch
 
 
@@ -1465,7 +1489,9 @@ int main() {
             al_draw_bitmap(bg_pausa, 0, 0, 0);
             voltarTelaEscolha(ev, &tela, fonte_20, &jogo_pausado);
         }
-
+        //sistema de vitória
+        if(controle.venceuJogo)
+            popup_vitoria(fonte_HUD, botao_play, &tela);
         al_flip_display();
     }
 

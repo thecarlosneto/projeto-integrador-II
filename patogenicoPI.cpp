@@ -151,7 +151,7 @@ char textos[NUM_TEXTO][MAX_TEXTO] = {
 
 // FUNÇÕES GERAIS
 
-void criar_bitmap_botao(ALLEGRO_BITMAP* imagem, ALLEGRO_FONT* fonte, const char *txt, int margem, posicao_texto posicao, float x, float y) {
+void criar_bitmap_botao(ALLEGRO_BITMAP* imagem, ALLEGRO_FONT* fonte, const char* txt, int margem, posicao_texto posicao, float x, float y) {
     int largura_botao = al_get_bitmap_width(imagem);
     int altura_botao = al_get_bitmap_height(imagem);
 
@@ -188,8 +188,8 @@ void criar_bitmap_botao(ALLEGRO_BITMAP* imagem, ALLEGRO_FONT* fonte, const char 
         al_draw_text(fonte, al_map_rgb(255, 255, 255), pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_RIGHT, txt);
         break;
     }
-        
-    }
+
+}
 
 void pause() {
     al_stop_timer(timer);
@@ -255,7 +255,7 @@ void cria_fundo_pausa(ALLEGRO_DISPLAY* disp, ALLEGRO_BITMAP* bitmap) {
 void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
     pause();
     int proxTela;
-    switch(*tela){
+    switch (*tela) {
     case ATAQUE_MOSQUITO:
         proxTela = FAGOCITOSE;
         break;
@@ -264,8 +264,8 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
         break;
     case VIREMIA:
         proxTela = VENCEU_VIREMIA;
-        break; 
-    //garantia de que o jogo não vai crashar, mas em tese esse caso nunca vai acontecer
+        break;
+        //garantia de que o jogo não vai crashar, mas em tese esse caso nunca vai acontecer
     default:
         proxTela = *tela;
     }
@@ -274,20 +274,20 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
     static int popup_height = 300;
     static int popup_x = DISPLAY_WIDTH / 2 - popup_width / 2;
     static int popup_y = DISPLAY_HEIGHT / 2 - popup_height / 2;
-    
+
     static int margem = 30;
 
     static int botao_width = al_get_bitmap_width(botao);
     static int botao_height = al_get_bitmap_height(botao);
     static int botao_x = popup_x + popup_width - botao_width - margem;
     static int botao_y = popup_y + popup_height - botao_height - margem;
-    
+
     if ((colisao_mouse(mState, botao_x, botao_y, botao_width, botao_height) && (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) && ev.mouse.button == 1)) {
         *tela = proxTela;
         controle.venceuJogo = false;
         unpause();
     }
-    
+
     //
     //DESENHO
     //
@@ -682,13 +682,13 @@ int main() {
     int tempo_perdeu = 0;
     bool jogo_pausado = false;
 
-        //setup do controle geral do jogo (struct q guarda pontuação, estado do jogo, etc)
+    //setup do controle geral do jogo (struct q guarda pontuação, estado do jogo, etc)
     controle.venceuJogo = false;
     controle.pontuacaoTotal = 0;
     for (int i = 0; i < 2; i++)
         controle.pontuacao[i] = 0;
 
-    
+
     // - - - - - - -FIM DAS VARIÁVEIS GERAIS - - - - - - -
 
     // - - - - - - - VARIÁVEIS PARA A TELA LOADING - - - - - - -
@@ -744,7 +744,7 @@ int main() {
     float tempo_segundos = 0.0; // Variavel de tempo para adicionar na barra de progresso e para aumentar a velocidade
     float tempo_max = 20.0; // Variavel de tempo para ditar o tempo maximo para o jogo "Estrofulo"
 
- 
+
 
 
     // Inicializar a amplitude e o padrão de movimento
@@ -816,7 +816,7 @@ int main() {
 
     //Setando os structs
     player_viremia player_vire;
-    ALLEGRO_BITMAP* vidas_viremia[5];
+    ALLEGRO_BITMAP* vidas_viremia[6];
 
     //Coordenadas pré estabelecidas 
     int x1 = 50, y1 = 535;
@@ -1021,7 +1021,7 @@ int main() {
                 contador_de_frames++;
                 //Verifica o timer a cada meio segundo'
                 if (contador_de_frames % (frame_segundo / intervalo_segundo) == 0)
-                opacidade_texto = opacidade_texto * (-1);
+                    opacidade_texto = opacidade_texto * (-1);
             }
             //se apertar espaço pula para o jogo
             if (al_key_down(&kState, ALLEGRO_KEY_SPACE))
@@ -1032,7 +1032,7 @@ int main() {
             al_draw_bitmap(bg_pausa, 0, 0, 0);
             // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
             al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
-            
+
             al_draw_bitmap(mosquitao, 372, 213, 0);
             al_draw_line(319, 275, 460, 275, WHITE, 3.0);
             al_draw_bitmap(teclas_tutorial, 352, 285, 0);
@@ -1042,12 +1042,12 @@ int main() {
             al_draw_filled_circle(480, 440, 10, YELLOW);
 
             //Título
-            al_draw_text(fonte_titulo, WHITE, 400,75, ALLEGRO_ALIGN_CENTER, "COMO JOGAR?");
-            
+            al_draw_text(fonte_titulo, WHITE, 400, 75, ALLEGRO_ALIGN_CENTER, "COMO JOGAR?");
+
             //Texto 
-            al_draw_text(fonte_texto, WHITE, 50,167, ALLEGRO_ALIGN_LEFT, "- MISSÃO: DOMINAR A CASA! Controle o mosquito com W e S ou as setas. ");
-            al_draw_text(fonte_texto, WHITE, 50,368, ALLEGRO_ALIGN_LEFT, "- FUJA DOS PERIGOS ABAIXO e explore cada canto da casa!");
-            
+            al_draw_text(fonte_texto, WHITE, 50, 167, ALLEGRO_ALIGN_LEFT, "- MISSÃO: DOMINAR A CASA! Controle o mosquito com W e S ou as setas. ");
+            al_draw_text(fonte_texto, WHITE, 50, 368, ALLEGRO_ALIGN_LEFT, "- FUJA DOS PERIGOS ABAIXO e explore cada canto da casa!");
+
         }
         break;
 
@@ -1123,7 +1123,7 @@ int main() {
                     tela = GAME_OVER;
                     player_mosquito.x = 600;
                     tempo_segundos = 0;
-                    
+
                 }
                 spray.y += (player_mosquito.y - 50 - spray.y) * suavidade;
             }
@@ -1151,12 +1151,12 @@ int main() {
 
             float icone_mosquito = 40 + barra_progresso; // calculo para posicao do iconmosquitao com base no progresso da barra
             icone_mosquito = fmin(icone_mosquito, 760); // comando que GARANTE que o icone_mosquito nao ultrapasse a largura máxima da barra
-            
+
 
             al_draw_rectangle(40 - 2, 18, 760 + 2, 42, BLACK, 2); // desenha as bordas da barra de progresso
 
             al_draw_filled_rectangle(40, 20, 40 + barra_progresso, 40, RED); // desenha a barra de progresso
-           
+
             al_draw_bitmap(iconmosquitao, icone_mosquito - al_get_bitmap_width(iconmosquitao) / 2, 18, 0); // desenha o iconmosquitao sobre a barra de progresso, acompanhando seu movimento
 
         }
@@ -1183,7 +1183,7 @@ int main() {
             al_draw_bitmap(mosquitao, 622, 203, 0);
             al_draw_line(569, 265, 710, 265, WHITE, 3.0);
             al_draw_bitmap(mouse_tutorial, 632, 275, 0);
-            
+
 
             //Título
             al_draw_text(fonte_titulo, WHITE, 400, 75, ALLEGRO_ALIGN_CENTER, "COMO JOGAR?");
@@ -1325,7 +1325,7 @@ int main() {
             al_draw_bitmap(bg_pausa, 0, 0, 0);
             // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
             al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
-           
+
             linhas_Onduladas(632 + 15, 203 + 15, 682 + 50 * cos(0.03), 183 + 50 * sin(0.03), 40);
             al_draw_bitmap(celula_viremia, 632, 203, 0);
             al_draw_bitmap(virus_viremia, 712, 183, 0);
@@ -1464,8 +1464,7 @@ int main() {
                 }
             }
             // - - - - - - - DESENHO - - - - - - -
-            
-           
+
             //Desenha as linhas chamando a função
             gerar_Linhas(coordenada_X, coordenada_Y, tamanho, espessura_linha);
 
@@ -1563,7 +1562,7 @@ int main() {
             voltarTelaEscolha(ev, &tela, fonte_20, &jogo_pausado);
         }
         //sistema de vitória
-        if(controle.venceuJogo)
+        if (controle.venceuJogo)
             popup_vitoria(fonte_HUD, botao_play, &tela);
         al_flip_display();
     }
@@ -1595,8 +1594,11 @@ int main() {
     al_destroy_bitmap(mouse_tutorial);
     al_destroy_bitmap(spray_tutorial);
     al_destroy_bitmap(virus_PB);
+    al_destroy_bitmap(botao_play);
 
-
+    for (int i = 0; i < sizeof(vidas_viremia) / 8; i++) { //divide por 8 pq é o tamanho de ALLEGRO_BITMAP (descobri isso de forma empírica)
+        al_destroy_bitmap(vidas_viremia[i]);
+    }
     for (int i = 0; i < quantidade_CD8; i++) {
         al_destroy_bitmap(linfocito_CD8[i].cd8_viremia);
     }

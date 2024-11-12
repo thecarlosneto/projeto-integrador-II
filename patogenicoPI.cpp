@@ -94,12 +94,13 @@ typedef struct {
     int vel;
 } fagocito;
 
-//viremia
+
 typedef struct {
     float x_loading, y_loading;
     int w_loading, h_loading;
 } Retangulo;
 
+//viremia
 typedef struct {
     ALLEGRO_BITMAP* celula_viremia;
     float x;
@@ -111,7 +112,7 @@ typedef struct {
     ALLEGRO_BITMAP* cd8_viremia;
     float x, y, velocidade;
     int direcao; // -1 para cima, 1 para baixo
-} obstaculoViremia;
+} obstaculo_viremia;
 
 
 
@@ -558,6 +559,38 @@ void pontuacao_viremia(int tempo, int pontuacao) {
     pontuacao = 250000 / tempo;
 }
 
+//Função que desenha uma série de imagens na tela, substituindo-as por outras, de forma sequencial, de acordo com um valor de "vida"
+void atualiza_vidas(ALLEGRO_BITMAP* img1, ALLEGRO_BITMAP* img2, ALLEGRO_BITMAP* img3,
+    ALLEGRO_BITMAP* img1_subs, ALLEGRO_BITMAP* img2_subs, ALLEGRO_BITMAP* img3_subs,
+    int vida, int x, int y) {
+
+    // Verifica se a terceira imagem deve ser substituída
+    if (vida <= 2) {
+        al_draw_bitmap(img3_subs, x, y, 0);
+    }
+    else {
+        al_draw_bitmap(img3, x, y, 0);
+    }
+
+    // Verifica se a segunda imagem deve ser substituída e se a terceira já foi substituída
+    if (vida <= 1) {
+        al_draw_bitmap(img2_subs, x - 50, y, 0);
+    }
+    else {
+        al_draw_bitmap(img2, x - 50, y, 0);
+    }
+
+    // Verifica se a primeira imagem deve ser substituída e se a segunda já foi substituída
+    if (vida == 0) {
+        al_draw_bitmap(img1_subs, x - 100, y, 0);
+    }
+    else {
+        al_draw_bitmap(img1, x - 100, y, 0);
+    }
+}
+
+
+
 int main() {
     //atribui uma seed aleatória. Caso o jogo crashe ou algo do tipo, essa é uma boa forma de debug
     //tutorial de como usar a seed:
@@ -607,6 +640,7 @@ int main() {
     ALLEGRO_BITMAP* teclas_tutorial = al_load_bitmap("img/menus/teclas_tutorial.png");
     ALLEGRO_BITMAP* mouse_tutorial = al_load_bitmap("img/menus/mouse.png");
     ALLEGRO_BITMAP* spray_tutorial = al_load_bitmap("img/menus/spray_tutorial.png");
+    ALLEGRO_BITMAP* virus_PB = al_load_bitmap("img/menus/virusP&B.png");
 
     ALLEGRO_BITMAP* mosquitao = al_load_bitmap("img/estrofulo/mosquitao.png");
     ALLEGRO_BITMAP* iconmosquitao = al_load_bitmap("img/estrofulo/iconmosquitao.png");
@@ -782,6 +816,7 @@ int main() {
 
     //Setando os structs
     player_viremia player_vire;
+    ALLEGRO_BITMAP* vidas_viremia[5];
 
     //Coordenadas pré estabelecidas 
     int x1 = 50, y1 = 535;
@@ -803,6 +838,23 @@ int main() {
     int espessura_linha = 18.0;
     bool dentro_da_linha = false;
 
+    //vidas
+    bool invulneravel = false;
+    int tempo_invulnerabilidade = 120; // invulnerabilidade de acordo com a duração desejada (em frames)
+    int contador_invulnerabilidade = 0;
+
+    // Inicializar as imagens
+    for (int i = 0; i <= 2; i++) {
+        vidas_viremia[i] = al_clone_bitmap(virus_viremia);
+    }
+    for (int i = 3; i <= 5; i++) {
+        vidas_viremia[i] = al_clone_bitmap(virus_PB);
+    }
+    int vidas_disponiveis_viremia = 3;
+    int vida_viremia_x = 150;
+    int vida_viremia_y = 5;
+
+
     //para o cronometro
     int cronometro = 0;
     int cronometro_reset = 0; // para o cronometro do viremia 
@@ -823,10 +875,10 @@ int main() {
     float raio_viremia = 50;
 
     const int quantidade_CD8 = 5;
-    obstaculoViremia* linfocito_CD8;
+    obstaculo_viremia* linfocito_CD8;
 
     // Criar um array para armazenar as informações das imagens
-    linfocito_CD8 = (obstaculoViremia*)malloc(quantidade_CD8 * sizeof(obstaculoViremia));
+    linfocito_CD8 = (obstaculo_viremia*)malloc(quantidade_CD8 * sizeof(obstaculo_viremia));
 
     // Inicializar as imagens
     for (int i = 0; i < quantidade_CD8; i++) {
@@ -977,6 +1029,7 @@ int main() {
             //Desenhar
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(background_estrofulo, 0, 0, 0);
+            al_draw_bitmap(bg_pausa, 0, 0, 0);
             // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
             al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
             
@@ -1123,6 +1176,7 @@ int main() {
             //Desenhar
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(tela_tutorial, 0, 0, 0);
+            al_draw_bitmap(bg_pausa, 0, 0, 0);
             // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
             al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
 
@@ -1268,6 +1322,7 @@ int main() {
             //Desenhar
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(background_viremia, 0, 0, 0);
+            al_draw_bitmap(bg_pausa, 0, 0, 0);
             // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
             al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
            
@@ -1332,17 +1387,31 @@ int main() {
                         }
                     }
 
+                    //PLAYER X INIMIGO
                     for (int i = 0; i < quantidade_CD8; i++) {
                         if (colisao_quadrado_dentro(player_vire.x, player_vire.y, al_get_bitmap_width(celula_viremia),
                             al_get_bitmap_height(celula_viremia), linfocito_CD8[i].x, linfocito_CD8[i].y, al_get_bitmap_width(cd8_viremia),
                             al_get_bitmap_height(cd8_viremia))) {
-                            tela = GAME_OVER;
+                            if (!invulneravel) {
+                                vidas_disponiveis_viremia--;
+                                invulneravel = true;
+                                contador_invulnerabilidade = tempo_invulnerabilidade;
+                            }
                         }
                     }
 
-                    //Fora da linha
+                    if (invulneravel) {
+                        contador_invulnerabilidade--;
+                        if (contador_invulnerabilidade <= 0) {
+                            invulneravel = false;
+                        }
+                    }
 
+                    if (vidas_disponiveis_viremia == 0) {
+                        tela = GAME_OVER;
+                    }
 
+                    //niveis viremia
                     if (nivel_viremia == 1 || nivel_viremia == 3) {
                         x_chegada = x2;
                         y_chegada = y2;
@@ -1395,6 +1464,8 @@ int main() {
                 }
             }
             // - - - - - - - DESENHO - - - - - - -
+            
+           
             //Desenha as linhas chamando a função
             gerar_Linhas(coordenada_X, coordenada_Y, tamanho, espessura_linha);
 
@@ -1425,6 +1496,8 @@ int main() {
 
             sprintf_s(cronometro_str, "0%d'", cronometro);
             al_draw_text(font, WHITE, 400, 10, ALLEGRO_ALIGN_CENTER, cronometro_str);
+
+            atualiza_vidas(vidas_viremia[0], vidas_viremia[1], vidas_viremia[2], vidas_viremia[3], vidas_viremia[4], vidas_viremia[5], vidas_disponiveis_viremia, vida_viremia_x, vida_viremia_y);
             // - - - - - - - FIM DOS DESENHOS - - - - - - -
         }
         break;
@@ -1521,6 +1594,7 @@ int main() {
     al_destroy_bitmap(tela_tutorial);
     al_destroy_bitmap(mouse_tutorial);
     al_destroy_bitmap(spray_tutorial);
+    al_destroy_bitmap(virus_PB);
 
 
     for (int i = 0; i < quantidade_CD8; i++) {

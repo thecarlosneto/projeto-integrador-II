@@ -577,6 +577,8 @@ void atualiza_vidas(ALLEGRO_BITMAP* img1, ALLEGRO_BITMAP* img2, ALLEGRO_BITMAP* 
     }
 }
 
+
+
 int main() {
     //atribui uma seed aleatória. Caso o jogo crashe ou algo do tipo, essa é uma boa forma de debug
     //tutorial de como usar a seed:
@@ -1008,6 +1010,7 @@ int main() {
             //Desenhar
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(background_estrofulo, 0, 0, 0);
+            al_draw_bitmap(bg_pausa, 0, 0, 0);
             // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
             al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
             
@@ -1154,6 +1157,7 @@ int main() {
             //Desenhar
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(tela_tutorial, 0, 0, 0);
+            al_draw_bitmap(bg_pausa, 0, 0, 0);
             // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
             al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
 
@@ -1300,6 +1304,7 @@ int main() {
             //Desenhar
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(background_viremia, 0, 0, 0);
+            al_draw_bitmap(bg_pausa, 0, 0, 0);
             // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
             al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 400, 555, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA CONTINUAR");
            
@@ -1384,7 +1389,7 @@ int main() {
                         }
                     }
 
-                    if (vidas_disponiveis_viremia == -1) {
+                    if (vidas_disponiveis_viremia == 0) {
                         tela = GAME_OVER;
                     }
 

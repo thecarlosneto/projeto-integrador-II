@@ -67,7 +67,6 @@ typedef struct {
 typedef struct {
     bool morto;
     bool venceu;
-    bool gameover;
     short int tentativas;
     short int pontuacao;
     bool desenhou_fundo;
@@ -115,8 +114,6 @@ typedef struct {
 } obstaculo_viremia;
 
 
-
-
 //cores
 ALLEGRO_COLOR BLACK = al_map_rgb(0, 0, 0);
 ALLEGRO_COLOR WHITE = al_map_rgb(255, 255, 255);
@@ -136,12 +133,26 @@ ALLEGRO_TIMER* countdown_timer;
 ALLEGRO_EVENT ev;
 
 controle_geral controle;
+int tela;
+
+
+//FAGOCITOSE
+controle_fagocitose control_fago; // variáveis gerais como vida, pontuação, etc
+nutriente* nutrientes; // nutrientes que são comidos pro player crescer
+player_fagocitose player_fago;
+fagocito fago_pong; // inimigo que se move igual a bola do jogo Pong
+const int num_nutrientes = 100; // quantos nutrientes tem no mapa
+const int raio_nutriente = 10;
+int timer_invencibilidade;
+short int grid_map[NUM_CELULAS_GRID][10];  // grade de fundo onde cada nutriente será atribuido
+short int qtd_nutrientes_grid[NUM_CELULAS_GRID]; // quantos nutrientes há em cada espaço na grid
+int pong_velX; //controla se o fagocito pong vai p/ direita ou esquerda
+int pong_velY; //controla se o fagocito pong vai p/ cima ou baixo
 
 
 
 
 // textos dentro da caixa de dialogo
-
 char textos[NUM_TEXTO][MAX_TEXTO] = {
       "Array sendo utilizada.",
       "Outro texto grande que pode ser usado no seu programa.",
@@ -210,37 +221,30 @@ bool colisao_mouse(ALLEGRO_MOUSE_STATE mouse, int x, int y, int width, int heigh
     return colisao_x && colisao_y;
 }
 
+//se os valores da instância A estiverem dentro da instância B, retorna verdadeiro
+//inserir coord A PARTIR DO CANTO SUPERIOR ESQUERDO, igual no p5js
+bool colisao_quadrado_dentro(int xA, int yA, int widthA, int height_A, int xB, int yB, int widthB, int heightB) {
+    bool colisao_X = xA < xB + widthB && xA + widthA > xB;
+    bool colisao_Y = yA < yB + heightB && yA + height_A > yB;
 
-//cria um botão que, ao ser clicado, volta para o menu
-void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20, bool* jogo_pausa) {
+    return colisao_X && colisao_Y;
+}
 
-    char msg[] = { "SAIR" };
+//retorna verdadeiro se o círculo A estiver dentro do círculo B
+bool colisao_circulo_dentro(int xA, int yA, int rA, int xB, int yB, int rB) {
+    //geometria analítica para descobrir o tamanho de uma reta (norma)
+    int dx = xA - xB;
+    int dy = yA - yB;
+    int norma_AB = sqrt(dx * dx + dy * dy);
 
-    // Coordenadas e dimensões do texto "VOLTAR"
-    int larguraTexto = al_get_text_width(fonte_20, msg);
-    int alturaTexto = al_get_font_line_height(fonte_20);
-    int textoX = DISPLAY_WIDTH / 2 - larguraTexto / 2;
-    int textoY = DISPLAY_HEIGHT / 2 - alturaTexto / 2;
+    if (norma_AB + rA <= rB)
+        return true;
+    return false;
 
-    // Desenha o texto "VOLTAR"
-    al_draw_text(fonte_20, al_map_rgb(255, 255, 255), textoX, textoY, 0, msg);
-    // Verifica se houve um clique do mouse
-    if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+}
 
-        if (ev.mouse.button == 1) { // Verifica se o botão esquerdo foi clicado
-
-            // Verifica se o clique foi dentro da área do texto "SAIR"
-            if (ev.mouse.x > textoX && ev.mouse.x < (textoX + larguraTexto) &&
-                ev.mouse.y > textoY && ev.mouse.y < (textoY + alturaTexto)) {
-                *tela = 2; // Atualiza o valor de "tela" para voltar à tela 2
-                *jogo_pausa = false;
-                unpause();
-            }
-
-            // Exibe as coordenadas do clique no console
-            printf("Clique detectado na coordenada escolha (%d, %d)\n", ev.mouse.x, ev.mouse.y);
-        }
-    }
+int posicao_aleatoria(int tam_display, int tam_objeto) {
+    return rand() % (tam_display - tam_objeto) + tam_objeto / 2;
 }
 
 //desenha o que sobrepõe a tela ao pausar jogo
@@ -260,10 +264,10 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
     int proxTela;
     switch (*tela) {
     case ATAQUE_MOSQUITO:
-        proxTela = FAGOCITOSE;
+        proxTela = TUTORIAL_FAGOCITOSE;
         break;
     case FAGOCITOSE:
-        proxTela = VIREMIA;
+        proxTela = TUTORIAL_VIREMIA;
         break;
     case VIREMIA:
         proxTela = VENCEU_VIREMIA;
@@ -367,15 +371,12 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
 float movimento_senoidal(float x, float amplitude) {
     return (DISPLAY_HEIGHT / 2) + amplitude * sin((x / DISPLAY_WIDTH) * (2 * PI)) * 0.5; // Reduz a amplitude para não sair da tela
 }
-
 float movimento_cosenoidal(float x, float amplitude) {
     return (DISPLAY_HEIGHT / 2) + amplitude * cos((x / DISPLAY_WIDTH) * (2 * PI)) * 0.5; // Reduz a amplitude para não sair da tela
 }
-
 float movimento_inverso_senoidal(float x, float amplitude) {
     return (DISPLAY_HEIGHT / 2) - amplitude * sin((x / DISPLAY_WIDTH) * (2 * PI)) * 0.5;
 }
-
 float movimento_inverso_cosenoidal(float x, float amplitude) {
     return (DISPLAY_HEIGHT / 2) - amplitude * cos((x / DISPLAY_WIDTH) * (2 * PI)) * 0.5;
 }
@@ -391,31 +392,6 @@ float (*padrao_movimento[4])(float, float) = {
 
 //FUNÇÕES FAGOCITOSE
 
-//se os valores da instância A estiverem dentro da instância B, retorna verdadeiro
-//inserir coord A PARTIR DO CANTO SUPERIOR ESQUERDO, igual no p5js
-bool colisao_quadrado_dentro(int xA, int yA, int widthA, int height_A, int xB, int yB, int widthB, int heightB) {
-    bool colisao_X = xA < xB + widthB && xA + widthA > xB;
-    bool colisao_Y = yA < yB + heightB && yA + height_A > yB;
-
-    return colisao_X && colisao_Y;
-}
-
-//retorna verdadeiro se o círculo A estiver dentro do círculo B
-bool colisao_circulo_dentro(int xA, int yA, int rA, int xB, int yB, int rB) {
-    //geometria analítica para descobrir o tamanho de uma reta (norma)
-    int dx = xA - xB;
-    int dy = yA - yB;
-    int norma_AB = sqrt(dx * dx + dy * dy);
-
-    if (norma_AB + rA <= rB)
-        return true;
-    return false;
-
-}
-
-int posicao_aleatoria(int tam_display, int tam_objeto) {
-    return rand() % (tam_display - tam_objeto) + tam_objeto / 2;
-}
 
 //recebe um par ordenado e retorna em qual posição ele está na grade de fundo (como se fosse um array unidimensional)
 int pega_posicao_grid(int x, int y) {
@@ -496,8 +472,6 @@ void criar_bg_fagocitose(ALLEGRO_DISPLAY* display, ALLEGRO_BITMAP* bitmap, ALLEG
     }
     al_set_target_bitmap(al_get_backbuffer(display));
 }
-
-
 
 //FUNÇÕES VIREMIA
 /*Função que gera coordenadas de X aleatorias com base no tamanho do display,
@@ -594,6 +568,100 @@ void atualiza_vidas(ALLEGRO_BITMAP* img1, ALLEGRO_BITMAP* img2, ALLEGRO_BITMAP* 
 
 
 
+//SETUP DAS TELAS
+
+void init_fagocitose() {
+    //inicializa array q marca quantos nutrientes tem em cada espaço na grid
+    for (int i = 0; i < NUM_CELULAS_GRID; i++) {
+        qtd_nutrientes_grid[i] = 0;
+    }
+
+    nutrientes = (nutriente*)malloc(num_nutrientes * sizeof(nutriente)); // array dinâmico de nutrientes
+    for (int i = 0; i < num_nutrientes; i++) {
+        mapear_nutrientes(&nutrientes[i], raio_nutriente, i, grid_map, qtd_nutrientes_grid);  //define um valor aleatório para cada nutriente no mapa
+    }
+
+    //setup dos dados do minigame
+    control_fago.pontuacao = 0;
+    control_fago.morto = false;
+    control_fago.venceu = false;
+    control_fago.desenhou_fundo = false;
+    control_fago.tentativas = 3;
+    timer_invencibilidade = 0;
+    //define como o círculo do player spawna no mapa
+    player_fago.x = DISPLAY_WIDTH / 2;
+    player_fago.y = DISPLAY_HEIGHT / 2;
+    player_fago.vel = 5;
+    player_fago.raio_min = raio_nutriente * 2;
+    player_fago.raio_max = 75;
+    player_fago.raio = player_fago.raio_min;
+
+    //define como o círculo do fagocito pong spawna no mapa
+    fago_pong.raio = player_fago.raio_max;
+    fago_pong.x = posicao_aleatoria(DISPLAY_WIDTH, fago_pong.raio * 2);
+    fago_pong.y = posicao_aleatoria(DISPLAY_HEIGHT, fago_pong.raio * 2);
+    fago_pong.vel = 7;
+    pong_velX = 1;
+    pong_velY = 1;
+}
+
+void ir_para_tela(int jogoDestino) {
+    switch (jogoDestino) {
+    case ATAQUE_MOSQUITO:
+        tela = ATAQUE_MOSQUITO;
+        break;
+
+    case FAGOCITOSE:
+        tela = FAGOCITOSE;
+        init_fagocitose();
+        break;
+
+    case VIREMIA:
+        tela = VIREMIA;
+        break;
+    case TELA_INICIAL:
+        tela = TELA_INICIAL;
+        break;
+    default:
+        tela = VENCEU_VIREMIA;
+        break;
+    }
+}
+
+//cria um botão que, ao ser clicado, volta para o menu
+void voltarTelaEscolha(ALLEGRO_EVENT ev, int* tela, ALLEGRO_FONT* fonte_20, bool* jogo_pausa) {
+
+    char msg[] = { "SAIR" };
+
+    // Coordenadas e dimensões do texto "VOLTAR"
+    int larguraTexto = al_get_text_width(fonte_20, msg);
+    int alturaTexto = al_get_font_line_height(fonte_20);
+    int textoX = DISPLAY_WIDTH / 2 - larguraTexto / 2;
+    int textoY = DISPLAY_HEIGHT / 2 - alturaTexto / 2;
+
+    // Desenha o texto "VOLTAR"
+    al_draw_text(fonte_20, al_map_rgb(255, 255, 255), textoX, textoY, 0, msg);
+    // Verifica se houve um clique do mouse
+    if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+
+        if (ev.mouse.button == 1) { // Verifica se o botão esquerdo foi clicado
+
+            // Verifica se o clique foi dentro da área do texto "SAIR"
+            if (ev.mouse.x > textoX && ev.mouse.x < (textoX + larguraTexto) &&
+                ev.mouse.y > textoY && ev.mouse.y < (textoY + alturaTexto)) {
+                //*tela = 2; // Atualiza o valor de "tela" para voltar à tela 2
+                ir_para_tela(2);
+                *jogo_pausa = false;
+                unpause();
+            }
+
+            // Exibe as coordenadas do clique no console
+            printf("Clique detectado na coordenada escolha (%d, %d)\n", ev.mouse.x, ev.mouse.y);
+        }
+    }
+}
+
+
 int main() {
     //atribui uma seed aleatória. Caso o jogo crashe ou algo do tipo, essa é uma boa forma de debug
     //tutorial de como usar a seed:
@@ -632,19 +700,20 @@ int main() {
 
     // imagens
     ALLEGRO_BITMAP* loading = al_load_bitmap("img/menus/telaLoading.png");
-
     ALLEGRO_BITMAP* background_desktop = al_load_bitmap("img/menus/bgDesktop.png");
     ALLEGRO_BITMAP* botao_play = al_load_bitmap("img/menus/Controle jogar.png");
-
     ALLEGRO_BITMAP* background_fases = al_load_bitmap("img/menus/bgFases.png");
     ALLEGRO_BITMAP* virus_viremia = al_load_bitmap("img/menus/virus.png");
     ALLEGRO_BITMAP* tela_perdeu = al_load_bitmap("img/menus/telaPerdeu.png");
     ALLEGRO_BITMAP* tela_tutorial = al_load_bitmap("img/menus/telaTutorial.png");
+
+    printf("\n\ncarlos e cucas: verificar oq significa a linha a seguir:\n");
     ALLEGRO_BITMAP* teclas_tutorial = al_load_bitmap("img/menus/teclas_tutorial.png");
+    printf("\n\n");
+
     ALLEGRO_BITMAP* mouse_tutorial = al_load_bitmap("img/menus/mouse.png");
     ALLEGRO_BITMAP* spray_tutorial = al_load_bitmap("img/menus/spray_tutorial.png");
     ALLEGRO_BITMAP* virus_PB = al_load_bitmap("img/menus/virusP&B.png");
-
     ALLEGRO_BITMAP* mosquitao = al_load_bitmap("img/estrofulo/mosquitao.png");
     ALLEGRO_BITMAP* iconmosquitao = al_load_bitmap("img/estrofulo/iconmosquitao.png");
     ALLEGRO_BITMAP* teia_img = al_load_bitmap("img/estrofulo/teia.png");
@@ -680,7 +749,7 @@ int main() {
     // - - - - - - - VARIÁVEIS GERAIS - - - - - - -
     cria_fundo_pausa(display, bg_pausa);
 
-    int tela = 1;
+    tela = TELA_LOADING;
     int tela_anterior = 0;
     int tempo_perdeu = 0;
     bool jogo_pausado = false;
@@ -758,56 +827,15 @@ int main() {
 
 
     // - - - - - - - VARIÁVEIS PARA FAGOCITOSE - - - - - - -
-    controle_fagocitose control_fago; // variáveis gerais como vida, pontuação, etc
-    nutriente* nutrientes; // nutrientes que são comidos pro player crescer
-    player_fagocitose player_fago;
-    fagocito fago_pong; // inimigo que se move igual a bola do jogo Pong
-
-    const int num_nutrientes = 100; // quantos nutrientes tem no mapa
-    const int raio_nutriente = 10;
-
-    int timer_invencibilidade = 0;
-
-    short int grid_map[NUM_CELULAS_GRID][10];  // grade de fundo onde cada nutriente será atribuido
-    short int qtd_nutrientes_grid[NUM_CELULAS_GRID]; // quantos nutrientes há em cada espaço na grid
-
+  
+    
+    
     /*****SETUP*****/
+
     //cria "imagem" pra desenhar no fundo do jogo
     criar_bg_fagocitose(display, bg_fagocitose_bitmap, WHITE, ESPACO_ENTRE_GRADE, GRAY, 2);
-
-    //inicializa array q marca quantos nutrientes tem em cada espaço na grid
-    for (int i = 0; i < NUM_CELULAS_GRID; i++) {
-        qtd_nutrientes_grid[i] = 0;
-    }
-
-    nutrientes = (nutriente*)malloc(num_nutrientes * sizeof(nutriente)); // array dinâmico de nutrientes
-    for (int i = 0; i < num_nutrientes; i++) {
-        mapear_nutrientes(&nutrientes[i], raio_nutriente, i, grid_map, qtd_nutrientes_grid);  //define um valor aleatório para cada nutriente no mapa
-    }
-
-    //setup dos dados do minigame
-    control_fago.pontuacao = 0;
-    control_fago.morto = false;
-    control_fago.venceu = false;
-    control_fago.gameover = false;
-    control_fago.desenhou_fundo = false;
-    control_fago.tentativas = 3;
-
-    //define como o círculo do player spawna no mapa
-    player_fago.x = DISPLAY_WIDTH / 2;
-    player_fago.y = DISPLAY_HEIGHT / 2;
-    player_fago.vel = 5;
-    player_fago.raio_min = raio_nutriente * 2;
-    player_fago.raio_max = 75;
-    player_fago.raio = player_fago.raio_min;
-
-    //define como o círculo do fagocito pong spawna no mapa
-    fago_pong.raio = player_fago.raio_max;
-    fago_pong.x = posicao_aleatoria(DISPLAY_WIDTH, fago_pong.raio * 2);
-    fago_pong.y = posicao_aleatoria(DISPLAY_HEIGHT, fago_pong.raio * 2);
-    fago_pong.vel = 7;
-    int pong_velX = 1; //controla se o fagocito pong
-    int pong_velY = 1; //vai subir ou descer
+    init_fagocitose();
+    
 
     /*****FIM SETUP DO JOGO*****/
 
@@ -1178,7 +1206,7 @@ int main() {
             }
             //se apertar espaço pula para o jogo
             if (al_key_down(&kState, ALLEGRO_KEY_SPACE))
-                tela = FAGOCITOSE;
+                ir_para_tela(FAGOCITOSE);
             //Desenhar
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(tela_tutorial, 0, 0, 0);
@@ -1255,9 +1283,6 @@ int main() {
                 }
                 //se as vidas acabarem
                 if (control_fago.tentativas <= 0) {
-                    control_fago.gameover = true;
-                    control_fago.tentativas = 3;
-                    control_fago.pontuacao = 0;
                     tela = GAME_OVER;
                 }
                 if (control_fago.pontuacao >= 100) {
@@ -1284,8 +1309,8 @@ int main() {
                     player_fago.raio = player_fago.raio_min;
             }
 
-            /*****DESENHO*****/
 
+            /*****DESENHO*****/
             al_draw_bitmap(bg_fagocitose_bitmap, 0, 0, 0);
             //desenha nutrientes
             for (int i = 0; i < num_nutrientes; i++) {
@@ -1525,11 +1550,8 @@ int main() {
             }
 
             if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
-
-
                 if (ev.keyboard.keycode == ALLEGRO_KEY_S) {
-                    tela = tela_anterior;
-
+                    ir_para_tela(tela_anterior);
                 }
                 else if (ev.keyboard.keycode == ALLEGRO_KEY_N) {
                     tela = TELA_INICIAL;

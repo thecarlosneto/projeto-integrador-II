@@ -143,11 +143,13 @@ controle_geral controle;
 // textos dentro da caixa de dialogo
 
 char textos[NUM_TEXTO][MAX_TEXTO] = {
-      "Array sendo utilizada.",
-      "Outro texto grande que pode ser usado no seu programa.",
-      "Você pode armazenar até 5 textos aqui.",
-      "Cada string pode ter até 99 caracteres.",
-      "Isso é útil para gerenciar mensagens ou diálogos."
+      " Bzzz.",
+      "Se eu não pegar o sangue desse humano, meus filhos vão morrer.",
+      "Precizzzzzo evitar ser morta até lá!",
+      " Bzzz.",
+      "Acho que infectei ele com um víruzzzzz." 
+   
+
 };
 
 
@@ -305,7 +307,7 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
 }
 
 
-void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char textos[NUM_TEXTO][MAX_TEXTO], int* tempo_perdeu, ALLEGRO_EVENT_QUEUE* event_queue) {
+void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char textos[NUM_TEXTO][MAX_TEXTO], int* tempo_perdeu, ALLEGRO_EVENT_QUEUE* event_queue, bool* dialogo, ALLEGRO_BITMAP* img) {
     ALLEGRO_EVENT ev;
     int tempo_sub = *tempo_perdeu / 3;
 
@@ -315,14 +317,22 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
     }
 
     // Desenha a caixa de diálogo preenchida
-    al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(50, 50, 50));
+    al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(5530, 50, 50));
 
     // Desenha a borda da caixa de diálogo
     al_draw_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(255, 255, 255), 2);
 
     // Desenha o texto correspondente ao valor atual de tempo_sub
-    al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 20, 0, textos[tempo_sub]);
+    al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 60, 0, textos[tempo_sub]);
+
+    if (tempo_sub == 0) {
+        // desenha  a imagem atual
+        al_draw_bitmap(img, caixaX + 20, caixaY + 20, 0);
+    }
+
     al_flip_display();
+
+
 
     // Variaveis do botão "Avançar" para mudar o texto da caixa de dialogo
     int largura_botao = 80;
@@ -340,17 +350,22 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
 
     // Verifica se o botão foi clicado
     while (al_get_next_event(event_queue, &ev)) {
+
         if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && ev.mouse.button == 1) {
+
+
+
             if (ev.mouse.x > botaoX && ev.mouse.x < botaoX + largura_botao &&
                 ev.mouse.y > botaoY && ev.mouse.y < botaoY + altura_botao) {
                 printf("botao foi clicado\n");
-
+                printf("tempo: %d \n", tempo_sub);
                 *tempo_perdeu += 3; // Avança para o próximo texto
                 tempo_sub = *tempo_perdeu / 3;
 
                 if (tempo_sub >= NUM_TEXTO) {
                     tempo_sub = NUM_TEXTO - 1; // Limita o valor de tempo_sub
                 }
+
             }
         }
     }
@@ -358,9 +373,11 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
     // Se o tempo atingir o limite, sair da função
     if (*tempo_perdeu >= 15) {
         printf("Tempo atingido, saindo da função.\n");
+        *dialogo = false;
         return;
     }
 }
+
 
 
 // Funções de movimento da mão - Ataque Mosquito
@@ -650,10 +667,14 @@ int main() {
     ALLEGRO_BITMAP* teia_img = al_load_bitmap("img/estrofulo/teia.png");
     ALLEGRO_BITMAP* spray_img = al_load_bitmap("img/estrofulo/spray.png");
     ALLEGRO_BITMAP* background_estrofulo = al_load_bitmap("img/estrofulo/fundoestrofulo.png");
+    ALLEGRO_BITMAP* dialogo_mosquito = al_load_bitmap("img/estrofulo/moquitoo.png");
+    ALLEGRO_BITMAP* dialogo_virus = al_load_bitmap("img/estrofulo/viruss.png");
 
     ALLEGRO_BITMAP* background_viremia = al_load_bitmap("img/viremia/backgroundViremia.png");
     ALLEGRO_BITMAP* cd8_viremia = al_load_bitmap("img/viremia/cd8Viremia.png");
     ALLEGRO_BITMAP* celula_viremia = al_load_bitmap("img/viremia/player_viremia.png");
+
+
 
     ALLEGRO_BITMAP* bg_pausa = al_create_bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT);
     ALLEGRO_BITMAP* bg_fagocitose_bitmap = al_create_bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -683,6 +704,7 @@ int main() {
     int tela = 1;
     int tela_anterior = 0;
     int tempo_perdeu = 0;
+    bool dialogo = true;
     bool jogo_pausado = false;
 
     //setup do controle geral do jogo (struct q guarda pontuação, estado do jogo, etc)
@@ -992,6 +1014,8 @@ int main() {
 
         case SELETOR_FASE:
         {
+            dialogo = true;
+
             if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
                 if (ev.mouse.button == 1) { // Botão esquerdo do mouse
 
@@ -1059,6 +1083,21 @@ int main() {
         case ATAQUE_MOSQUITO:
         {
             tela_anterior = tela;
+
+            //   caixa de dialogo
+            if (dialogo == true) {
+
+                al_draw_bitmap(bg_pausa, 0, 0, 0);
+
+                desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
+
+
+                // Atualiza a tela e faz outras operações, se necessário
+                al_flip_display();
+
+                // Espera um segundo para dar tempo para o tempo ser incrementado
+                al_rest(0.5);
+            }
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
 
@@ -1207,6 +1246,23 @@ int main() {
         {
             tela_anterior = tela;
 
+            //   caixa de dialogo
+            if (dialogo == true) {
+
+                al_draw_bitmap(bg_pausa, 0, 0, 0);
+
+                desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
+
+                al_draw_textf(fonte_20, WHITE, 400, 120, ALLEGRO_ALIGN_CENTER, "Como Jogar?");
+
+
+                // Atualiza a tela e faz outras operações, se necessário
+                al_flip_display();
+
+                // Espera um segundo para dar tempo para o tempo ser incrementado
+                al_rest(0.5);
+            }
+
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 // Calcula a direção e a distância até a posição do mouse
                 float dx = mState.x - player_fago.x;
@@ -1353,6 +1409,23 @@ int main() {
         case VIREMIA:
         {
             tela_anterior = tela;
+
+            //   caixa de dialogo
+            if (dialogo == true) {
+
+                al_draw_bitmap(bg_pausa, 0, 0, 0);
+
+                desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
+
+                al_draw_textf(fonte_20, WHITE, 400, 120, ALLEGRO_ALIGN_CENTER, "Como Jogar?");
+
+
+                // Atualiza a tela e faz outras operações, se necessário
+                al_flip_display();
+
+                // Espera um segundo para dar tempo para o tempo ser incrementado
+                al_rest(0.5);
+            }
 
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {
@@ -1605,6 +1678,8 @@ int main() {
     al_destroy_bitmap(spray_tutorial);
     al_destroy_bitmap(virus_PB);
     al_destroy_bitmap(botao_play);
+    al_destroy_bitmap(dialogo_mosquito);
+    al_destroy_bitmap(dialogo_virus);
 
     for (int i = 0; i < sizeof(vidas_viremia) / 8; i++) { //divide por 8 pq é o tamanho de ALLEGRO_BITMAP (descobri isso de forma empírica)
         al_destroy_bitmap(vidas_viremia[i]);

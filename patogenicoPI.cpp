@@ -147,7 +147,7 @@ char textos[NUM_TEXTO][MAX_TEXTO] = {
       "Se eu não pegar o sangue desse humano, meus filhos vão morrer.",
       "Precizzzzzo evitar ser morta até lá!",
       " Bzzz.",
-      "Acho que infectei ele com um víruzzzzz." 
+      "Acho que infectei ele com um víruzzzzz." ,
    
 
 };
@@ -1084,20 +1084,20 @@ int main() {
         {
             tela_anterior = tela;
 
-            //   caixa de dialogo
-            if (dialogo == true) {
+            ////   caixa de dialogo
+            //if (dialogo == true) {
 
-                al_draw_bitmap(bg_pausa, 0, 0, 0);
+            //    al_draw_bitmap(bg_pausa, 0, 0, 0);
 
-                desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
+            //    desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
 
 
-                // Atualiza a tela e faz outras operações, se necessário
-                al_flip_display();
+            //    // Atualiza a tela e faz outras operações, se necessário
+            //    al_flip_display();
 
-                // Espera um segundo para dar tempo para o tempo ser incrementado
-                al_rest(0.5);
-            }
+            //    // Espera um segundo para dar tempo para o tempo ser incrementado
+            //    al_rest(0.5);
+            //}
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
 
@@ -1246,22 +1246,22 @@ int main() {
         {
             tela_anterior = tela;
 
-            //   caixa de dialogo
-            if (dialogo == true) {
+            ////   caixa de dialogo
+            //if (dialogo == true) {
 
-                al_draw_bitmap(bg_pausa, 0, 0, 0);
+            //    al_draw_bitmap(bg_pausa, 0, 0, 0);
 
-                desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
+            //    desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
 
-                al_draw_textf(fonte_20, WHITE, 400, 120, ALLEGRO_ALIGN_CENTER, "Como Jogar?");
+            //    al_draw_textf(fonte_20, WHITE, 400, 120, ALLEGRO_ALIGN_CENTER, "Como Jogar?");
 
 
-                // Atualiza a tela e faz outras operações, se necessário
-                al_flip_display();
+            //    // Atualiza a tela e faz outras operações, se necessário
+            //    al_flip_display();
 
-                // Espera um segundo para dar tempo para o tempo ser incrementado
-                al_rest(0.5);
-            }
+            //    // Espera um segundo para dar tempo para o tempo ser incrementado
+            //    al_rest(0.5);
+            //}
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 // Calcula a direção e a distância até a posição do mouse
@@ -1410,22 +1410,22 @@ int main() {
         {
             tela_anterior = tela;
 
-            //   caixa de dialogo
-            if (dialogo == true) {
+            ////   caixa de dialogo
+            //if (dialogo == true) {
 
-                al_draw_bitmap(bg_pausa, 0, 0, 0);
+            //    al_draw_bitmap(bg_pausa, 0, 0, 0);
 
-                desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
+            //    desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
 
-                al_draw_textf(fonte_20, WHITE, 400, 120, ALLEGRO_ALIGN_CENTER, "Como Jogar?");
+            //    al_draw_textf(fonte_20, WHITE, 400, 120, ALLEGRO_ALIGN_CENTER, "Como Jogar?");
 
 
-                // Atualiza a tela e faz outras operações, se necessário
-                al_flip_display();
+            //    // Atualiza a tela e faz outras operações, se necessário
+            //    al_flip_display();
 
-                // Espera um segundo para dar tempo para o tempo ser incrementado
-                al_rest(0.5);
-            }
+            //    // Espera um segundo para dar tempo para o tempo ser incrementado
+            //    al_rest(0.5);
+            //}
 
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {

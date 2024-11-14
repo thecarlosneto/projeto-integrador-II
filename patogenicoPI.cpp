@@ -32,6 +32,7 @@
 #define TUTORIAL_ESTROFULO 8
 #define TUTORIAL_FAGOCITOSE 9
 #define TUTORIAL_VIREMIA 10
+#define HQ 11
 
 #define PI 3.14159265358979323846
 
@@ -113,6 +114,13 @@ typedef struct {
     int direcao; // -1 para cima, 1 para baixo
 } obstaculo_viremia;
 
+//imagens
+ALLEGRO_BITMAP* mosquitao;
+ALLEGRO_BITMAP* spray_img;
+
+ALLEGRO_BITMAP* virus_viremia;
+ALLEGRO_BITMAP* virus_PB;
+ALLEGRO_BITMAP* cd8_viremia;
 
 //cores
 ALLEGRO_COLOR BLACK = al_map_rgb(0, 0, 0);
@@ -135,6 +143,20 @@ ALLEGRO_EVENT ev;
 controle_geral controle;
 int tela;
 
+//ATAQUE MOSQUITO
+inimigo_estrofulo teia;
+inimigo_estrofulo mao;
+inimigo_estrofulo spray;
+
+player_estrofulo player_mosquito;
+
+float velocidade_x; // Define uma velocidade aleatória inicial entre 5 e 10
+float suavidade; // Define uma velocidade a qual sera usada para efeito de suavização
+float amplitude; // Amplitude da parábola
+float offset; // Deslocamento Y inicial
+float tempo_segundos; // Variavel de tempo para adicionar na barra de progresso e para aumentar a velocidade
+float tempo_max; // Variavel de tempo para ditar o tempo maximo para o jogo "Estrofulo"
+int indice_padroes; // Índice do padrão de movimento
 
 //FAGOCITOSE
 controle_fagocitose control_fago; // variáveis gerais como vida, pontuação, etc
@@ -149,6 +171,49 @@ short int qtd_nutrientes_grid[NUM_CELULAS_GRID]; // quantos nutrientes há em ca
 int pong_velX; //controla se o fagocito pong vai p/ direita ou esquerda
 int pong_velY; //controla se o fagocito pong vai p/ cima ou baixo
 
+//VIREMIA
+//Setando os structs
+player_viremia player_vire;
+ALLEGRO_BITMAP* vidas_viremia[6]{};
+
+int x_checkpoint1; int y_checkpoint1; //Coordenadas pré estabelecidas 
+int x_checkpoint2; int y_checkpoint2; //Coordenadas pré estabelecidas 
+
+int x_chegada;
+int y_chegada;
+
+bool pode_seguir_mouse;
+
+bool startJogo;
+bool mudou_de_nivel_viremia;
+int nivel_viremia;
+
+int tamanho;
+int espessura_linha;
+bool dentro_da_linha;
+
+bool invulneravel;
+int tempo_invulnerabilidade;
+int contador_invulnerabilidade;
+
+int vidas_disponiveis_viremia;
+int vida_viremia_x;
+int vida_viremia_y;
+
+//para o cronometro
+int cronometro;
+int cronometro_reset;
+char cronometro_str[10];
+int pontos_viremia;
+
+int* coordenada_X;
+int* coordenada_Y;
+
+// Variáveis para o movimento circular
+float angulo_viremia;
+float raio_viremia;
+const int quantidade_CD8 = 5;
+obstaculo_viremia* linfocito_CD8;
 
 
 
@@ -291,6 +356,7 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
 
     if ((colisao_mouse(mState, botao_x, botao_y, botao_width, botao_height) && (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) && ev.mouse.button == 1)) {
         *tela = proxTela;
+        //ir_para_tela(proxTela);
         controle.venceuJogo = false;
         unpause();
     }
@@ -307,7 +373,7 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
     //botao
     al_draw_bitmap(botao, botao_x, botao_y, 0);
 }
-
+ 
 
 void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char textos[NUM_TEXTO][MAX_TEXTO], int* tempo_perdeu, ALLEGRO_EVENT_QUEUE* event_queue) {
     ALLEGRO_EVENT ev;
@@ -570,6 +636,34 @@ void atualiza_vidas(ALLEGRO_BITMAP* img1, ALLEGRO_BITMAP* img2, ALLEGRO_BITMAP* 
 
 //SETUP DAS TELAS
 
+void init_ataque_mosquito() {
+    player_mosquito.x = 600;
+    player_mosquito.y = 300;
+    player_mosquito.raio = al_get_bitmap_width(mosquitao) / 2;
+
+    teia.x = DISPLAY_WIDTH;
+    teia.y = rand() % (DISPLAY_HEIGHT - 20) + 10;
+    teia.raio = 5;
+
+    mao.x = 0; // Posição fixa em X
+    mao.y = rand() % (DISPLAY_HEIGHT - 20) + 10; // Posição inicial aleatória em Y
+    mao.raio = 5;
+
+    spray.x = 50; // posicao inicial e fixa de X do spray
+    spray.y = 220; //posicao inicial Y do spray
+    spray.raio = al_get_bitmap_width(spray_img) / 2;
+
+    velocidade_x = (rand() % 6 + 5);
+    suavidade = 0.020;
+    tempo_segundos = 0.0;
+    tempo_max = 20.0;
+
+    // Inicializar a amplitude e o padrão de movimento
+    amplitude = rand() % (DISPLAY_HEIGHT / 2) + (DISPLAY_HEIGHT / 2); // Amplitude
+    indice_padroes = 0;
+
+}
+
 void init_fagocitose() {
     //inicializa array q marca quantos nutrientes tem em cada espaço na grid
     for (int i = 0; i < NUM_CELULAS_GRID; i++) {
@@ -605,10 +699,79 @@ void init_fagocitose() {
     pong_velY = 1;
 }
 
+void init_viremia() {
+    x_checkpoint1 = 50; y_checkpoint1 = 535;
+    x_checkpoint2 = 740; y_checkpoint2 = 50;
+
+    // Posição inicial do círculo player
+    player_vire.x = x_checkpoint1 - 5;
+    player_vire.y = y_checkpoint1 - 5;
+    player_vire.diferenca = 15;
+
+    pode_seguir_mouse = false;
+    startJogo = false;
+    mudou_de_nivel_viremia = false;
+    nivel_viremia = 1;
+    
+    tamanho = 4;
+    espessura_linha = 18.0;
+    dentro_da_linha = false;
+
+    //vidas
+    invulneravel = false;
+    tempo_invulnerabilidade = 120; // invulnerabilidade de acordo com a duração desejada (em frames)
+    contador_invulnerabilidade = 0;
+
+    // Inicializar as imagens
+    for (int i = 0; i <= 2; i++) {
+        vidas_viremia[i] = al_clone_bitmap(virus_viremia);
+    }
+    for (int i = 3; i <= 5; i++) {
+        vidas_viremia[i] = al_clone_bitmap(virus_PB);
+    }
+
+    vidas_disponiveis_viremia = 3;
+    vida_viremia_x = 150;
+    vida_viremia_y = 5;
+
+    cronometro = 0;
+    cronometro_reset = 0; // para o cronometro do viremia 
+    pontos_viremia = 0;
+
+
+    // Aloca memória para as coordenadas
+    coordenada_X = (int*)malloc(tamanho * sizeof(int));
+    coordenada_Y = (int*)malloc(tamanho * sizeof(int));
+
+    // Chama a função para preencher o array com números aleatórios
+    gera_coordenadas_X(coordenada_X, tamanho, x_checkpoint1, x_checkpoint2);
+    gera_coordenadas_Y(coordenada_Y, tamanho, y_checkpoint1, y_checkpoint2);
+
+    angulo_viremia = 0; //variável de ângulo será incrementada a cada frame para simular o movimento circular
+    raio_viremia = 50;
+
+    // Criar um array para armazenar as informações das imagens
+    linfocito_CD8 = (obstaculo_viremia*)malloc(quantidade_CD8 * sizeof(obstaculo_viremia));
+
+    // Inicializar as imagens
+    for (int i = 0; i < quantidade_CD8; i++) {
+        linfocito_CD8[i].cd8_viremia = al_clone_bitmap(cd8_viremia);
+        linfocito_CD8[i].x = -((2 * al_get_bitmap_width(cd8_viremia)) * i);
+        // Coordenada Y inicial entre 340 e 600
+        linfocito_CD8[i].y = 340 + rand() % (600 - 340 + 1);
+        linfocito_CD8[i].velocidade = 0.5 + (float)i / 10.0;
+        // Direção inicial para baixo (para garantir que as imagens comecem descendo)
+        linfocito_CD8[i].direcao = 1;
+    }
+
+}
+
+
 void ir_para_tela(int jogoDestino) {
     switch (jogoDestino) {
     case ATAQUE_MOSQUITO:
         tela = ATAQUE_MOSQUITO;
+        init_ataque_mosquito();
         break;
 
     case FAGOCITOSE:
@@ -618,6 +781,8 @@ void ir_para_tela(int jogoDestino) {
 
     case VIREMIA:
         tela = VIREMIA;
+        init_viremia();
+
         break;
     case TELA_INICIAL:
         tela = TELA_INICIAL;
@@ -703,29 +868,36 @@ int main() {
     ALLEGRO_BITMAP* background_desktop = al_load_bitmap("img/menus/bgDesktop.png");
     ALLEGRO_BITMAP* botao_play = al_load_bitmap("img/menus/Controle jogar.png");
     ALLEGRO_BITMAP* background_fases = al_load_bitmap("img/menus/bgFases.png");
-    ALLEGRO_BITMAP* virus_viremia = al_load_bitmap("img/menus/virus.png");
+    virus_viremia = al_load_bitmap("img/menus/virus.png");
     ALLEGRO_BITMAP* tela_perdeu = al_load_bitmap("img/menus/telaPerdeu.png");
     ALLEGRO_BITMAP* tela_tutorial = al_load_bitmap("img/menus/telaTutorial.png");
+    ALLEGRO_BITMAP* hq_ataque_mosquito[4]{};
 
-    printf("\n\ncarlos e cucas: verificar oq significa a linha a seguir:\n");
+    hq_ataque_mosquito[0] = al_load_bitmap("img/HQ/ataque_mosquito1.png");
+    hq_ataque_mosquito[1] = al_load_bitmap("img/HQ/ataque_mosquito2.png");
+    hq_ataque_mosquito[2] = al_load_bitmap("img/HQ/ataque_mosquito3.png");
+    hq_ataque_mosquito[3] = al_load_bitmap("img/HQ/ataque_mosquito4.png");
+
+    printf("\n\ncarlos e cucas: verificar oq significa o aviso na linha a seguir:\n");
     ALLEGRO_BITMAP* teclas_tutorial = al_load_bitmap("img/menus/teclas_tutorial.png");
     printf("\n\n");
 
+
     ALLEGRO_BITMAP* mouse_tutorial = al_load_bitmap("img/menus/mouse.png");
     ALLEGRO_BITMAP* spray_tutorial = al_load_bitmap("img/menus/spray_tutorial.png");
-    ALLEGRO_BITMAP* virus_PB = al_load_bitmap("img/menus/virusP&B.png");
-    ALLEGRO_BITMAP* mosquitao = al_load_bitmap("img/estrofulo/mosquitao.png");
+    virus_PB = al_load_bitmap("img/menus/virusP&B.png");
+    mosquitao = al_load_bitmap("img/estrofulo/mosquitao.png");
     ALLEGRO_BITMAP* iconmosquitao = al_load_bitmap("img/estrofulo/iconmosquitao.png");
     ALLEGRO_BITMAP* teia_img = al_load_bitmap("img/estrofulo/teia.png");
-    ALLEGRO_BITMAP* spray_img = al_load_bitmap("img/estrofulo/spray.png");
+    spray_img = al_load_bitmap("img/estrofulo/spray.png");
     ALLEGRO_BITMAP* background_estrofulo = al_load_bitmap("img/estrofulo/fundoestrofulo.png");
-
     ALLEGRO_BITMAP* background_viremia = al_load_bitmap("img/viremia/backgroundViremia.png");
-    ALLEGRO_BITMAP* cd8_viremia = al_load_bitmap("img/viremia/cd8Viremia.png");
+    cd8_viremia = al_load_bitmap("img/viremia/cd8Viremia.png");
     ALLEGRO_BITMAP* celula_viremia = al_load_bitmap("img/viremia/player_viremia.png");
-
     ALLEGRO_BITMAP* bg_pausa = al_create_bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT);
     ALLEGRO_BITMAP* bg_fagocitose_bitmap = al_create_bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT);
+    //cria "imagem" pra desenhar no fundo do jogo (fagocitose)
+    criar_bg_fagocitose(display, bg_fagocitose_bitmap, WHITE, ESPACO_ENTRE_GRADE, GRAY, 2);
 
     // Cria uma fila de eventos
     ALLEGRO_EVENT_QUEUE* event_queue = al_create_event_queue();
@@ -740,16 +912,13 @@ int main() {
     al_start_timer(timer);
     al_start_timer(countdown_timer);
 
-
-
     /*****FIM SETUP DO ALLEGRO*****/
-
-
 
     // - - - - - - - VARIÁVEIS GERAIS - - - - - - -
     cria_fundo_pausa(display, bg_pausa);
 
     tela = TELA_LOADING;
+    tela = HQ;
     int tela_anterior = 0;
     int tempo_perdeu = 0;
     bool jogo_pausado = false;
@@ -760,8 +929,8 @@ int main() {
     for (int i = 0; i < 2; i++)
         controle.pontuacao[i] = 0;
 
-
     // - - - - - - -FIM DAS VARIÁVEIS GERAIS - - - - - - -
+
 
     // - - - - - - - VARIÁVEIS PARA A TELA LOADING - - - - - - -
     int contador_de_frames = 0;
@@ -784,150 +953,11 @@ int main() {
     retangulos[0].w_loading = width_Loading;
     retangulos[0].h_loading = height_Loading;
     //  - - - - - - - FIM DAS VARIÁVEIS PARA A TELA LOADING - - - - - - -
-
-    // - - - - - - - VARIÁVEIS PARA MOSQUITO - - - - - - -
-
-    inimigo_estrofulo teia;
-    inimigo_estrofulo mao;
-    inimigo_estrofulo spray;
-
-    player_estrofulo player_mosquito;
-
-    player_mosquito.x = 600;
-    player_mosquito.y = 300;
-    player_mosquito.raio = al_get_bitmap_width(mosquitao) / 2;
-
-    teia.x = DISPLAY_WIDTH;
-    teia.y = rand() % (DISPLAY_HEIGHT - 20) + 10;
-    teia.raio = 5;
-
-    mao.x = 0; // Posição fixa em X
-    mao.y = rand() % (DISPLAY_HEIGHT - 20) + 10; // Posição inicial aleatória em Y
-    mao.raio = 5;
-
-    spray.x = 50; // posicao inicial e fixa de X do spray
-    spray.y = 220; //posicao inicial Y do spray
-    spray.raio = al_get_bitmap_width(spray_img) / 2;
-
-    float velocidade_x = (rand() % 6 + 5);  // Define uma velocidade aleatória inicial entre 5 e 10
-    float suavidade = 0.020;  // Define uma velocidade a qual sera usada para efeito de suavização
-    float amplitude; // Amplitude da parábola
-    float offset; // Deslocamento Y inicial
-    float tempo_segundos = 0.0; // Variavel de tempo para adicionar na barra de progresso e para aumentar a velocidade
-    float tempo_max = 20.0; // Variavel de tempo para ditar o tempo maximo para o jogo "Estrofulo"
-
-
-
-
-    // Inicializar a amplitude e o padrão de movimento
-    amplitude = rand() % (DISPLAY_HEIGHT / 2) + (DISPLAY_HEIGHT / 2); // Amplitude
-    int indice_padroes = 0; // Índice do padrão de movimento
-
-    // - - - - - - -FIM DAS VARIÁVEIS PARA MOSQUITO - - - - - - -
-
-
-    // - - - - - - - VARIÁVEIS PARA FAGOCITOSE - - - - - - -
-  
     
-    
-    /*****SETUP*****/
-
-    //cria "imagem" pra desenhar no fundo do jogo
-    criar_bg_fagocitose(display, bg_fagocitose_bitmap, WHITE, ESPACO_ENTRE_GRADE, GRAY, 2);
+    //SETUP DOS JOGOS
+    init_ataque_mosquito();
     init_fagocitose();
-    
-
-    /*****FIM SETUP DO JOGO*****/
-
-
-    // - - - - - - -FIM DAS VARIÁVEIS PARA FAGOCITOSE - - - - - - -
-
-
-    // - - - - - - - VARIÁVEIS PARA VIREMIA - - - - - - -
-
-    //Setando os structs
-    player_viremia player_vire;
-    ALLEGRO_BITMAP* vidas_viremia[6];
-
-    //Coordenadas pré estabelecidas 
-    int x1 = 50, y1 = 535;
-    int x2 = 740, y2 = 50;
-
-    // Posição inicial do círculo player
-    player_vire.x = x1 - 5;
-    player_vire.y = y1 - 5;
-    player_vire.diferenca = 15;
-
-    bool podeSeguirMouse = false;
-
-    int x_chegada;
-    int y_chegada;
-
-    bool startJogo = false;
-    bool mudou_de_nivel_viremia = false;
-    int nivel_viremia = 1;
-
-    int tamanho = 4;
-    int espessura_linha = 18.0;
-    bool dentro_da_linha = false;
-
-    //vidas
-    bool invulneravel = false;
-    int tempo_invulnerabilidade = 120; // invulnerabilidade de acordo com a duração desejada (em frames)
-    int contador_invulnerabilidade = 0;
-
-    // Inicializar as imagens
-    for (int i = 0; i <= 2; i++) {
-        vidas_viremia[i] = al_clone_bitmap(virus_viremia);
-    }
-    for (int i = 3; i <= 5; i++) {
-        vidas_viremia[i] = al_clone_bitmap(virus_PB);
-    }
-    int vidas_disponiveis_viremia = 3;
-    int vida_viremia_x = 150;
-    int vida_viremia_y = 5;
-
-
-    //para o cronometro
-    int cronometro = 0;
-    int cronometro_reset = 0; // para o cronometro do viremia 
-    char cronometro_str[10];
-    int pontos_viremia = 0;
-
-
-    // Aloca memória para as coordenadas
-    int* coordenada_X = (int*)malloc(tamanho * sizeof(int));
-    int* coordenada_Y = (int*)malloc(tamanho * sizeof(int));
-
-    // Chama a função para preencher o array com números aleatórios
-    gera_coordenadas_X(coordenada_X, tamanho, x1, x2);
-    gera_coordenadas_Y(coordenada_Y, tamanho, y1, y2);
-
-    // Variáveis para o movimento circular
-    float angulo_viremia = 0; //variável de ângulo será incrementada a cada frame para simular o movimento circular
-    float raio_viremia = 50;
-
-    const int quantidade_CD8 = 5;
-    obstaculo_viremia* linfocito_CD8;
-
-    // Criar um array para armazenar as informações das imagens
-    linfocito_CD8 = (obstaculo_viremia*)malloc(quantidade_CD8 * sizeof(obstaculo_viremia));
-
-    // Inicializar as imagens
-    for (int i = 0; i < quantidade_CD8; i++) {
-        linfocito_CD8[i].cd8_viremia = al_clone_bitmap(cd8_viremia);
-        linfocito_CD8[i].x = -((2 * al_get_bitmap_width(cd8_viremia)) * i);
-        // Coordenada Y inicial entre 340 e 600
-        linfocito_CD8[i].y = 340 + rand() % (600 - 340 + 1);
-        linfocito_CD8[i].velocidade = 0.5 + (float)i / 10.0;
-        // Direção inicial para baixo (para garantir que as imagens comecem descendo)
-        linfocito_CD8[i].direcao = 1;
-    }
-
-    // - - - - - - -FIM DAS VARIÁVEIS PARA VIREMIA - - - - - - -
-
-
-
+    init_viremia();
 
     // Loop de eventos
     bool running = true;
@@ -943,6 +973,33 @@ int main() {
         al_get_keyboard_state(&kState);
 
         switch (tela) {
+        case HQ:
+        {
+
+
+
+            int hq_size = al_get_bitmap_width(hq_ataque_mosquito[0]);
+            int hq_margem = 7; //levar em consideração que a margem é sempre aplicada 2 vezes
+            int x1 = DISPLAY_WIDTH / 2 - hq_size - hq_margem;
+            int y1 = DISPLAY_HEIGHT / 2 - hq_size - hq_margem;
+            int x2 = DISPLAY_WIDTH / 2 + hq_margem;
+            int y2 = DISPLAY_HEIGHT / 2 + hq_margem;
+
+            int borda_grossura = 6;
+            int borda_x;
+            int borda_y;
+            int borda_size = hq_size + borda_grossura/2;
+            
+            al_clear_to_color(BLACK);
+            al_draw_rectangle(x1 - borda_grossura/2, y1 - borda_grossura/2, x1 + borda_size, y1 + borda_size, RED, borda_grossura);
+            al_draw_bitmap(hq_ataque_mosquito[0], x1, y1, 0);
+            
+            al_draw_bitmap(hq_ataque_mosquito[1], x2, y1, 0);
+            al_draw_bitmap(hq_ataque_mosquito[2], x1, y2, 0);
+            al_draw_bitmap(hq_ataque_mosquito[3], x2, y2, 0);
+        }
+            break;
+
         case TELA_LOADING:
         {
             //se apertar espaço pula animação e vai direto pro menu
@@ -983,6 +1040,19 @@ int main() {
                 // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
                 al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 420, 565, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA INICIAR");
             }
+
+
+
+            //TESTE DE OPACIDADE 
+            static float opp = 0;
+            al_draw_tinted_bitmap(mosquitao, al_map_rgba_f(opp, opp, opp, opp), DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2, 0);
+            opp += 0.001;
+            if (opp >= 1)
+                opp = 0;
+            //TESTE DE OPACIDADE 
+
+
+
         }
         break;
 
@@ -1058,7 +1128,7 @@ int main() {
             }
             //se apertar espaço pula para o jogo
             if (al_key_down(&kState, ALLEGRO_KEY_SPACE))
-                tela = ATAQUE_MOSQUITO;
+                ir_para_tela(ATAQUE_MOSQUITO);
             //Desenhar
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(background_estrofulo, 0, 0, 0);
@@ -1349,7 +1419,7 @@ int main() {
             }
             //se apertar espaço pula para o jogo
             if (al_key_down(&kState, ALLEGRO_KEY_SPACE))
-                tela = VIREMIA;
+                ir_para_tela(VIREMIA);
             //Desenhar
             // Desenha a imagem de fundo na tela (na posição (0, 0))
             al_draw_bitmap(background_viremia, 0, 0, 0);
@@ -1401,14 +1471,14 @@ int main() {
                 //Fase viremia começou
                 if (startJogo == true) {
 
-                    podeSeguirMouse = true;
+                    pode_seguir_mouse = true;
 
                     //Verifica se o círculo está em cima de alguma linha ou dos quadrados brancos
                     for (int i = 0; i < tamanho - 1; i++) {
                         if (!fora_Da_Linha(player_vire.x, player_vire.y, coordenada_X[i], coordenada_Y[i], coordenada_X[i + 1],
                             coordenada_Y[i + 1], espessura_linha)
-                            || player_vire.x >= x1 && player_vire.x <= x1 + 20 && player_vire.y >= y1 && player_vire.y <= y1 + 20
-                            || player_vire.x >= x2 && player_vire.x <= x2 + 20 && player_vire.y >= y2 && player_vire.y <= y2 + 20) {
+                            || player_vire.x >= x_checkpoint1 && player_vire.x <= x_checkpoint1 + 20 && player_vire.y >= y_checkpoint1 && player_vire.y <= y_checkpoint1 + 20
+                            || player_vire.x >= x_checkpoint2 && player_vire.x <= x_checkpoint2 + 20 && player_vire.y >= y_checkpoint2 && player_vire.y <= y_checkpoint2 + 20) {
                             dentro_da_linha = true;
                             break; // Se o cursor estiver sobre uma linha, não precisa verificar as demais
                         }
@@ -1440,19 +1510,19 @@ int main() {
 
                     //niveis viremia
                     if (nivel_viremia == 1 || nivel_viremia == 3) {
-                        x_chegada = x2;
-                        y_chegada = y2;
+                        x_chegada = x_checkpoint2;
+                        y_chegada = y_checkpoint2;
                     }
                     else if (nivel_viremia == 2) {
-                        x_chegada = x1;
-                        y_chegada = y1;
+                        x_chegada = x_checkpoint1;
+                        y_chegada = y_checkpoint1;
                     }
                     if (nivel_viremia < 3 && (mState.x >= x_chegada && mState.x <= x_chegada + 20 && mState.y >= y_chegada && mState.y <= y_chegada + 20)) {
                         mudou_de_nivel_viremia = true;
                     }
                     if (mudou_de_nivel_viremia == true) {
-                        gera_coordenadas_X(coordenada_X, tamanho, x1, x2);
-                        gera_coordenadas_Y(coordenada_Y, tamanho, y1, y2);
+                        gera_coordenadas_X(coordenada_X, tamanho, x_checkpoint1, x_checkpoint2);
+                        gera_coordenadas_Y(coordenada_Y, tamanho, y_checkpoint1, y_checkpoint2);
                         //Diminui a espessura da linha
                         espessura_linha -= espessura_linha * 0.12;
                         nivel_viremia++;
@@ -1462,12 +1532,12 @@ int main() {
                         //Reseta mudouDeNivel
                         mudou_de_nivel_viremia = false;
                     }
-                    if (nivel_viremia == 3 && (mState.x >= x2 && mState.x <= x2 + 20 && mState.y >= y2 && mState.y <= y2 + 20)) {
+                    if (nivel_viremia == 3 && (mState.x >= x_checkpoint2 && mState.x <= x_checkpoint2 + 20 && mState.y >= y_checkpoint2 && mState.y <= y_checkpoint2 + 20)) {
                         pontuacao_viremia(cronometro, pontos_viremia);
                         controle.venceuJogo = true;
                     }
                 }
-                if(podeSeguirMouse){
+                if(pode_seguir_mouse){
                     player_vire.x = mState.x - al_get_bitmap_width(celula_viremia) / 2;
                     player_vire.y = mState.y - al_get_bitmap_height(celula_viremia) / 2;
                 }
@@ -1504,8 +1574,8 @@ int main() {
             gerar_Linhas(coordenada_X, coordenada_Y, tamanho, espessura_linha);
 
             //Desenha os quadrados brancos
-            al_draw_filled_rectangle(x1, y1, x1 + 20, y1 + 20, WHITE);
-            al_draw_filled_rectangle(x2, y2, x2 + 20, y2 + 20, WHITE);
+            al_draw_filled_rectangle(x_checkpoint1, y_checkpoint1, x_checkpoint1 + 20, y_checkpoint1 + 20, WHITE);
+            al_draw_filled_rectangle(x_checkpoint2, y_checkpoint2, x_checkpoint2 + 20, y_checkpoint2 + 20, WHITE);
 
             // Calcula a posição da imagem no círculo
             float x_virus_viremia = player_vire.x + raio_viremia * cos(angulo_viremia);
@@ -1627,6 +1697,10 @@ int main() {
     al_destroy_bitmap(spray_tutorial);
     al_destroy_bitmap(virus_PB);
     al_destroy_bitmap(botao_play);
+
+    for (int i = 0; i < sizeof(hq_ataque_mosquito) / 8; i++) {
+        al_destroy_bitmap(hq_ataque_mosquito[i]);
+    }
 
     for (int i = 0; i < sizeof(vidas_viremia) / 8; i++) { //divide por 8 pq é o tamanho de ALLEGRO_BITMAP (descobri isso de forma empírica)
         al_destroy_bitmap(vidas_viremia[i]);

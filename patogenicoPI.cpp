@@ -54,6 +54,7 @@ typedef struct {
     int x;
     int y;
     int raio;
+    int pontuacao;
 } player_estrofulo;
 
 typedef struct {
@@ -61,7 +62,7 @@ typedef struct {
     float y;
     float raio;
     float velocidade;
-} inimigo_estrofulo;
+} obstaculo_estrofulo;
 
 //fagocitose
 typedef struct {
@@ -668,6 +669,7 @@ int main() {
     ALLEGRO_BITMAP* spray_img = al_load_bitmap("img/estrofulo/spray.png");
     ALLEGRO_BITMAP* background_estrofulo = al_load_bitmap("img/estrofulo/fundoestrofulo.png");
     ALLEGRO_BITMAP* dialogo_mosquito = al_load_bitmap("img/estrofulo/moquitoo.png");
+    ALLEGRO_BITMAP* bonus_img = al_load_bitmap("img/estrofulo/raio.png");
     ALLEGRO_BITMAP* dialogo_virus = al_load_bitmap("img/estrofulo/viruss.png");
 
     ALLEGRO_BITMAP* background_viremia = al_load_bitmap("img/viremia/backgroundViremia.png");
@@ -740,15 +742,18 @@ int main() {
 
     // - - - - - - - VARIÁVEIS PARA MOSQUITO - - - - - - -
 
-    inimigo_estrofulo teia;
-    inimigo_estrofulo mao;
-    inimigo_estrofulo spray;
+    obstaculo_estrofulo teia;
+    obstaculo_estrofulo mao;
+    obstaculo_estrofulo spray;
+    obstaculo_estrofulo bonus_estrofulo;
 
     player_estrofulo player_mosquito;
 
     player_mosquito.x = 600;
     player_mosquito.y = 300;
     player_mosquito.raio = al_get_bitmap_width(mosquitao) / 2;
+
+    player_mosquito.pontuacao = 0;
 
     teia.x = DISPLAY_WIDTH;
     teia.y = rand() % (DISPLAY_HEIGHT - 20) + 10;
@@ -758,11 +763,17 @@ int main() {
     mao.y = rand() % (DISPLAY_HEIGHT - 20) + 10; // Posição inicial aleatória em Y
     mao.raio = 5;
 
+    bonus_estrofulo.x = DISPLAY_WIDTH + 50;
+    bonus_estrofulo.y = rand() % (DISPLAY_HEIGHT - 30) + 10;
+    bonus_estrofulo.raio = 5;
+  
+
+
     spray.x = 50; // posicao inicial e fixa de X do spray
     spray.y = 220; //posicao inicial Y do spray
     spray.raio = al_get_bitmap_width(spray_img) / 2;
 
-    float velocidade_x = (rand() % 6 + 5);  // Define uma velocidade aleatória inicial entre 5 e 10
+   
     float suavidade = 0.020;  // Define uma velocidade a qual sera usada para efeito de suavização
     float amplitude; // Amplitude da parábola
     float offset; // Deslocamento Y inicial
@@ -1100,9 +1111,11 @@ int main() {
             //}
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
-
                 tempo_segundos += 1.0 / 60;
+              
 
+                player_mosquito.pontuacao = (int)(tempo_segundos * 5); // 5 pontos por segundo
+                printf("Tempo: %.1f segundos\n Pontuação: %d\n \n\n", tempo_segundos, player_mosquito.pontuacao); //verificando func segundos e pontuacoa
 
                 // Atualiza a posição do mosquito com base nas teclas W e S
                 if (al_key_down(&kState, ALLEGRO_KEY_W) || al_key_down(&kState, ALLEGRO_KEY_UP)) {
@@ -1121,9 +1134,11 @@ int main() {
                 }
 
                 // Atualiza a posição da mão
-                mao.x -= velocidade_x;
+                mao.x -= rand() % 6 + 6;
                 // Atualiza a posição da teia
-                teia.x -= velocidade_x;
+                teia.x -= rand() % 6 + 6;
+
+                bonus_estrofulo.x -= rand() % 5 + 1;
 
                 // Verifica se a mão saiu da tela
                 if (mao.x < 0) {
@@ -1139,8 +1154,6 @@ int main() {
                     // Nova posição Y aleatória
                     mao.y = rand() % (DISPLAY_HEIGHT - 20) + 10;
 
-                    // Atribui uma nova velocidade aleatória à mão entre 5 e 10
-                    mao.velocidade = velocidade_x; // Gera um número aleatório entre 5 e 10
                 }
                 if (teia.x < -30) {
                     // Resetando a teia para o início
@@ -1148,13 +1161,18 @@ int main() {
 
                     // Nova posição Y aleatória
                     teia.y = rand() % (DISPLAY_HEIGHT - 20) + 10;
-                    teia.velocidade = velocidade_x; // Gera um número aleatório entre 5 e 10
+               
+                }
+                if (bonus_estrofulo.x < -30) {
+                    bonus_estrofulo.x = (DISPLAY_WIDTH  + 50);
+                    bonus_estrofulo.y = rand() % (DISPLAY_HEIGHT - 60) + 10;
+              
                 }
 
                 // Calcula a posição Y da mão usando o padrão atual
                 mao.y = padrao_movimento[indice_padroes](mao.x, amplitude);
 
-                // Verifica colisão com o mosquito
+                // Verifica colisão com a mao
                 if (colisao_quadrado_dentro(mao.x, mao.y, mao.raio, mao.raio, player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao), al_get_bitmap_height(mosquitao))) {
                     player_mosquito.x -= 100; // Lógica de colisão com a mão
                 }
@@ -1162,14 +1180,21 @@ int main() {
                 if (colisao_quadrado_dentro(teia.x, teia.y, al_get_bitmap_width(teia_img), al_get_bitmap_height(teia_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
                     player_mosquito.x -= 100; // Lógica de colisão com a teia
                 }
+                // Verifica colisão com o bonus
+                if (colisao_quadrado_dentro(bonus_estrofulo.x, bonus_estrofulo.y, al_get_bitmap_width(bonus_img), al_get_bitmap_height(bonus_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
+                    bonus_estrofulo.x = (DISPLAY_WIDTH + 50);
+                    bonus_estrofulo.y = rand() % (DISPLAY_HEIGHT - 60) + 10;
+                    player_mosquito.pontuacao += 15;
+                }
                 // Verifica colisao com o spray
                 if (colisao_quadrado_dentro(spray.x, spray.y, al_get_bitmap_width(spray_img), al_get_bitmap_height(spray_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
                     tela = GAME_OVER;
                     player_mosquito.x = 600;
                     tempo_segundos = 0;
+                    player_mosquito.pontuacao = 0;
 
                 }
-                spray.y += (player_mosquito.y - 50 - spray.y) * suavidade;
+                spray.y += (player_mosquito.y - 50 - spray.y) * suavidade; // o y do spray segue o y do mosquito com uma velocidade certa para suavidade
             }
 
             // Desenha a imagem de fundo
@@ -1184,6 +1209,9 @@ int main() {
             // Desenha o mosquito
             al_draw_bitmap(mosquitao, player_mosquito.x, player_mosquito.y, 0);
 
+            // Desenha o mosquito
+            al_draw_bitmap(bonus_img, bonus_estrofulo.x, bonus_estrofulo.y, 0);
+
             //Desenha o spray
             al_draw_bitmap(spray_img, spray.x, spray.y, 0);
 
@@ -1194,16 +1222,19 @@ int main() {
             barra_progresso = fmin(barra_progresso, largura_barra); // comando que GARANTE que a barra não ultrapasse a largura máxima
 
             float icone_mosquito = 40 + barra_progresso; // calculo para posicao do iconmosquitao com base no progresso da barra
+
             icone_mosquito = fmin(icone_mosquito, 760); // comando que GARANTE que o icone_mosquito nao ultrapasse a largura máxima da barra
-            if (barra_progresso >= 100)
+
+            if (barra_progresso >= largura_barra)
                 controle.venceuJogo = true;
-            printf("%f\n", barra_progresso);
+
             al_draw_rectangle(40 - 2, 18, 760 + 2, 42, BLACK, 2); // desenha as bordas da barra de progresso
 
             al_draw_filled_rectangle(40, 20, 40 + barra_progresso, 40, RED); // desenha a barra de progresso
 
             al_draw_bitmap(iconmosquitao, icone_mosquito - al_get_bitmap_width(iconmosquitao) / 2, 18, 0); // desenha o iconmosquitao sobre a barra de progresso, acompanhando seu movimento
 
+         
         }
         break;
 
@@ -1670,6 +1701,7 @@ int main() {
     al_destroy_bitmap(teia_img);
     al_destroy_bitmap(spray_img);
     al_destroy_bitmap(background_estrofulo);
+    al_destroy_bitmap(bonus_img);
     al_destroy_bitmap(tela_perdeu);
     al_destroy_bitmap(celula_viremia);
     al_destroy_bitmap(teclas_tutorial);

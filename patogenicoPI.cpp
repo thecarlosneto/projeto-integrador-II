@@ -8,6 +8,7 @@
 #include <allegro5/allegro_image.h>
 #include <math.h>
 #include <cmath>
+#include <string.h>
 
 #define DISPLAY_WIDTH 800
 #define DISPLAY_HEIGHT 600
@@ -143,15 +144,7 @@ controle_geral controle;
 
 // textos dentro da caixa de dialogo
 
-char textos[NUM_TEXTO][MAX_TEXTO] = {
-      " Bzzz.",
-      "Se eu não pegar o sangue desse humano, meus filhos vão morrer.",
-      "Precizzzzzo evitar ser morta até lá!",
-      " Bzzz.",
-      "Acho que infectei ele com um víruzzzzz." ,
-   
 
-};
 
 
 
@@ -258,18 +251,24 @@ void cria_fundo_pausa(ALLEGRO_DISPLAY* disp, ALLEGRO_BITMAP* bitmap) {
     al_set_target_bitmap(al_get_backbuffer(disp));
 }
 // chamada de exemplo: popup_vitoria(fonte_HUD, botao_play, &tela);
-void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
+void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela, int dialogo) {
     pause();
     int proxTela;
+
+
+
     switch (*tela) {
     case ATAQUE_MOSQUITO:
-        proxTela = FAGOCITOSE;
+        proxTela = TUTORIAL_FAGOCITOSE;
+
         break;
     case FAGOCITOSE:
-        proxTela = VIREMIA;
+        proxTela = TUTORIAL_VIREMIA;
+
         break;
     case VIREMIA:
         proxTela = VENCEU_VIREMIA;
+
         break;
         //garantia de que o jogo não vai crashar, mas em tese esse caso nunca vai acontecer
     default:
@@ -308,76 +307,101 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
 }
 
 
-void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaAltura, ALLEGRO_FONT* font, const char textos[NUM_TEXTO][MAX_TEXTO], int* tempo_perdeu, ALLEGRO_EVENT_QUEUE* event_queue, bool* dialogo, ALLEGRO_BITMAP* img) {
-    ALLEGRO_EVENT ev;
-    int tempo_sub = *tempo_perdeu / 3;
 
-    // Limita o valor de tempo_sub para que não ultrapasse o número de textos disponíveis
-    if (tempo_sub >= NUM_TEXTO) {
-        tempo_sub = NUM_TEXTO - 1;
+// Função para desenhar o texto ajustado
+void desenhar_caixa_dialogo(
+    int caixaX, int caixaY, int caixaLargura, int caixaAltura,
+    ALLEGRO_FONT* font, const char textos[NUM_TEXTO][MAX_TEXTO],
+    int* indice_texto, ALLEGRO_EVENT_QUEUE* event_queue,
+    bool* dialogo, ALLEGRO_BITMAP* img
+) {
+    ALLEGRO_EVENT ev;
+
+    // Limita o valor de indice_texto
+    if (*indice_texto >= NUM_TEXTO) {
+        *indice_texto = NUM_TEXTO - 1;
     }
+
+
 
     // Desenha a caixa de diálogo preenchida
-    al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(5530, 50, 50));
+    al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(50, 50, 50));
 
-    // Desenha a borda da caixa de diálogo
+    // Desenha a borda
     al_draw_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(255, 255, 255), 2);
 
-    // Desenha o texto correspondente ao valor atual de tempo_sub
-    al_draw_text(font, al_map_rgb(255, 255, 255), caixaX + 20, caixaY + 60, 0, textos[tempo_sub]);
+    // Coordenadas da imagem
+    int imgX = caixaX + 20;
+    int imgY = caixaY + 40;
 
-    if (tempo_sub == 0) {
-        // desenha  a imagem atual
-        al_draw_bitmap(img, caixaX + 20, caixaY + 20, 0);
+    // Desenha a imagem
+    al_draw_scaled_bitmap(
+        img, 0, 0,
+        al_get_bitmap_width(img), al_get_bitmap_height(img),
+        imgX, imgY, 100, 100, 0
+    );
+
+    // Texto atual
+    const char* texto_atual = textos[*indice_texto];
+
+    // Ajuste de linha para o texto
+    int linhaY = imgY + 50;
+    int espacoVertical = 10;  // Espaço entre as linhas do texto
+
+    // Quebra de linha automática
+    int largura_maxima = caixaLargura - (imgX + 120); // Largura disponível para o texto
+    char texto_buffer[MAX_TEXTO];
+    int pos_inicial = 0;
+
+    while (pos_inicial < strlen(texto_atual)) {
+        int comprimento_texto = 0;
+
+        // Encontra a posição do texto que cabe na linha
+        while (comprimento_texto < largura_maxima && texto_atual[pos_inicial + comprimento_texto] != '\0') {
+            comprimento_texto++;
+        }
+
+        // Copia o texto que cabe na linha
+
+        strncpy_s(texto_buffer, sizeof(texto_buffer), texto_atual + pos_inicial, comprimento_texto);
+
+
+        // Desenha o texto
+        al_draw_text(font, al_map_rgb(255, 255, 255), imgX + 120, linhaY, 0, texto_buffer);
+        linhaY += al_get_font_line_height(font) + espacoVertical;
+        pos_inicial += comprimento_texto;
     }
 
-    al_flip_display();
-
-
-
-    // Variaveis do botão "Avançar" para mudar o texto da caixa de dialogo
+    // Botão "Avançar"
     int largura_botao = 80;
     int altura_botao = 30;
     int botaoX = caixaX + caixaLargura - largura_botao - 20;
     int botaoY = caixaY + caixaAltura - altura_botao - 10;
 
-    // Desenha o botão
     al_draw_filled_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(100, 100, 100));
     al_draw_rectangle(botaoX, botaoY, botaoX + largura_botao, botaoY + altura_botao, al_map_rgb(255, 255, 255), 2);
 
-    // Desenha o texto do botão
     const char* texto_botao = "Avançar";
     al_draw_text(font, al_map_rgb(255, 255, 255), botaoX + largura_botao / 2, botaoY + altura_botao / 2 - al_get_font_line_height(font) / 2, ALLEGRO_ALIGN_CENTER, texto_botao);
 
-    // Verifica se o botão foi clicado
+    // Processa eventos de clique no botão
     while (al_get_next_event(event_queue, &ev)) {
-
         if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && ev.mouse.button == 1) {
-
-
-
             if (ev.mouse.x > botaoX && ev.mouse.x < botaoX + largura_botao &&
                 ev.mouse.y > botaoY && ev.mouse.y < botaoY + altura_botao) {
-                printf("botao foi clicado\n");
-                printf("tempo: %d \n", tempo_sub);
-                *tempo_perdeu += 3; // Avança para o próximo texto
-                tempo_sub = *tempo_perdeu / 3;
+                *indice_texto += 1;
 
-                if (tempo_sub >= NUM_TEXTO) {
-                    tempo_sub = NUM_TEXTO - 1; // Limita o valor de tempo_sub
+                // Se o índice exceder o número de textos disponíveis, finaliza o diálogo
+                if (*indice_texto >= NUM_TEXTO) {
+                    *dialogo = false;
+                    return;
                 }
-
             }
         }
     }
-
-    // Se o tempo atingir o limite, sair da função
-    if (*tempo_perdeu >= 15) {
-        printf("Tempo atingido, saindo da função.\n");
-        *dialogo = false;
-        return;
-    }
 }
+
+
 
 
 
@@ -766,14 +790,14 @@ int main() {
     bonus_estrofulo.x = DISPLAY_WIDTH + 50;
     bonus_estrofulo.y = rand() % (DISPLAY_HEIGHT - 30) + 10;
     bonus_estrofulo.raio = 5;
-  
+
 
 
     spray.x = 50; // posicao inicial e fixa de X do spray
     spray.y = 220; //posicao inicial Y do spray
     spray.raio = al_get_bitmap_width(spray_img) / 2;
 
-   
+
     float suavidade = 0.020;  // Define uma velocidade a qual sera usada para efeito de suavização
     float amplitude; // Amplitude da parábola
     float offset; // Deslocamento Y inicial
@@ -1057,6 +1081,8 @@ int main() {
 
         case TUTORIAL_ESTROFULO:
         {
+            dialogo = true;
+
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 contador_de_frames++;
                 //Verifica o timer a cada meio segundo'
@@ -1088,6 +1114,7 @@ int main() {
             al_draw_text(fonte_texto, WHITE, 50, 167, ALLEGRO_ALIGN_LEFT, "- MISSÃO: DOMINAR A CASA! Controle o mosquito com W e S ou as setas. ");
             al_draw_text(fonte_texto, WHITE, 50, 368, ALLEGRO_ALIGN_LEFT, "- FUJA DOS PERIGOS ABAIXO e explore cada canto da casa!");
 
+            dialogo = true;
         }
         break;
 
@@ -1096,23 +1123,34 @@ int main() {
             tela_anterior = tela;
 
             ////   caixa de dialogo
-            //if (dialogo == true) {
+            if (dialogo == true) {
 
-            //    al_draw_bitmap(bg_pausa, 0, 0, 0);
+                al_draw_bitmap(bg_pausa, 0, 0, 0);
 
-            //    desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
+                char textos[NUM_TEXTO][MAX_TEXTO] = {
+
+                  " Bzzz...",
+                  "Se eu não pegar o sangue desse humano..... ",
+                  "meus filhos vão morrer...",
+                  "Precizzzzzo evitar ser morta até lá!..",
+                  " Bzzz.",
 
 
-            //    // Atualiza a tela e faz outras operações, se necessário
-            //    al_flip_display();
+                };
 
-            //    // Espera um segundo para dar tempo para o tempo ser incrementado
-            //    al_rest(0.5);
-            //}
+                desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, mosquitao);
 
-            if (ev.type == ALLEGRO_EVENT_TIMER) {
+
+                // Atualiza a tela e faz outras operações, se necessário
+                al_flip_display();
+
+                // Espera um pouco para dar tempo para o tempo ser incrementado
+                al_rest(0.5);
+            }
+
+            if (ev.type == ALLEGRO_EVENT_TIMER && dialogo == false) {
                 tempo_segundos += 1.0 / 60;
-              
+
 
                 player_mosquito.pontuacao = (int)(tempo_segundos * 5); // 5 pontos por segundo
                 printf("Tempo: %.1f segundos\n Pontuação: %d\n \n\n", tempo_segundos, player_mosquito.pontuacao); //verificando func segundos e pontuacoa
@@ -1161,12 +1199,12 @@ int main() {
 
                     // Nova posição Y aleatória
                     teia.y = rand() % (DISPLAY_HEIGHT - 20) + 10;
-               
+
                 }
                 if (bonus_estrofulo.x < -30) {
-                    bonus_estrofulo.x = (DISPLAY_WIDTH  + 50);
+                    bonus_estrofulo.x = (DISPLAY_WIDTH + 50);
                     bonus_estrofulo.y = rand() % (DISPLAY_HEIGHT - 60) + 10;
-              
+
                 }
 
                 // Calcula a posição Y da mão usando o padrão atual
@@ -1234,12 +1272,14 @@ int main() {
 
             al_draw_bitmap(iconmosquitao, icone_mosquito - al_get_bitmap_width(iconmosquitao) / 2, 18, 0); // desenha o iconmosquitao sobre a barra de progresso, acompanhando seu movimento
 
-         
+
         }
         break;
 
         case TUTORIAL_FAGOCITOSE:
         {
+            dialogo = true;
+
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 contador_de_frames++;
                 //Verifica o timer a cada meio segundo'
@@ -1270,6 +1310,7 @@ int main() {
             al_draw_text(fonte_texto, WHITE, 50, 368, ALLEGRO_ALIGN_LEFT, "- FUJA DO FAGÓCITO! Seja mais rápido que o sistema imunológico");
             al_draw_text(fonte_texto, WHITE, 50, 398, ALLEGRO_ALIGN_LEFT, "  para sobreviver!");
 
+            dialogo = true;
         }
         break;
 
@@ -1278,23 +1319,32 @@ int main() {
             tela_anterior = tela;
 
             ////   caixa de dialogo
-            //if (dialogo == true) {
+            if (dialogo == true) {
 
-            //    al_draw_bitmap(bg_pausa, 0, 0, 0);
+                al_draw_bitmap(bg_pausa, 0, 0, 0);
 
-            //    desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
+                char textos[NUM_TEXTO][MAX_TEXTO] = {
 
-            //    al_draw_textf(fonte_20, WHITE, 400, 120, ALLEGRO_ALIGN_CENTER, "Como Jogar?");
+                  " DOMINAR CÉLULA...",
+                  "COMER NUTRIENTES...... ",
+                  "SE MULTIPLICAR. ...",
+                  "EVITAR FAGÓCITOS...",
+                  "UGAA...",
 
 
-            //    // Atualiza a tela e faz outras operações, se necessário
-            //    al_flip_display();
+                };
 
-            //    // Espera um segundo para dar tempo para o tempo ser incrementado
-            //    al_rest(0.5);
-            //}
+                desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
 
-            if (ev.type == ALLEGRO_EVENT_TIMER) {
+
+                // Atualiza a tela e faz outras operações, se necessário
+                al_flip_display();
+
+                // Espera um pouco para dar tempo para o tempo ser incrementado
+                al_rest(0.5);
+            }
+
+            if (ev.type == ALLEGRO_EVENT_TIMER && dialogo == false) {
                 // Calcula a direção e a distância até a posição do mouse
                 float dx = mState.x - player_fago.x;
                 float dy = mState.y - player_fago.y;
@@ -1403,6 +1453,9 @@ int main() {
 
         case TUTORIAL_VIREMIA:
         {
+
+            dialogo = true;
+
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 contador_de_frames++;
                 //Verifica o timer a cada meio segundo'
@@ -1442,21 +1495,30 @@ int main() {
             tela_anterior = tela;
 
             ////   caixa de dialogo
-            //if (dialogo == true) {
+            if (dialogo == true) {
 
-            //    al_draw_bitmap(bg_pausa, 0, 0, 0);
+                al_draw_bitmap(bg_pausa, 0, 0, 0);
 
-            //    desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
+                char textos[NUM_TEXTO][MAX_TEXTO] = {
 
-            //    al_draw_textf(fonte_20, WHITE, 400, 120, ALLEGRO_ALIGN_CENTER, "Como Jogar?");
+                  " UGAA....",
+                  "ESPALHAR PELO SANGUE...... ",
+                  "DIVIDIR...",
+                  "CONQUISTAR.",
+                  " VAMOOOO",
 
 
-            //    // Atualiza a tela e faz outras operações, se necessário
-            //    al_flip_display();
+                };
 
-            //    // Espera um segundo para dar tempo para o tempo ser incrementado
-            //    al_rest(0.5);
-            //}
+                desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
+
+
+                // Atualiza a tela e faz outras operações, se necessário
+                al_flip_display();
+
+                // Espera um pouco para dar tempo para o tempo ser incrementado
+                al_rest(0.5);
+            }
 
             // Verifica se o evento é do temporizador
             if (ev.type == ALLEGRO_EVENT_TIMER) {
@@ -1546,7 +1608,7 @@ int main() {
                         controle.venceuJogo = true;
                     }
                 }
-                if(podeSeguirMouse){
+                if (podeSeguirMouse) {
                     player_vire.x = mState.x - al_get_bitmap_width(celula_viremia) / 2;
                     player_vire.y = mState.y - al_get_bitmap_height(celula_viremia) / 2;
                 }
@@ -1677,7 +1739,8 @@ int main() {
         }
         //sistema de vitória
         if (controle.venceuJogo)
-            popup_vitoria(fonte_HUD, botao_play, &tela);
+            popup_vitoria(fonte_HUD, botao_play, &tela, dialogo);
+
         al_flip_display();
     }
 

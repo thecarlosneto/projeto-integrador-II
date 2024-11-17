@@ -1103,11 +1103,12 @@ int main() {
 
             al_draw_bitmap(mosquitao, 372, 213, 0);
             al_draw_line(319, 275, 460, 275, WHITE, 3.0);
+            al_draw_bitmap(mao_img, 460, 415, 0);
             al_draw_bitmap(teclas_tutorial, 352, 285, 0);
             al_draw_bitmap(teia_img, 372, 415, 0);
             al_draw_bitmap(spray_tutorial, 292, 415, 0);
 
-            al_draw_filled_circle(480, 440, 10, YELLOW);
+        
 
             //Título
             al_draw_text(fonte_titulo, WHITE, 400, 75, ALLEGRO_ALIGN_CENTER, "COMO JOGAR?");

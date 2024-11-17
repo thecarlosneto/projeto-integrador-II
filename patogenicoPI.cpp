@@ -196,6 +196,11 @@ float tempo_segundos; // Variavel de tempo para adicionar na barra de progresso 
 float tempo_max; // Variavel de tempo para ditar o tempo maximo para o jogo "Estrofulo"
 int indice_padroes; // Índice do padrão de movimento
 
+float largura_barra;
+float barra_progresso;
+float icone_mosquito;
+
+
 //FAGOCITOSE
 controle_fagocitose control_fago; // variáveis gerais como vida, pontuação, etc
 nutriente* nutrientes; // nutrientes que são comidos pro player crescer
@@ -1379,12 +1384,11 @@ int main() {
                 al_flip_display();
 
                 // Espera um pouco para dar tempo para o tempo ser incrementado
-                al_rest(0.5);
+                al_rest(0.1);
             }
             pode_pausar = true;
             if (ev.type == ALLEGRO_EVENT_TIMER) {
-
-                if (ev.type == ALLEGRO_EVENT_TIMER && dialogo == false) {
+                if (dialogo == false) {
                     tempo_segundos += 1.0 / 60;
 
 
@@ -1473,46 +1477,40 @@ int main() {
                     spray.y += (player_mosquito.y - 50 - spray.y) * suavidade; // o y do spray segue o y do mosquito com uma velocidade certa para suavidade
                 }
 
-                // Desenha a imagem de fundo
-                al_draw_bitmap(background_estrofulo, 0, 0, 0);
-
-                // Desenha a mão
-                al_draw_rotated_bitmap(mao_img, al_get_bitmap_width(mao_img) / 2, al_get_bitmap_height(mao_img) / 2, mao.x + al_get_bitmap_width(mao_img) / 2, mao.y + al_get_bitmap_height(mao_img) / 2, ALLEGRO_PI / 2, ALLEGRO_FLIP_VERTICAL);
-
-                //Desenha a teia
-                al_draw_bitmap(teia_img, teia.x, teia.y, 0);
-
-                // Desenha o mosquito
-                al_draw_bitmap(mosquitao, player_mosquito.x, player_mosquito.y, 0);
-
-                // Desenha o bonus
-                al_draw_bitmap(bonus_img, bonus_estrofulo.x, bonus_estrofulo.y, 0);
-
-                //Desenha o spray
-                al_draw_bitmap(spray_img, spray.x, spray.y, 0);
-
-
-                float largura_barra = 760.0 - 40.0; // comprimento total da barra de progresso
-
-                float barra_progresso = (tempo_segundos / tempo_max) * largura_barra; // calculo do progresso da barra baseada no tempo de jogo
+                largura_barra = 760.0 - 40.0; // comprimento total da barra de progresso
+                barra_progresso = (tempo_segundos / tempo_max) * largura_barra; // calculo do progresso da barra baseada no tempo de jogo
                 barra_progresso = fmin(barra_progresso, largura_barra); // comando que GARANTE que a barra não ultrapasse a largura máxima
-
-                float icone_mosquito = 40 + barra_progresso; // calculo para posicao do iconmosquitao com base no progresso da barra
-
+                icone_mosquito = 40 + barra_progresso; // calculo para posicao do iconmosquitao com base no progresso da barra
                 icone_mosquito = fmin(icone_mosquito, 760); // comando que GARANTE que o icone_mosquito nao ultrapasse a largura máxima da barra
 
                 if (barra_progresso >= largura_barra)
                     controle.venceuJogo = true;
-
-                al_draw_rectangle(40 - 2, 18, 760 + 2, 42, BLACK, 2); // desenha as bordas da barra de progresso
-
-                al_draw_filled_rectangle(40, 20, 40 + barra_progresso, 40, RED); // desenha a barra de progresso
-
-                al_draw_bitmap(iconmosquitao, icone_mosquito - al_get_bitmap_width(iconmosquitao) / 2, 5, 0); // desenha o iconmosquitao sobre a barra de progresso, acompanhando seu movimento
-
-
             }
-            break;
+            // Desenha a imagem de fundo
+            al_draw_bitmap(background_estrofulo, 0, 0, 0);
+
+            // Desenha a mão
+            al_draw_rotated_bitmap(mao_img, al_get_bitmap_width(mao_img) / 2, al_get_bitmap_height(mao_img) / 2, mao.x + al_get_bitmap_width(mao_img) / 2, mao.y + al_get_bitmap_height(mao_img) / 2, ALLEGRO_PI / 2, ALLEGRO_FLIP_VERTICAL);
+
+            //Desenha a teia
+            al_draw_bitmap(teia_img, teia.x, teia.y, 0);
+
+            // Desenha o mosquito
+            al_draw_bitmap(mosquitao, player_mosquito.x, player_mosquito.y, 0);
+
+            // Desenha o bonus
+            al_draw_bitmap(bonus_img, bonus_estrofulo.x, bonus_estrofulo.y, 0);
+
+            //Desenha o spray
+            al_draw_bitmap(spray_img, spray.x, spray.y, 0);
+
+            al_draw_rectangle(40 - 2, 18, 760 + 2, 42, BLACK, 2); // desenha as bordas da barra de progresso
+
+            al_draw_filled_rectangle(40, 20, 40 + barra_progresso, 40, RED); // desenha a barra de progresso
+
+            al_draw_bitmap(iconmosquitao, icone_mosquito - al_get_bitmap_width(iconmosquitao) / 2, 5, 0); // desenha o iconmosquitao sobre a barra de progresso, acompanhando seu movimento
+        }
+        break;
 
         case TUTORIAL_FAGOCITOSE:
         {
@@ -1954,7 +1952,6 @@ int main() {
             al_draw_text(fonte_HUD, BLACK, 50, 50, 0, "Erro 404: Tela nao encontrada");
         }
         break;
-        }
         } // <- fim switch
 
         //sistema de vitória
@@ -1973,7 +1970,6 @@ int main() {
         if (jogo_pausado) {
             pause();
             al_draw_bitmap(bg_pausa, 0, 0, 0);
-
             voltarTelaEscolha(ev, &tela, fonte_20, &jogo_pausado);
         }
         pode_pausar = false;

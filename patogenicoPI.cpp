@@ -693,6 +693,7 @@ int main() {
     ALLEGRO_BITMAP* spray_img = al_load_bitmap("img/estrofulo/spray.png");
     ALLEGRO_BITMAP* background_estrofulo = al_load_bitmap("img/estrofulo/fundoestrofulo.png");
     ALLEGRO_BITMAP* dialogo_mosquito = al_load_bitmap("img/estrofulo/moquitoo.png");
+    ALLEGRO_BITMAP* mao_img = al_load_bitmap("img/estrofulo/maofrente.png");
     ALLEGRO_BITMAP* bonus_img = al_load_bitmap("img/estrofulo/raio.png");
     ALLEGRO_BITMAP* dialogo_virus = al_load_bitmap("img/estrofulo/viruss.png");
 
@@ -785,12 +786,13 @@ int main() {
 
     mao.x = 0; // Posição fixa em X
     mao.y = rand() % (DISPLAY_HEIGHT - 20) + 10; // Posição inicial aleatória em Y
-    mao.raio = 5;
+    mao.raio = al_get_bitmap_width(mao_img)/2;
 
+   // VARIAVEIS BONUS, NAO ESTA ADICIONANDO AO SISTEMA DE PONTOS, DE RESTO TUDO OK 
     bonus_estrofulo.x = DISPLAY_WIDTH + 50;
     bonus_estrofulo.y = rand() % (DISPLAY_HEIGHT - 30) + 10;
     bonus_estrofulo.raio = 5;
-
+    
 
 
     spray.x = 50; // posicao inicial e fixa de X do spray
@@ -1218,12 +1220,14 @@ int main() {
                 if (colisao_quadrado_dentro(teia.x, teia.y, al_get_bitmap_width(teia_img), al_get_bitmap_height(teia_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
                     player_mosquito.x -= 100; // Lógica de colisão com a teia
                 }
-                // Verifica colisão com o bonus
+                // Verifica colisão com o bonus - NAO ESTA FUNCIONANDO O SISTEMA DE PONTOS
                 if (colisao_quadrado_dentro(bonus_estrofulo.x, bonus_estrofulo.y, al_get_bitmap_width(bonus_img), al_get_bitmap_height(bonus_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
                     bonus_estrofulo.x = (DISPLAY_WIDTH + 50);
                     bonus_estrofulo.y = rand() % (DISPLAY_HEIGHT - 60) + 10;
                     player_mosquito.pontuacao += 15;
-                }
+                } 
+                
+            
                 // Verifica colisao com o spray
                 if (colisao_quadrado_dentro(spray.x, spray.y, al_get_bitmap_width(spray_img), al_get_bitmap_height(spray_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
                     tela = GAME_OVER;
@@ -1239,7 +1243,7 @@ int main() {
             al_draw_bitmap(background_estrofulo, 0, 0, 0);
 
             // Desenha a mão
-            al_draw_filled_circle(mao.x, mao.y, 10, al_map_rgb(255, 255, 0));
+            al_draw_rotated_bitmap(mao_img, al_get_bitmap_width(mao_img) / 2, al_get_bitmap_height(mao_img) / 2, mao.x + al_get_bitmap_width(mao_img) / 2, mao.y + al_get_bitmap_height(mao_img) / 2, ALLEGRO_PI / 2, ALLEGRO_FLIP_VERTICAL);
 
             //Desenha a teia
             al_draw_bitmap(teia_img, teia.x, teia.y, 0);
@@ -1247,7 +1251,7 @@ int main() {
             // Desenha o mosquito
             al_draw_bitmap(mosquitao, player_mosquito.x, player_mosquito.y, 0);
 
-            // Desenha o mosquito
+            // Desenha o bonus
             al_draw_bitmap(bonus_img, bonus_estrofulo.x, bonus_estrofulo.y, 0);
 
             //Desenha o spray
@@ -1270,7 +1274,7 @@ int main() {
 
             al_draw_filled_rectangle(40, 20, 40 + barra_progresso, 40, RED); // desenha a barra de progresso
 
-            al_draw_bitmap(iconmosquitao, icone_mosquito - al_get_bitmap_width(iconmosquitao) / 2, 18, 0); // desenha o iconmosquitao sobre a barra de progresso, acompanhando seu movimento
+            al_draw_bitmap(iconmosquitao, icone_mosquito - al_get_bitmap_width(iconmosquitao) / 2, 5, 0); // desenha o iconmosquitao sobre a barra de progresso, acompanhando seu movimento
 
 
         }

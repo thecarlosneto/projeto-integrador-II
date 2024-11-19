@@ -408,10 +408,13 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
 
 
     // Desenha a caixa de diálogo preenchida
-    al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(50, 50, 50));
+    al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(192, 192, 192));
 
     // Desenha a borda
     al_draw_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + caixaAltura, al_map_rgb(255, 255, 255), 2);
+
+    // Desenha o header
+    al_draw_filled_rectangle(caixaX, caixaY, caixaX + caixaLargura, caixaY + 30, al_map_rgb(23, 0, 209));
 
     // Coordenadas da imagem
     int imgX = caixaX + 20;
@@ -450,8 +453,8 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
 
 
         // Desenha o texto
-        al_draw_text(font, al_map_rgb(255, 255, 255), imgX + 120, linhaY, 0, texto_buffer);
-        linhaY += al_get_font_line_height(font) + espacoVertical;
+        al_draw_text(fonte_texto, al_map_rgb(0, 0, 0), imgX + 120, linhaY, 0, texto_buffer);
+        linhaY += al_get_font_line_height(fonte_texto) + espacoVertical;
         pos_inicial += comprimento_texto;
     }
 

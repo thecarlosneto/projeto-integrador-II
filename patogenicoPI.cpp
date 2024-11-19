@@ -47,9 +47,14 @@ typedef enum {
 //geral
 typedef struct {
     int pontuacao[3];
-    int pontuacaoTotal;
-    bool venceuJogo;
+    int pontuacao_total;
+    bool venceu_jogo;
 } controle_geral;
+
+typedef struct {
+    float x_loading, y_loading;
+    int w_loading, h_loading;
+} Retangulo; //retângulo da tela de loading
 
 //picada mosquito (estrofulo)
 typedef struct {
@@ -57,6 +62,7 @@ typedef struct {
     int y;
     int raio;
     int pontuacao;
+    int vivo;
 } player_estrofulo;
 
 typedef struct {
@@ -72,6 +78,7 @@ typedef struct {
     bool venceu;
     short int tentativas;
     short int pontuacao;
+    short int cont_vezes_crescidas;
     bool desenhou_fundo;
 } controle_fagocitose;
 
@@ -97,11 +104,6 @@ typedef struct {
 } fagocito;
 
 
-typedef struct {
-    float x_loading, y_loading;
-    int w_loading, h_loading;
-} Retangulo;
-
 //viremia
 typedef struct {
     ALLEGRO_BITMAP* celula_viremia;
@@ -117,6 +119,12 @@ typedef struct {
 } obstaculo_viremia;
 
 ALLEGRO_DISPLAY* display;
+
+//fontes
+ALLEGRO_FONT* fonte_HUD;
+ALLEGRO_FONT* font;
+ALLEGRO_FONT* fonte_20;
+ALLEGRO_FONT* fonte_titulo;
 
 //imagens 
 ALLEGRO_BITMAP* loading;
@@ -149,6 +157,8 @@ ALLEGRO_BITMAP* cd8_viremia;
 ALLEGRO_BITMAP* dialogo_virus;
 ALLEGRO_BITMAP* dialogo_mosquito;
 
+ALLEGRO_BITMAP* paintogenico;
+ALLEGRO_BITMAP* bg_venceu_jogo;
 
 //fontes de texto
 ALLEGRO_FONT* fonte_texto;
@@ -178,6 +188,7 @@ short int index_HQ = -1;
 static float opacidade_HQs[4] = { 0, 0, 0, 0 }; // Armazena as opacidades dos quadrinhos
 static int quadrinho_atual = 0;                 // Índice do quadrinho que está animando
 
+int tempo_perdeu;
 bool dialogo = true;
 
 //ATAQUE MOSQUITO
@@ -199,7 +210,7 @@ int indice_padroes; // Índice do padrão de movimento
 float largura_barra;
 float barra_progresso;
 float icone_mosquito;
-
+int cont_bonus;
 
 //FAGOCITOSE
 controle_fagocitose control_fago; // variáveis gerais como vida, pontuação, etc
@@ -274,7 +285,19 @@ char textos[NUM_TEXTO][MAX_TEXTO] = {
 
 // FUNÇÕES GERAIS
 
-void criar_bitmap_botao(ALLEGRO_BITMAP* imagem, ALLEGRO_FONT* fonte, const char* txt, int margem, posicao_texto posicao, float x, float y) {
+void cria_paintogenico_bitmap() {
+    ALLEGRO_BITMAP* paintogenico_fundo = al_load_bitmap("img/menus/msPaint98.png");
+    ALLEGRO_BITMAP* desenho_paint = al_load_bitmap("img/menus/menu_paint_img.jpg");
+    al_set_target_bitmap(paintogenico);
+
+    al_draw_bitmap(paintogenico_fundo, 0, 0, 0);
+    al_draw_bitmap(desenho_paint, 59, 47, 0);
+
+
+    al_set_target_bitmap(al_get_backbuffer(display));
+}
+
+void criar_bitmap_botao(ALLEGRO_BITMAP* imagem, ALLEGRO_FONT* fonte, const char* txt, ALLEGRO_COLOR cor,int margem, posicao_texto posicao, float x, float y) {
     int largura_botao = al_get_bitmap_width(imagem);
     int altura_botao = al_get_bitmap_height(imagem);
 
@@ -290,25 +313,25 @@ void criar_bitmap_botao(ALLEGRO_BITMAP* imagem, ALLEGRO_FONT* fonte, const char*
     case NORTE:  // NORTE = 1 - define a posicao do texto para CIMA da imagem
         pos_texto_x = x + largura_botao / 2;
         pos_texto_y = y - margem - al_get_font_ascent(fonte);
-        al_draw_text(fonte, al_map_rgb(255, 255, 255), pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_CENTER, txt);
+        al_draw_text(fonte, cor, pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_CENTER, txt);
         break;
 
     case SUL: // SUL = 2 - define a posicao do texto para BAIXO da imagem
         pos_texto_x = x + largura_botao / 2;
         pos_texto_y = y + altura_botao + margem;
-        al_draw_text(fonte, al_map_rgb(255, 255, 255), pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_CENTER, txt);
+        al_draw_text(fonte, cor, pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_CENTER, txt);
         break;
 
     case LESTE: // LESTE = 3 - define a posicao do texto a DIREITA da imagem
         pos_texto_x = x + largura_botao + margem;
         pos_texto_y = y + altura_botao / 2 - al_get_font_ascent(fonte) / 2;
-        al_draw_text(fonte, al_map_rgb(255, 255, 255), pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_LEFT, txt);
+        al_draw_text(fonte, cor, pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_LEFT, txt);
         break;
 
     case OESTE: // OESTE = 4 - define a posicao do texto a ESQUERDA da imagem
         pos_texto_x = x - margem;
         pos_texto_y = y + altura_botao / 2 - al_get_font_ascent(fonte) / 2;
-        al_draw_text(fonte, al_map_rgb(255, 255, 255), pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_RIGHT, txt);
+        al_draw_text(fonte, cor, pos_texto_x, pos_texto_y, ALLEGRO_ALIGN_RIGHT, txt);
         break;
     }
 
@@ -321,6 +344,10 @@ void pause() {
 void unpause() {
     al_resume_timer(timer);
     al_resume_timer(countdown_timer);
+}
+
+bool mouse_click() {
+    return (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && ev.mouse.button == 1);
 }
 
 bool colisao_mouse(ALLEGRO_MOUSE_STATE mouse, int x, int y, int width, int height) {
@@ -442,7 +469,7 @@ void desenhar_caixa_dialogo(int caixaX, int caixaY, int caixaLargura, int caixaA
 
     // Processa eventos de clique no botão
     while (al_get_next_event(event_queue, &ev)) {
-        if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && ev.mouse.button == 1) {
+        if (mouse_click()) {
             if (ev.mouse.x > botaoX && ev.mouse.x < botaoX + largura_botao &&
                 ev.mouse.y > botaoY && ev.mouse.y < botaoY + altura_botao) {
                 *indice_texto += 1;
@@ -626,8 +653,8 @@ void linhas_Onduladas(float x1, float y1, float x2, float y2, int qtdOndas) {
     }
 }
 
-void pontuacao_viremia(int tempo, int pontuacao) {
-    pontuacao = 250000 / tempo;
+int pontuacao_viremia(int tempo) {
+    return 250000 / tempo;
 }
 
 //Função que desenha uma série de imagens na tela, substituindo-as por outras, de forma sequencial, de acordo com um valor de "vida"
@@ -700,6 +727,9 @@ void init_bitmaps() {
     celula_viremia = al_load_bitmap("img/viremia/player_viremia.png");
     mao_img = al_load_bitmap("img/estrofulo/maofrente.png");
     bonus_img = al_load_bitmap("img/estrofulo/raio.png");
+   
+    bg_venceu_jogo = al_load_bitmap("img/menus/menu_vitoria.png");
+
 
     dialogo_virus = al_load_bitmap("img/estrofulo/viruss.png");
     dialogo_mosquito = al_load_bitmap("img/estrofulo/moquitoo.png");
@@ -709,16 +739,21 @@ void init_bitmaps() {
     //cria "imagem" pra desenhar no fundo do jogo (fagocitose)
     bg_fagocitose_bitmap = al_create_bitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT);
     criar_bg_fagocitose(display, bg_fagocitose_bitmap, WHITE, ESPACO_ENTRE_GRADE, GRAY, 2);
-
+    paintogenico = al_create_bitmap(271, 260);
+    cria_paintogenico_bitmap();
 }
 
 //SETUP DAS TELAS
 
 void init_ataque_mosquito() {
+    for(int i = 0; i < 4; i++)
+        controle.pontuacao[i] = 0;
+    controle.pontuacao_total = 0;
+    
     player_mosquito.x = 600;
     player_mosquito.y = 300;
     player_mosquito.raio = al_get_bitmap_width(mosquitao) / 2;
-
+    player_mosquito.vivo = true;
     player_mosquito.pontuacao = 0;
 
     teia.x = DISPLAY_WIDTH;
@@ -728,13 +763,15 @@ void init_ataque_mosquito() {
     mao.x = 0; // Posição fixa em X
     mao.y = rand() % (DISPLAY_HEIGHT - 20) + 10; // Posição inicial aleatória em Y
     mao.raio = al_get_bitmap_width(mao_img)/2;
+    
+    timer_invencibilidade = 0;
 
    // VARIAVEIS BONUS, NAO ESTA ADICIONANDO AO SISTEMA DE PONTOS, DE RESTO TUDO OK 
     bonus_estrofulo.x = DISPLAY_WIDTH + 50;
     bonus_estrofulo.y = rand() % (DISPLAY_HEIGHT - 30) + 10;
     bonus_estrofulo.raio = 5;
     
-
+    cont_bonus = 0; //conta qnts bonus foram pegos pra calcular no final a pontuacao
 
     spray.x = 50; // posicao inicial e fixa de X do spray
     spray.y = 220; //posicao inicial Y do spray
@@ -768,6 +805,7 @@ void init_fagocitose() {
     control_fago.venceu = false;
     control_fago.desenhou_fundo = false;
     control_fago.tentativas = 3;
+    control_fago.cont_vezes_crescidas = 0; //marca qnts vezes o player chegou no tamanho máx
     timer_invencibilidade = 0;
     //define como o círculo do player spawna no mapa
     player_fago.x = DISPLAY_WIDTH / 2;
@@ -787,6 +825,7 @@ void init_fagocitose() {
 }
 
 void init_viremia() {
+    controle.pontuacao[2] = 0;
     x_checkpoint1 = 50; y_checkpoint1 = 535;
     x_checkpoint2 = 740; y_checkpoint2 = 50;
 
@@ -877,22 +916,27 @@ void ir_para_tela(int jogoDestino) {
         break;
 
     case ATAQUE_MOSQUITO:
-        tela = ATAQUE_MOSQUITO;
+        tempo_perdeu = 0;
         init_ataque_mosquito();
+        tela = ATAQUE_MOSQUITO;
         break;
 
     case FAGOCITOSE:
-        tela = FAGOCITOSE;
+        tempo_perdeu = 0;
         init_fagocitose();
+        tela = FAGOCITOSE;
+        
         break;
 
     case VIREMIA:
-        tela = VIREMIA;
+        tempo_perdeu = 0;
         init_viremia();
+        tela = VIREMIA;
         break;
 
     case TELA_INICIAL:
         index_HQ = -1;
+        al_set_timer_count(timer, 0);
         tela = TELA_INICIAL;
         break;
 
@@ -907,19 +951,26 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
     pause();
     pode_pausar = false;
     int proxTela;
+    int index_pontuacao;
     switch (*tela) {
     case ATAQUE_MOSQUITO:
+        index_pontuacao = 0;
         proxTela = HQ;
         break;
     case FAGOCITOSE:
+        index_pontuacao = 1;
         proxTela = HQ;
         break;
     case VIREMIA:
+        index_pontuacao = 2;
         proxTela = VENCEU_VIREMIA;
         break;
         //garantia de que o jogo não vai crashar, mas em tese esse caso nunca vai acontecer
     default:
         proxTela = *tela;
+    }
+    if (ev.type == ALLEGRO_EVENT_TIMER) {
+        controle.pontuacao_total += controle.pontuacao[index_pontuacao];
     }
 
     static int popup_width = 300;
@@ -934,9 +985,9 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
     static int botao_x = popup_x + popup_width - botao_width - margem;
     static int botao_y = popup_y + popup_height - botao_height - margem;
 
-    if ((colisao_mouse(mState, botao_x, botao_y, botao_width, botao_height) && (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) && ev.mouse.button == 1)) {
+    if (colisao_mouse(mState, botao_x, botao_y, botao_width, botao_height) && mouse_click()) {
         ir_para_tela(proxTela);
-        controle.venceuJogo = false;
+        controle.venceu_jogo = false;
         unpause();
     }
 
@@ -947,8 +998,8 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
     //título do popup
     al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + popup_width / 2, popup_y + margem, ALLEGRO_ALIGN_CENTER, "Fase Concluida!");
     //pontuacao e etc
-    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + margem, popup_y + margem + 50, ALLEGRO_ALIGN_LEFT, "Pontuacao: %d", popup_y);
-    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + margem, popup_y + margem * 2 + 50, ALLEGRO_ALIGN_LEFT, "Pontuacao total: %d", popup_x);
+    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + margem, popup_y + margem + 50, ALLEGRO_ALIGN_LEFT, "Pontuacao: %d", controle.pontuacao[index_pontuacao]);
+    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + margem, popup_y + margem * 2 + 50, ALLEGRO_ALIGN_LEFT, "Pontuacao total: %d", controle.pontuacao_total);
     //botao
     al_draw_bitmap(botao, botao_x, botao_y, 0);
 }
@@ -1011,10 +1062,14 @@ void mostra_HQ() {
     quadrinhos_y[0] = DISPLAY_HEIGHT / 2 - hq_size - hq_margem;
     quadrinhos_y[1] = DISPLAY_HEIGHT / 2 + hq_margem;
 
-    int borda_grossura = 10;
+    int borda_grossura = 7;
     int borda_x;
     int borda_y;
     int borda_size = hq_size + borda_grossura / 2;
+
+    char nome_fase[3][30] = { "FASE %d - ESTROFULO",
+                              "FASE %d - FAGOCITOSE",
+                              "FASE %d - VIREMIA" };
 
     //controla qual será a próx tela/ qual HQ mostrar
     int prox_tela = 0;
@@ -1043,20 +1098,32 @@ void mostra_HQ() {
     }
 
     if (ev.type == ALLEGRO_EVENT_TIMER) {
+
+        //controla animação de cada quadrinho surgindo
+        float velocidade_opacidade = 0.02;
+        if (quadrinho_atual < 4) { //garante q nao vai ultrapassar limite de quadrinhos (0 a 3)
+            opacidade_HQs[quadrinho_atual] += velocidade_opacidade;
+
+            if (opacidade_HQs[quadrinho_atual] > 1.0) { //quando atingir 100%
+                opacidade_HQs[quadrinho_atual] = 1.0;    //garante que nao ultrapassa 100%
+                quadrinho_atual++;
+            }
+        }
+
         //DESENHO
         al_clear_to_color(BLACK);
-   
-        // Ajuste para controlar a velocidade da animação
-        float velocidade_opacidade = 0.01;
 
-        // Desenha todos os quadrinhos e suas bordas
+        //al_draw_text(fonte_texto, WHITE, DISPLAY_WIDTH / 2, quadrinhos_y[0] - 40, ALLEGRO_ALIGN_CENTER, "Fase %d !", index_HQ+1);
+        al_draw_textf(fonte_texto, WHITE, DISPLAY_WIDTH / 2, quadrinhos_y[0] - 40, ALLEGRO_ALIGN_CENTER, nome_fase[index_HQ], index_HQ + 1);
+
+        // desenha quadrinhos e bordas
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
-                int indice = i + (2 * j); // Calcula o índice do quadrinho (0 a 3)
+                int indice = i + (2 * j); // calcula o índice do quadrinho (0 a 3)
                 borda_x = quadrinhos_x[i];
                 borda_y = quadrinhos_y[j];
 
-                // Bordas
+                //bordas
                 al_draw_rectangle(
                     borda_x - borda_grossura / 2, // x inicial
                     borda_y - borda_grossura / 2, // y inicial
@@ -1065,7 +1132,7 @@ void mostra_HQ() {
                     WHITE, borda_grossura
                 );
 
-                // Quadrinhos
+                //quadrinhos
                 al_draw_tinted_bitmap(
                     quadrinhos_HQ[index_HQ][indice],
                     al_map_rgba_f(opacidade_HQs[indice], opacidade_HQs[indice], opacidade_HQs[indice], opacidade_HQs[indice]),
@@ -1075,18 +1142,8 @@ void mostra_HQ() {
                 );
             }
         }
-
-        // Lógica da animação
-        if (quadrinho_atual < 4) { // Certifica que o índice está no limite
-            opacidade_HQs[quadrinho_atual] += velocidade_opacidade; // Aumenta a opacidade do quadrinho atual
-            if (opacidade_HQs[quadrinho_atual] >= 1.0) { // Quando atingir 100%
-                opacidade_HQs[quadrinho_atual] = 1.0;    // Garante que não ultrapasse
-                quadrinho_atual++;                   // Avança para o próximo quadrinho
-            }
-            printf("opacidade = %f\n", opacidade_HQs[quadrinho_atual]);
-        }
-
-        criar_bitmap_botao(botao_play, fonte_texto, "Continuar", 0, SUL, botao_continuar_x, botao_continuar_y - 20);
+        //botao p/ continuar
+        criar_bitmap_botao(botao_play, fonte_texto, "Continuar", WHITE,0, SUL, botao_continuar_x, botao_continuar_y - 20);
     }
 }
 
@@ -1120,12 +1177,11 @@ int main() {
     countdown_timer = al_create_timer(1.0);
 
     //fontes de texto
-    ALLEGRO_FONT* fonte_HUD = al_load_ttf_font("font/fonteWindowsRegular.ttf", 30, 0);
-    ALLEGRO_FONT* font = al_create_builtin_font();
-    ALLEGRO_FONT* fonte_20 = al_load_font("font/fonte.TTF", 20, 0);
+    fonte_HUD = al_load_ttf_font("font/fonteWindowsRegular.ttf", 30, 0);
+    font = al_create_builtin_font();
+    fonte_20 = al_load_font("font/fonte.TTF", 20, 0);
     fonte_texto = al_load_font("font/fonteWindowsRegular.ttf", 25, 0);
-    ALLEGRO_FONT* fonte_titulo = al_load_ttf_font("font/fonteWindowsRegular.ttf", 50, 0);
-
+    fonte_titulo = al_load_ttf_font("font/fonteWindowsRegular.ttf", 50, 0);
 
     // imagens
     init_bitmaps();
@@ -1152,15 +1208,15 @@ int main() {
     // - - - - - - - VARIÁVEIS GERAIS - - - - - - -
 
 
-    tela = TELA_LOADING;
-    int tela_anterior = 0;
-    int tempo_perdeu = 0;
     bool jogo_pausado = false;
+    int tela_anterior = 0;
+    tempo_perdeu = 0;
     pode_pausar = false;
+    tela = TELA_LOADING;
 
     //setup do controle geral do jogo (struct q guarda pontuação, estado do jogo, etc)
-    controle.venceuJogo = false;
-    controle.pontuacaoTotal = 0;
+    controle.venceu_jogo = false;
+    controle.pontuacao_total = 0;
     for (int i = 0; i < 2; i++)
         controle.pontuacao[i] = 0;
 
@@ -1272,7 +1328,9 @@ int main() {
             al_draw_bitmap(background_desktop, 0, 0, 0);
 
             //DEMONSTRAÇÃO DA FUNÇÃO criar_bitmap_botao
-            criar_bitmap_botao(botao_play, font, "reveba", 10, SUL, 300, 250); // chamando a função e desenhando o 'botao_play' na posicao_texto NORTE, passado os parametros de x e y
+            criar_bitmap_botao(botao_play, font, "reveba", WHITE,10, SUL, 300, 250); // chamando a função e desenhando o 'botao_play' na posicao_texto NORTE, passado os parametros de x e y
+
+            al_draw_bitmap(paintogenico,100, 75, 0);
 
             // Desenhar o texto na tela usando a fonte embutida
             al_draw_text(fonte_20, WHITE, 600, 300, ALLEGRO_ALIGN_CENTER, "jogar");
@@ -1319,7 +1377,6 @@ int main() {
 
         case TUTORIAL_ESTROFULO:
         {
-            dialogo = true;
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 contador_de_frames++;
@@ -1360,7 +1417,6 @@ int main() {
         case ATAQUE_MOSQUITO:
         {
             tela_anterior = tela;
-
             ////   caixa de dialogo
             if (dialogo == true) {
 
@@ -1391,16 +1447,16 @@ int main() {
                 if (dialogo == false) {
                     tempo_segundos += 1.0 / 60;
 
-
                     player_mosquito.pontuacao = (int)(tempo_segundos * 5); // 5 pontos por segundo
-                    printf("Tempo: %.1f segundos\n Pontuação: %d\n \n\n", tempo_segundos, player_mosquito.pontuacao); //verificando func segundos e pontuacoa
-
+                    controle.pontuacao[0] = (int)(tempo_segundos * 5);
+                    printf("Tempo: %.1f segundos\n Pontuacao: %d\n ", tempo_segundos, player_mosquito.pontuacao); //verificando func segundos e pontuacoa
+                    static int vel_mosquito = 10;
                     // Atualiza a posição do mosquito com base nas teclas W e S
-                    if (al_key_down(&kState, ALLEGRO_KEY_W) || al_key_down(&kState, ALLEGRO_KEY_UP)) {
-                        player_mosquito.y -= 5; // Move para cima
+                    if ((al_key_down(&kState, ALLEGRO_KEY_W) || al_key_down(&kState, ALLEGRO_KEY_UP)) && timer_invencibilidade == 0) {
+                        player_mosquito.y -= vel_mosquito; // Move para cima
                     }
-                    if (al_key_down(&kState, ALLEGRO_KEY_S) || al_key_down(&kState, ALLEGRO_KEY_DOWN)) {
-                        player_mosquito.y += 5; // Move para baixo
+                    if ((al_key_down(&kState, ALLEGRO_KEY_S) || al_key_down(&kState, ALLEGRO_KEY_DOWN)) && timer_invencibilidade == 0) {
+                        player_mosquito.y += vel_mosquito; // Move para baixo
                     }
 
                     // Limita a posição do mosquito dentro da tela
@@ -1451,18 +1507,31 @@ int main() {
                     mao.y = padrao_movimento[indice_padroes](mao.x, amplitude);
 
                     // Verifica colisão com a mao
-                    if (colisao_quadrado_dentro(mao.x, mao.y, mao.raio, mao.raio, player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao), al_get_bitmap_height(mosquitao))) {
+                    if (colisao_quadrado_dentro(mao.x, mao.y, mao.raio, mao.raio, player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao), al_get_bitmap_height(mosquitao)) && player_mosquito.vivo) {
                         player_mosquito.x -= 100; // Lógica de colisão com a mão
+                        player_mosquito.vivo = false;
                     }
                     // Verifica colisão com a teia
-                    if (colisao_quadrado_dentro(teia.x, teia.y, al_get_bitmap_width(teia_img), al_get_bitmap_height(teia_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
+                    if (colisao_quadrado_dentro(teia.x, teia.y, al_get_bitmap_width(teia_img), al_get_bitmap_height(teia_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao)) && player_mosquito.vivo) {
                         player_mosquito.x -= 100; // Lógica de colisão com a teia
+                        player_mosquito.vivo = false;
                     }
-                    // Verifica colisão com o bonus - NAO ESTA FUNCIONANDO O SISTEMA DE PONTOS
+
+                    if (!player_mosquito.vivo) {
+                        timer_invencibilidade++;
+                        if (timer_invencibilidade / 30 == 1) {
+                            player_mosquito.vivo = true;
+                            timer_invencibilidade = 0;
+                        }
+                    }
+
+                    // Verifica colisão com o bonus
                     if (colisao_quadrado_dentro(bonus_estrofulo.x, bonus_estrofulo.y, al_get_bitmap_width(bonus_img), al_get_bitmap_height(bonus_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
                         bonus_estrofulo.x = (DISPLAY_WIDTH + 50);
                         bonus_estrofulo.y = rand() % (DISPLAY_HEIGHT - 60) + 10;
-                        player_mosquito.pontuacao += 15;
+                        cont_bonus++;
+                        printf("BONUS COLETADOS: %d\n", cont_bonus);
+                        
                     }
 
 
@@ -1483,9 +1552,14 @@ int main() {
                 icone_mosquito = 40 + barra_progresso; // calculo para posicao do iconmosquitao com base no progresso da barra
                 icone_mosquito = fmin(icone_mosquito, 760); // comando que GARANTE que o icone_mosquito nao ultrapasse a largura máxima da barra
 
-                if (barra_progresso >= largura_barra)
-                    controle.venceuJogo = true;
+                if (barra_progresso >= largura_barra) {
+                    controle.pontuacao[0] = player_mosquito.pontuacao + cont_bonus * 15;
+                    controle.venceu_jogo = true;
+                    printf("bonus pegos = %d * 15 = %d\npontuacao total: %d", cont_bonus, cont_bonus*15,controle.pontuacao[0]);
+                }
             }
+
+
             // Desenha a imagem de fundo
             al_draw_bitmap(background_estrofulo, 0, 0, 0);
 
@@ -1562,13 +1636,11 @@ int main() {
 
                 char textos[NUM_TEXTO][MAX_TEXTO] = {
 
-                  " DOMINAR CÉLULA...",
-                  "COMER NUTRIENTES...... ",
-                  "SE MULTIPLICAR. ...",
+                  " DOMINAR CÉLULA... FEITO.",
+                  "COMER NUTRIENTES... EM ANDAMENTO.",
+                  "SE MULTIPLICAR... EM ANDAMENTO.",
                   "EVITAR FAGÓCITOS...",
-                  "UGAA...",
-
-
+                  "EM ANDAMENTO."
                 };
 
                 desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
@@ -1578,7 +1650,7 @@ int main() {
                 al_flip_display();
 
                 // Espera um pouco para dar tempo para o tempo ser incrementado
-                al_rest(0.5);
+                al_rest(0.1);
             }
 
             if (ev.type == ALLEGRO_EVENT_TIMER && dialogo == false) {
@@ -1623,7 +1695,6 @@ int main() {
                 //PLAYER X INIMIGO
                 if (!control_fago.morto && colisao_circulo_dentro(player_fago.x, player_fago.y, player_fago.raio, fago_pong.x, fago_pong.y, fago_pong.raio)) {
                     control_fago.morto = true;
-                    al_clear_to_color(RED);
                     player_fago.raio = player_fago.raio_min;
                     control_fago.tentativas--;
                 }
@@ -1631,8 +1702,9 @@ int main() {
                 if (control_fago.tentativas <= 0) {
                     tela = GAME_OVER;
                 }
-                if (control_fago.pontuacao >= 100) {
-                    controle.venceuJogo = true;
+                if (control_fago.cont_vezes_crescidas >= 10) {
+                    controle.venceu_jogo = true;
+                    controle.pontuacao[1] = control_fago.pontuacao;
                 }
 
                 //deixa o player invencível por alguns segundos após morrer
@@ -1647,12 +1719,16 @@ int main() {
                 //reseta tamanho do player
                 if (player_fago.raio >= player_fago.raio_max) {
                     player_fago.raio = player_fago.raio_min;
+                    //faz ganhar pontos
+                    control_fago.cont_vezes_crescidas++;
+                    control_fago.pontuacao += 50;
                 }
                 //diminui constantemente o tamanho do player
                 if (player_fago.raio > player_fago.raio_min)
-                    player_fago.raio -= 0.03;
+                    player_fago.raio -= 0.04;
                 else
                     player_fago.raio = player_fago.raio_min;
+                 
             }
 
 
@@ -1734,14 +1810,11 @@ int main() {
                 al_draw_bitmap(bg_pausa, 0, 0, 0);
 
                 char textos[NUM_TEXTO][MAX_TEXTO] = {
-
-                  " UGAA....",
-                  "ESPALHAR PELO SANGUE...... ",
-                  "DIVIDIR...",
+                  "NOVO OBJETIVO DETERMINADO.",
+                  "SE ESPALHAR PELO SANGUE.",
+                  "DIVIDIR.",
                   "CONQUISTAR.",
-                  " VAMOOOO",
-
-
+                  "DOMINAR."
                 };
 
                 desenhar_caixa_dialogo(100, 200, 600, 200, font, textos, &tempo_perdeu, event_queue, &dialogo, virus_viremia);
@@ -1751,7 +1824,7 @@ int main() {
                 al_flip_display();
 
                 // Espera um pouco para dar tempo para o tempo ser incrementado
-                al_rest(0.5);
+                al_rest(0.1);
             }
 
             pode_pausar = true;
@@ -1838,9 +1911,9 @@ int main() {
                         //Reseta mudouDeNivel
                         mudou_de_nivel_viremia = false;
                     }
-                    if (nivel_viremia == 3 && (mState.x >= x_checkpoint2 && mState.x <= x_checkpoint2 + 20 && mState.y >= y_checkpoint2 && mState.y <= y_checkpoint2 + 20)) {
-                        pontuacao_viremia(cronometro, pontos_viremia);
-                        controle.venceuJogo = true;
+                    if (nivel_viremia == 3 && (mState.x >= x_checkpoint2 && mState.x <= x_checkpoint2 + 20 && mState.y >= y_checkpoint2 && mState.y <= y_checkpoint2 + 20)){
+                        controle.pontuacao[2] = pontuacao_viremia(cronometro);
+                        controle.venceu_jogo = true;
                     }
                 }
                 if (pode_seguir_mouse) {
@@ -1911,7 +1984,43 @@ int main() {
             // - - - - - - - FIM DOS DESENHOS - - - - - - -
         }
         break;
+        case VENCEU_VIREMIA:
+        {
+            static int num_linhas_popup_vitoria = 7; //quantas linhas vão ter no popup que aparece na tela de vitória do jogo 
+            //linha 1 - PARABENS !! MISSAO CONCLUIDA !!
+            //linha 2 - Voce conseguiu com sucesso infectar este ser humano com o vírus da dengue
+            //linha 3 - pontuacao jogo 1 
+            //linha 4 - pontuacao jogo 2
+            //linha 5 - pontuacao jogo 3
+            //linha 6 - pontuacao total
+            //linha 7 - jogo concluído em ... segundos
+            
+            static int fonte_HUD_h = al_get_font_line_height(fonte_HUD);
+            static int mensagem_vitoria_y = (DISPLAY_HEIGHT - (fonte_HUD_h * 7)) / 2;
 
+            static int segundos_jogo_rodado = al_get_timer_count(timer) / 60;
+
+            //botao voltar !!
+            static int botao_voltar_inicio_x = 50;
+            static int botao_voltar_inicio_y = DISPLAY_HEIGHT - 100;
+
+
+            al_clear_to_color(WHITE);
+            al_draw_bitmap(bg_venceu_jogo,0,0,0);
+            al_draw_filled_rounded_rectangle(DISPLAY_WIDTH / 2 - 400, mensagem_vitoria_y + fonte_HUD_h, DISPLAY_WIDTH / 2 + 400, mensagem_vitoria_y + fonte_HUD_h * (num_linhas_popup_vitoria + 1), 5, 5, al_map_rgba(175, 175, 175, 0.5));
+            al_draw_text(fonte_HUD, BLACK, DISPLAY_WIDTH / 2, mensagem_vitoria_y + fonte_HUD_h * 1, ALLEGRO_ALIGN_CENTER, "PARABENS !!! VOCE VENCEU !!!");
+            al_draw_text(fonte_HUD, BLACK, DISPLAY_WIDTH / 2, mensagem_vitoria_y + fonte_HUD_h * 2, ALLEGRO_ALIGN_CENTER, "Conseguiu com sucesso infectar o humano com a dengue!");
+            al_draw_textf(fonte_HUD, BLACK, DISPLAY_WIDTH / 2, mensagem_vitoria_y + fonte_HUD_h * 3, ALLEGRO_ALIGN_CENTER, "Pontos na fase ESTROFULO = %d", controle.pontuacao[0]);
+            al_draw_textf(fonte_HUD, BLACK, DISPLAY_WIDTH / 2, mensagem_vitoria_y + fonte_HUD_h * 4, ALLEGRO_ALIGN_CENTER, "Pontos na fase FAGOCITOSE = %d", controle.pontuacao[1]);
+            al_draw_textf(fonte_HUD, BLACK, DISPLAY_WIDTH / 2, mensagem_vitoria_y + fonte_HUD_h * 5, ALLEGRO_ALIGN_CENTER, "Pontos na fase VIREMIA = %d", controle.pontuacao[2]);
+            al_draw_textf(fonte_HUD, BLACK, DISPLAY_WIDTH / 2, mensagem_vitoria_y + fonte_HUD_h * 6, ALLEGRO_ALIGN_CENTER, "Pontos no total = %d", controle.pontuacao_total);
+            al_draw_textf(fonte_HUD, BLACK, DISPLAY_WIDTH / 2, mensagem_vitoria_y + fonte_HUD_h * 7, ALLEGRO_ALIGN_CENTER, "Jogo zerado em %d segundos.", segundos_jogo_rodado);
+        
+            criar_bitmap_botao(botao_play, fonte_texto, "Voltar ao inicio", BLACK,0, SUL, botao_voltar_inicio_x, botao_voltar_inicio_y);
+            if (colisao_mouse(mState, botao_voltar_inicio_x, botao_voltar_inicio_y, al_get_bitmap_width(botao_play), al_get_bitmap_height(botao_play)) && mouse_click())
+                ir_para_tela(TELA_INICIAL);
+        }
+        break;
         case GAME_OVER:
         {
             if (ev.type == ALLEGRO_EVENT_TIMER) {
@@ -1955,7 +2064,7 @@ int main() {
         } // <- fim switch
 
         //sistema de vitória
-        if (controle.venceuJogo)
+        if (controle.venceu_jogo)
             popup_vitoria(fonte_HUD, botao_play, &tela);
 
         //sistema de pausa
@@ -1971,6 +2080,12 @@ int main() {
             pause();
             al_draw_bitmap(bg_pausa, 0, 0, 0);
             voltarTelaEscolha(ev, &tela, fonte_20, &jogo_pausado);
+            al_draw_text(fonte_texto, WHITE, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT - 50, ALLEGRO_ALIGN_CENTER, "ATALHO P/ DEBUG: ENTER - AVANÇA TELA");
+            if (al_key_down(&kState, ALLEGRO_KEY_ENTER)) {
+                controle.venceu_jogo = true;
+                unpause();
+                jogo_pausado = !jogo_pausado;
+            }
         }
         pode_pausar = false;
         al_flip_display();
@@ -2001,6 +2116,10 @@ int main() {
     al_destroy_bitmap(spray_tutorial);
     al_destroy_bitmap(virus_PB);
     al_destroy_bitmap(botao_play);
+    al_destroy_bitmap(paintogenico);
+    al_destroy_bitmap(bg_venceu_jogo);
+
+
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 4; j++) {
             al_destroy_bitmap(quadrinhos_HQ[i][j]);

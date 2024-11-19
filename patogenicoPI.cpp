@@ -106,6 +106,7 @@ typedef struct {
     float x;
     float y;
     float diferenca;
+    bool no_caminho;
 } player_viremia;
 
 typedef struct {
@@ -549,16 +550,27 @@ void gerar_Linhas(int* coordenadaX, int* coordenadaY, int tamanho, int espessura
     }
 }
 
+// Função para verificar se o mouse está sobre uma linha com espessura
+bool mouse_sobre_linha(float x1, float y1, float x2, float y2, float espessura, int mouse_x, int mouse_y) {
+    // Calcula o vetor diretor da linha
+    float ponto_x = x2 - x1;
+    float ponto_y = y2 - y1;
 
-// Função para verificar se o círculo está sobre uma linha com espessura
-bool fora_Da_Linha(float x, float y, float x1, float y1, float x2, float y2, float espessura) {
-    // Calcular a distância perpendicular do ponto à reta
-    float A = y2 - y1;
-    float B = x1 - x2;
-    float C = x2 * y1 - x1 * y2;
-    float distancia = fabs(A * x + B * y + C) / sqrt(A * A + B * B);
+    // Calcula a distância do ponto ao segmento de reta
+    float numerador = abs(ponto_y * mouse_x - ponto_x * mouse_y + x2 * y1 - y2 * x1);
+    float denominador = sqrt(ponto_x * ponto_x + ponto_y * ponto_y);
+    float distancia = numerador / denominador;
 
-    return distancia > espessura / 2;
+    // Verifica se o ponto está dentro do comprimento da linha (limite do segmento)
+    // O produto escalar entre o vetor do mouse e o vetor da linha deve estar dentro do intervalo [0,1]
+    float produto_escalar = (mouse_x - x1) * ponto_x + (mouse_y - y1) * ponto_y;
+    float comprimento_linha = ponto_x * ponto_x + ponto_y * ponto_y;
+    if (produto_escalar < 0 || produto_escalar > comprimento_linha) {
+        return false; // O ponto está fora do intervalo da linha
+    }
+
+    // Verifica se a distância é menor ou igual à metade da espessura da linha
+    return distancia <= espessura / 2.0;
 }
 
 //função que cria linhas onduladas por meio do calculo da Função Seno
@@ -851,6 +863,7 @@ int main() {
     player_vire.x = x1 - 5;
     player_vire.y = y1 - 5;
     player_vire.diferenca = 15;
+    player_vire.no_caminho = false;
 
     bool podeSeguirMouse = false;
 
@@ -910,7 +923,7 @@ int main() {
     // Inicializar as imagens
     for (int i = 0; i < quantidade_CD8; i++) {
         linfocito_CD8[i].cd8_viremia = al_clone_bitmap(cd8_viremia);
-        linfocito_CD8[i].x = -((2 * al_get_bitmap_width(cd8_viremia)) * i);
+        linfocito_CD8[i].x = - al_get_bitmap_width(cd8_viremia) -((2 * al_get_bitmap_width(cd8_viremia)) * i);
         // Coordenada Y inicial entre 340 e 600
         linfocito_CD8[i].y = 340 + rand() % (600 - 340 + 1);
         linfocito_CD8[i].velocidade = 0.5 + (float)i / 10.0;
@@ -1444,27 +1457,34 @@ int main() {
                 }
 
                 // Reiniciar a cada iteração
-                dentro_da_linha = false;
+                dentro_da_linha = true;
 
                 //Fase viremia começou
                 if (startJogo == true) {
 
                     podeSeguirMouse = true;
 
-                    //Verifica se o círculo está em cima de alguma linha ou dos quadrados brancos
                     for (int i = 0; i < tamanho - 1; i++) {
-                        if (!fora_Da_Linha(player_vire.x, player_vire.y, coordenada_X[i], coordenada_Y[i], coordenada_X[i + 1],
-                            coordenada_Y[i + 1], espessura_linha)
-                            || player_vire.x >= x1 && player_vire.x <= x1 + 20 && player_vire.y >= y1 && player_vire.y <= y1 + 20
-                            || player_vire.x >= x2 && player_vire.x <= x2 + 20 && player_vire.y >= y2 && player_vire.y <= y2 + 20) {
-                            dentro_da_linha = true;
-                            break; // Se o cursor estiver sobre uma linha, não precisa verificar as demais
+                        // Verificar a colisão
+
+
+                        if (mouse_sobre_linha(coordenada_X[i], coordenada_Y[i], coordenada_X[i + 1], coordenada_Y[i], espessura_linha, mState.x, mState.y) ||
+                            mouse_sobre_linha(coordenada_X[i + 1], coordenada_Y[i], coordenada_X[i + 1], coordenada_Y[i + 1], espessura_linha, mState.x, mState.y) ||
+                            mouse_sobre_linha(coordenada_X[i + 1], coordenada_Y[i + 1], coordenada_X[i], coordenada_Y[i + 1], espessura_linha, mState.x, mState.y) ||
+                            mouse_sobre_linha(coordenada_X[i], coordenada_Y[i + 1], coordenada_X[i], coordenada_Y[i], espessura_linha, mState.x, mState.y)) {
+                            // O mouse está colidindo com a linha
+                            printf("estou dentro %d %d", mState.x, mState.y);
+                            player_vire.no_caminho = true;
+                        }
+                        else {
+                            printf("estou fora %d %d", mState.x, mState.y);
+                            player_vire.no_caminho = false;
                         }
                     }
 
                     //PLAYER X INIMIGO
                     for (int i = 0; i < quantidade_CD8; i++) {
-                        if (colisao_quadrado_dentro(player_vire.x, player_vire.y, al_get_bitmap_width(celula_viremia),
+                        if (player_vire.no_caminho == false || colisao_quadrado_dentro(player_vire.x, player_vire.y, al_get_bitmap_width(celula_viremia),
                             al_get_bitmap_height(celula_viremia), linfocito_CD8[i].x, linfocito_CD8[i].y, al_get_bitmap_width(cd8_viremia),
                             al_get_bitmap_height(cd8_viremia))) {
                             if (!invulneravel) {
@@ -1505,8 +1525,6 @@ int main() {
                         espessura_linha -= espessura_linha * 0.12;
                         nivel_viremia++;
 
-                        //podeSeguirMouse = false;
-
                         //Reseta mudouDeNivel
                         mudou_de_nivel_viremia = false;
                     }
@@ -1515,14 +1533,15 @@ int main() {
                         controle.venceuJogo = true;
                     }
                 }
-                if(podeSeguirMouse){
+                if (podeSeguirMouse) {
                     player_vire.x = mState.x - al_get_bitmap_width(celula_viremia) / 2;
                     player_vire.y = mState.y - al_get_bitmap_height(celula_viremia) / 2;
                 }
                 // Incrementa o ângulo
                 angulo_viremia += 0.03;
                 // atualiza as posições dos linfócitos
-                for (int i = 0; i < quantidade_CD8; i++) {
+                if (cronometro >= 5) {
+                   for (int i = 0; i < quantidade_CD8; i++) {
                     linfocito_CD8[i].x += linfocito_CD8[i].velocidade;
                     linfocito_CD8[i].y += linfocito_CD8[i].velocidade * linfocito_CD8[i].direcao;
 
@@ -1542,7 +1561,9 @@ int main() {
                         linfocito_CD8[i].y = 340 + rand() % (600 - 340 + 1);
                         linfocito_CD8[i].direcao = 1;
                     }
+                   } 
                 }
+                
             }
             // - - - - - - - DESENHO - - - - - - -
             // Desenha a imagem de fundo

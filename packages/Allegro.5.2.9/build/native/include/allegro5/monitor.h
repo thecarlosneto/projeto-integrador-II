@@ -14,7 +14,7 @@ typedef struct ALLEGRO_MONITOR_INFO
 {
    int x1;
    int y1;
-   int x2;
+   int x_checkpoint2;
    int y2;
 } ALLEGRO_MONITOR_INFO;
 

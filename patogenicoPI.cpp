@@ -1702,7 +1702,7 @@ int main() {
                 if (control_fago.tentativas <= 0) {
                     tela = GAME_OVER;
                 }
-                if (control_fago.cont_vezes_crescidas >= 10) {
+                if (control_fago.cont_vezes_crescidas >= 3) {
                     controle.venceu_jogo = true;
                     controle.pontuacao[1] = control_fago.pontuacao;
                 }

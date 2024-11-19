@@ -1536,7 +1536,7 @@ int main() {
 
 
                     // Verifica colisao com o spray
-                    if (colisao_quadrado_dentro(spray.x, spray.y, al_get_bitmap_width(spray_img), al_get_bitmap_height(spray_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao))) {
+                    if (colisao_quadrado_dentro(spray.x, spray.y, al_get_bitmap_width(spray_img), al_get_bitmap_height(spray_img), player_mosquito.x, player_mosquito.y, al_get_bitmap_width(mosquitao) / 2, al_get_bitmap_height(mosquitao)) || player_mosquito.x < 0/*garante q caso saia da tela morre*/) {
                         tela = GAME_OVER;
                         player_mosquito.x = 600;
                         tempo_segundos = 0;

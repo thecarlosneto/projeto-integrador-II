@@ -1,4 +1,6 @@
-    #include <allegro5/allegro.h>
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_primitives.h>
 #include <time.h>
 #include <stdio.h>
@@ -130,6 +132,7 @@ ALLEGRO_FONT* fonte_titulo;
 ALLEGRO_BITMAP* loading;
 ALLEGRO_BITMAP* background_desktop;
 ALLEGRO_BITMAP* botao_play;
+ALLEGRO_BITMAP* nextlevel;
 ALLEGRO_BITMAP* background_fases;
 ALLEGRO_BITMAP* tela_perdeu;
 ALLEGRO_BITMAP* tela_tutorial;
@@ -159,6 +162,15 @@ ALLEGRO_BITMAP* dialogo_mosquito;
 
 ALLEGRO_BITMAP* paintogenico;
 ALLEGRO_BITMAP* bg_venceu_jogo;
+
+//Audio
+ALLEGRO_SAMPLE* colisao;
+ALLEGRO_SAMPLE* gameover;
+ALLEGRO_SAMPLE* morreu;
+ALLEGRO_SAMPLE* next_level;
+ALLEGRO_AUDIO_STREAM* trilha_sonora;
+ALLEGRO_AUDIO_STREAM* mosquito;
+ALLEGRO_AUDIO_STREAM* viremia_som;
 
 //fontes de texto
 ALLEGRO_FONT* fonte_texto;
@@ -690,10 +702,22 @@ void atualiza_vidas(ALLEGRO_BITMAP* img1, ALLEGRO_BITMAP* img2, ALLEGRO_BITMAP* 
     }
 }
 
+void init_sample(){
+    //Audio
+    colisao = al_load_sample("sound/colisao.wav");
+    gameover = al_load_sample("sound/gameover.wav");
+    morreu = al_load_sample("sound/morreu.wav");
+    next_level = al_load_sample("sound/next_level.wav");
+    trilha_sonora = NULL;
+    viremia_som = NULL;
+    mosquito = NULL;
+}
+
 void init_bitmaps() {
     loading = al_load_bitmap("img/menus/telaLoading.png");
     background_desktop = al_load_bitmap("img/menus/bgDesktop.png");
     botao_play = al_load_bitmap("img/menus/Controle jogar.png");
+    nextlevel = al_load_bitmap("img/menus/nextlevel.png");
     background_fases = al_load_bitmap("img/menus/bgFases.png");
     virus_viremia = al_load_bitmap("img/menus/virus.png");
     tela_perdeu = al_load_bitmap("img/menus/telaPerdeu.png");
@@ -732,8 +756,6 @@ void init_bitmaps() {
     bonus_img = al_load_bitmap("img/estrofulo/raio.png");
    
     bg_venceu_jogo = al_load_bitmap("img/menus/menu_vitoria.png");
-
-
     dialogo_virus = al_load_bitmap("img/estrofulo/viruss.png");
     dialogo_mosquito = al_load_bitmap("img/estrofulo/moquitoo.png");
 
@@ -949,7 +971,7 @@ void ir_para_tela(int jogoDestino) {
     }
 }
 
-// chamada de exemplo: popup_vitoria(fonte_HUD, botao_play, &tela);
+// chamada de exemplo: popup_vitoria(fonte_HUD, nextlevel, &tela);
 void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
     pause();
     pode_pausar = false;
@@ -985,7 +1007,7 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
 
     static int botao_width = al_get_bitmap_width(botao);
     static int botao_height = al_get_bitmap_height(botao);
-    static int botao_x = popup_x + popup_width - botao_width - margem;
+    static int botao_x = popup_x + (popup_width - botao_width) / 2 + 10;
     static int botao_y = popup_y + popup_height - botao_height - margem;
 
     if (colisao_mouse(mState, botao_x, botao_y, botao_width, botao_height) && mouse_click()) {
@@ -997,13 +1019,23 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
     //
     //DESENHO
     //
-    al_draw_filled_rounded_rectangle(popup_x, popup_y, popup_x + popup_width, popup_y + popup_height, 15, 15, al_map_rgb(100, 100, 100));
-    //título do popup
-    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + popup_width / 2, popup_y + margem, ALLEGRO_ALIGN_CENTER, "Fase Concluida!");
-    //pontuacao e etc
-    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + margem, popup_y + margem + 50, ALLEGRO_ALIGN_LEFT, "Pontuacao: %d", controle.pontuacao[index_pontuacao]);
-    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + margem, popup_y + margem * 2 + 50, ALLEGRO_ALIGN_LEFT, "Pontuacao total: %d", controle.pontuacao_total);
-    //botao
+   // fundo popup
+    al_draw_filled_rectangle(popup_x, popup_y, popup_x + popup_width, popup_y + popup_height, al_map_rgb(192, 192, 192));
+
+    // borda popup
+    al_draw_rectangle(popup_x, popup_y, popup_x + popup_width, popup_y + popup_height, al_map_rgb(255, 255, 255), 2);
+
+    // cabeçalho popup
+    al_draw_filled_rectangle(popup_x, popup_y, popup_x + popup_width, popup_y + 50, al_map_rgb(23, 0, 209));
+
+    // título do popup
+    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + popup_width / 2, popup_y + 5, ALLEGRO_ALIGN_CENTER, "Fase Concluída!");
+
+    // pontuação e etc
+    al_draw_textf(fonte, al_map_rgb(0, 0, 0), popup_x + margem, popup_y + 60, ALLEGRO_ALIGN_LEFT, "Pontuação: %d", controle.pontuacao[index_pontuacao]);
+    al_draw_textf(fonte, al_map_rgb(0, 0, 0), popup_x + margem, popup_y + 100, ALLEGRO_ALIGN_LEFT, "Pontuação total: %d", controle.pontuacao_total);
+
+    // botão
     al_draw_bitmap(botao, botao_x, botao_y, 0);
 }
 
@@ -1170,6 +1202,8 @@ int main() {
     al_init_ttf_addon();
     al_install_mouse();
     al_install_keyboard();
+    al_install_audio();
+    al_init_acodec_addon();
 
     // Cria uma janela
     display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -1189,7 +1223,34 @@ int main() {
     // imagens
     init_bitmaps();
 
-    printf("\n\ncarlos e cucas: verificar oq significa o aviso na linha a seguir:\n");
+    //audio
+    init_sample();
+
+    //cria o mixer (e torna ele o mixer padrao), e adciona 5 samples de audio nele
+    if (!al_reserve_samples(7)) {
+        printf("Falha ao reservar amostrar de audio");
+        return 0;
+    }
+    
+    viremia_som = al_load_audio_stream("sound/viremia.ogg", 4, 1024);
+    trilha_sonora = al_load_audio_stream("sound/trilha_sonora.ogg", 4, 1024);
+    mosquito = al_load_audio_stream("sound/mosquito.wav", 4, 1024);
+    //liga o stream no mixer
+    al_attach_audio_stream_to_mixer(viremia_som, al_get_default_mixer());
+    al_attach_audio_stream_to_mixer(trilha_sonora, al_get_default_mixer());
+    al_attach_audio_stream_to_mixer(mosquito, al_get_default_mixer());
+
+
+    //define que o stream vai tocar no modo repeat
+    al_set_audio_stream_playmode(trilha_sonora, ALLEGRO_PLAYMODE_LOOP);
+    al_set_audio_stream_playmode(mosquito, ALLEGRO_PLAYMODE_LOOP);
+    al_set_audio_stream_playmode(viremia_som, ALLEGRO_PLAYMODE_LOOP);
+    
+    //Volume do áudio
+    al_set_audio_stream_gain(trilha_sonora, 0.5);
+    al_set_audio_stream_gain(viremia_som, 5.0);
+    al_set_audio_stream_gain(mosquito, 8.0);
+    
     ALLEGRO_BITMAP* teclas_tutorial = al_load_bitmap("img/menus/teclas_tutorial.png");
     printf("\n\n");
 
@@ -1252,6 +1313,9 @@ int main() {
     init_ataque_mosquito();
     init_fagocitose();
     init_viremia();
+    al_attach_audio_stream_to_mixer(trilha_sonora, al_get_default_mixer());
+    al_set_audio_stream_playing(trilha_sonora, true);
+
 
     // Loop de eventos
     bool running = true;
@@ -1270,9 +1334,16 @@ int main() {
 
         case TELA_LOADING:
         {
+            al_set_audio_stream_playing(viremia_som, 0);
+            al_set_audio_stream_playing(mosquito, 0);
             //se apertar espaço pula animação e vai direto pro menu
-            if (al_key_down(&kState, ALLEGRO_KEY_SPACE))
+            if (al_key_down(&kState, ALLEGRO_KEY_SPACE)) {
                 tela = TELA_INICIAL;
+
+                // Reproduzir áudio
+                al_play_sample(next_level, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+            }
+               
 
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 contador_de_frames++;
@@ -1308,6 +1379,8 @@ int main() {
                 // Desenha o texto alterando a cor entre preto e branco a cada 2 segundos
                 al_draw_textf(fonte_texto, al_map_rgb(opacidade_texto, opacidade_texto, opacidade_texto), 420, 565, ALLEGRO_ALIGN_CENTER, "APERTE A TECLA 'ESPAÇO' PARA INICIAR");
             }
+            
+
         }
         break;
 
@@ -1342,6 +1415,9 @@ int main() {
 
         case HQ:
         {
+            // Reproduzir áudio
+            al_set_audio_stream_playing(mosquito, 0); 
+
             mostra_HQ();
         }
         break;
@@ -1380,7 +1456,6 @@ int main() {
 
         case TUTORIAL_ESTROFULO:
         {
-
             if (ev.type == ALLEGRO_EVENT_TIMER) {
                 contador_de_frames++;
                 //Verifica o timer a cada meio segundo'
@@ -1419,6 +1494,7 @@ int main() {
 
         case ATAQUE_MOSQUITO:
         {
+            al_set_audio_stream_playing(mosquito, 1);
             tela_anterior = tela;
             ////   caixa de dialogo
             if (dialogo == true) {
@@ -1447,6 +1523,7 @@ int main() {
             }
             pode_pausar = true;
             if (ev.type == ALLEGRO_EVENT_TIMER) {
+                
                 if (dialogo == false) {
                     tempo_segundos += 1.0 / 60;
 
@@ -1586,7 +1663,8 @@ int main() {
             al_draw_filled_rectangle(40, 20, 40 + barra_progresso, 40, RED); // desenha a barra de progresso
 
             al_draw_bitmap(iconmosquitao, icone_mosquito - al_get_bitmap_width(iconmosquitao) / 2, 5, 0); // desenha o iconmosquitao sobre a barra de progresso, acompanhando seu movimento
-        }
+            
+        } 
         break;
 
         case TUTORIAL_FAGOCITOSE:
@@ -1756,9 +1834,12 @@ int main() {
             // desenha inimigo (elipse)
             al_draw_filled_circle(fago_pong.x, fago_pong.y, fago_pong.raio, BLACK);
 
+
+            al_draw_filled_rounded_rectangle(5, 5, 170, 80, 10, 10, al_map_rgb(10,10, 10));
+
             // HUD
-            al_draw_textf(fonte_HUD, BLACK, 10, 0, ALLEGRO_ALIGN_LEFT, "pontos = %d", control_fago.pontuacao);
-            al_draw_textf(fonte_HUD, BLACK, 10, 34, ALLEGRO_ALIGN_LEFT, "vidas = %d", control_fago.tentativas);
+            al_draw_textf(fonte_HUD, WHITE, 10, 5, ALLEGRO_ALIGN_LEFT, "pontos = %d", control_fago.pontuacao);
+            al_draw_textf(fonte_HUD, WHITE, 10, 40, ALLEGRO_ALIGN_LEFT, "vidas = %d", control_fago.tentativas);
 
             /*****FIM DESENHO*****/
         }
@@ -1805,6 +1886,7 @@ int main() {
 
         case VIREMIA:
         {
+            al_set_audio_stream_playing(viremia_som,1);
             tela_anterior = tela;
 
             ////   caixa de dialogo
@@ -1989,6 +2071,8 @@ int main() {
         break;
         case VENCEU_VIREMIA:
         {
+            // Reproduzir áudio
+            al_set_audio_stream_playing(viremia_som, 0);
             static int num_linhas_popup_vitoria = 7; //quantas linhas vão ter no popup que aparece na tela de vitória do jogo 
             //linha 1 - PARABENS !! MISSAO CONCLUIDA !!
             //linha 2 - Voce conseguiu com sucesso infectar este ser humano com o vírus da dengue
@@ -2010,7 +2094,7 @@ int main() {
 
             al_clear_to_color(WHITE);
             al_draw_bitmap(bg_venceu_jogo,0,0,0);
-            al_draw_filled_rounded_rectangle(DISPLAY_WIDTH / 2 - 400, mensagem_vitoria_y + fonte_HUD_h, DISPLAY_WIDTH / 2 + 400, mensagem_vitoria_y + fonte_HUD_h * (num_linhas_popup_vitoria + 1), 5, 5, al_map_rgba(175, 175, 175, 0.5));
+            al_draw_filled_rounded_rectangle(DISPLAY_WIDTH / 2 - 400, mensagem_vitoria_y + fonte_HUD_h, DISPLAY_WIDTH / 2 + 400, mensagem_vitoria_y + fonte_HUD_h * (num_linhas_popup_vitoria + 1), 5, 5, al_map_rgba(0, 0, 0, 0.5));
             al_draw_text(fonte_HUD, BLACK, DISPLAY_WIDTH / 2, mensagem_vitoria_y + fonte_HUD_h * 1, ALLEGRO_ALIGN_CENTER, "PARABENS !!! VOCE VENCEU !!!");
             al_draw_text(fonte_HUD, BLACK, DISPLAY_WIDTH / 2, mensagem_vitoria_y + fonte_HUD_h * 2, ALLEGRO_ALIGN_CENTER, "Conseguiu com sucesso infectar o humano com a dengue!");
             al_draw_textf(fonte_HUD, BLACK, DISPLAY_WIDTH / 2, mensagem_vitoria_y + fonte_HUD_h * 3, ALLEGRO_ALIGN_CENTER, "Pontos na fase ESTROFULO = %d", controle.pontuacao[0]);
@@ -2025,8 +2109,11 @@ int main() {
         }
         break;
         case GAME_OVER:
-        {
+        { // Reproduzir áudio
+            al_set_audio_stream_playing(mosquito, 0);
+            al_play_sample(morreu, 5.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
             if (ev.type == ALLEGRO_EVENT_TIMER) {
+               
                 if (ev.type == ALLEGRO_EVENT_TIMER && ev.timer.source == countdown_timer) {
 
 
@@ -2068,7 +2155,7 @@ int main() {
 
         //sistema de vitória
         if (controle.venceu_jogo)
-            popup_vitoria(fonte_HUD, botao_play, &tela);
+            popup_vitoria(fonte_HUD, nextlevel, &tela);
 
         //sistema de pausa
         if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
@@ -2119,6 +2206,7 @@ int main() {
     al_destroy_bitmap(spray_tutorial);
     al_destroy_bitmap(virus_PB);
     al_destroy_bitmap(botao_play);
+    al_destroy_bitmap(nextlevel);
     al_destroy_bitmap(paintogenico);
     al_destroy_bitmap(bg_venceu_jogo);
 
@@ -2143,6 +2231,14 @@ int main() {
     al_destroy_font(fonte_HUD);
     al_destroy_font(fonte_texto);
     al_destroy_font(fonte_titulo);
+
+    al_destroy_audio_stream(viremia_som);
+    al_destroy_audio_stream(trilha_sonora);
+    al_destroy_audio_stream(mosquito);
+    al_destroy_sample(colisao);
+    al_destroy_sample(gameover);
+    al_destroy_sample(morreu);
+    al_destroy_sample(next_level);
 
     al_shutdown_image_addon();
 

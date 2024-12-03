@@ -1277,7 +1277,7 @@ int main() {
     tempo_perdeu = 0;
     pode_pausar = false;
     tela = TELA_LOADING;
-
+    tela = VIREMIA;
     //setup do controle geral do jogo (struct q guarda pontuação, estado do jogo, etc)
     controle.venceu_jogo = false;
     controle.pontuacao_total = 0;
@@ -1633,7 +1633,7 @@ int main() {
                 icone_mosquito = fmin(icone_mosquito, 760); // comando que GARANTE que o icone_mosquito nao ultrapasse a largura máxima da barra
 
                 if (barra_progresso >= largura_barra) {
-                    controle.pontuacao[0] = player_mosquito.pontuacao + cont_bonus * 15;
+                    controle.pontuacao[0] = player_mosquito.pontuacao + cont_bonus * 15 * 1000;
                     controle.venceu_jogo = true;
                     printf("bonus pegos = %d * 15 = %d\npontuacao total: %d", cont_bonus, cont_bonus*15,controle.pontuacao[0]);
                 }
@@ -1835,12 +1835,12 @@ int main() {
             al_draw_filled_circle(fago_pong.x, fago_pong.y, fago_pong.raio, BLACK);
 
 
-            al_draw_filled_rounded_rectangle(5, 5, 170, 80, 10, 10, al_map_rgb(10,10, 10));
+            al_draw_filled_rounded_rectangle(5, 5, 190, 115, 5, 5, al_map_rgb(10,10, 10));
 
             // HUD
             al_draw_textf(fonte_HUD, WHITE, 10, 5, ALLEGRO_ALIGN_LEFT, "pontos = %d", control_fago.pontuacao);
             al_draw_textf(fonte_HUD, WHITE, 10, 40, ALLEGRO_ALIGN_LEFT, "vidas = %d", control_fago.tentativas);
-
+            al_draw_textf(fonte_HUD, WHITE, 10, 75, ALLEGRO_ALIGN_LEFT, "infeccoes = %d/3", control_fago.cont_vezes_crescidas);
             /*****FIM DESENHO*****/
         }
         break;
@@ -1938,14 +1938,16 @@ int main() {
                     pode_seguir_mouse = true;
 
                     //Verifica se o círculo está em cima de alguma linha ou dos quadrados brancos
-                    for (int i = 0; i < tamanho - 1; i++) {
+                    for (int i = 0; i < tamanho; i++) {
                         if (!fora_Da_Linha(player_vire.x, player_vire.y, coordenada_X[i], coordenada_Y[i], coordenada_X[i + 1],
                             coordenada_Y[i + 1], espessura_linha)
                             || player_vire.x >= x_checkpoint1 && player_vire.x <= x_checkpoint1 + 20 && player_vire.y >= y_checkpoint1 && player_vire.y <= y_checkpoint1 + 20
                             || player_vire.x >= x_checkpoint2 && player_vire.x <= x_checkpoint2 + 20 && player_vire.y >= y_checkpoint2 && player_vire.y <= y_checkpoint2 + 20) {
                             dentro_da_linha = true;
+                            printf("esta colidindo\n");
                             break; // Se o cursor estiver sobre uma linha, não precisa verificar as demais
                         }
+                        else { printf("colisao is no more\n"); }
                     }
 
                     //PLAYER X INIMIGO

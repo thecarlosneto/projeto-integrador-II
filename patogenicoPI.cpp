@@ -1834,9 +1834,12 @@ int main() {
             // desenha inimigo (elipse)
             al_draw_filled_circle(fago_pong.x, fago_pong.y, fago_pong.raio, BLACK);
 
+
+            al_draw_filled_rounded_rectangle(5, 5, 170, 80, 10, 10, al_map_rgb(10,10, 10));
+
             // HUD
-            al_draw_textf(fonte_HUD, BLACK, 10, 0, ALLEGRO_ALIGN_LEFT, "pontos = %d", control_fago.pontuacao);
-            al_draw_textf(fonte_HUD, BLACK, 10, 34, ALLEGRO_ALIGN_LEFT, "vidas = %d", control_fago.tentativas);
+            al_draw_textf(fonte_HUD, WHITE, 10, 5, ALLEGRO_ALIGN_LEFT, "pontos = %d", control_fago.pontuacao);
+            al_draw_textf(fonte_HUD, WHITE, 10, 40, ALLEGRO_ALIGN_LEFT, "vidas = %d", control_fago.tentativas);
 
             /*****FIM DESENHO*****/
         }

@@ -2131,7 +2131,7 @@ int main() {
                     ir_para_tela(tela_anterior);
                 }
                 else if (ev.keyboard.keycode == ALLEGRO_KEY_N) {
-                    tela = TELA_INICIAL;
+                    ir_para_tela(TELA_INICIAL);
                 }
             }
             //DESENHO

@@ -287,7 +287,7 @@ char textos[NUM_TEXTO][MAX_TEXTO] = {
 
 void cria_paintogenico_bitmap() {
     ALLEGRO_BITMAP* paintogenico_fundo = al_load_bitmap("img/menus/msPaint98.png");
-    ALLEGRO_BITMAP* desenho_paint = al_load_bitmap("img/menus/menu_paint_img.jpg");
+    ALLEGRO_BITMAP* desenho_paint = al_load_bitmap("img/menus/menu_paint_img.png");
     al_set_target_bitmap(paintogenico);
 
     al_draw_bitmap(paintogenico_fundo, 0, 0, 0);

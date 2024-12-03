@@ -130,6 +130,7 @@ ALLEGRO_FONT* fonte_titulo;
 ALLEGRO_BITMAP* loading;
 ALLEGRO_BITMAP* background_desktop;
 ALLEGRO_BITMAP* botao_play;
+ALLEGRO_BITMAP* nextlevel;
 ALLEGRO_BITMAP* background_fases;
 ALLEGRO_BITMAP* tela_perdeu;
 ALLEGRO_BITMAP* tela_tutorial;
@@ -694,6 +695,7 @@ void init_bitmaps() {
     loading = al_load_bitmap("img/menus/telaLoading.png");
     background_desktop = al_load_bitmap("img/menus/bgDesktop.png");
     botao_play = al_load_bitmap("img/menus/Controle jogar.png");
+    nextlevel = al_load_bitmap("img/menus/nextlevel.png");
     background_fases = al_load_bitmap("img/menus/bgFases.png");
     virus_viremia = al_load_bitmap("img/menus/virus.png");
     tela_perdeu = al_load_bitmap("img/menus/telaPerdeu.png");
@@ -949,7 +951,7 @@ void ir_para_tela(int jogoDestino) {
     }
 }
 
-// chamada de exemplo: popup_vitoria(fonte_HUD, botao_play, &tela);
+// chamada de exemplo: popup_vitoria(fonte_HUD, nextlevel, &tela);
 void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
     pause();
     pode_pausar = false;
@@ -985,7 +987,7 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
 
     static int botao_width = al_get_bitmap_width(botao);
     static int botao_height = al_get_bitmap_height(botao);
-    static int botao_x = popup_x + popup_width - botao_width - margem;
+    static int botao_x = popup_x + (popup_width - botao_width) / 2 + 10;
     static int botao_y = popup_y + popup_height - botao_height - margem;
 
     if (colisao_mouse(mState, botao_x, botao_y, botao_width, botao_height) && mouse_click()) {
@@ -997,13 +999,23 @@ void popup_vitoria(ALLEGRO_FONT* fonte, ALLEGRO_BITMAP* botao, int* tela) {
     //
     //DESENHO
     //
-    al_draw_filled_rounded_rectangle(popup_x, popup_y, popup_x + popup_width, popup_y + popup_height, 15, 15, al_map_rgb(100, 100, 100));
-    //título do popup
-    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + popup_width / 2, popup_y + margem, ALLEGRO_ALIGN_CENTER, "Fase Concluida!");
-    //pontuacao e etc
-    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + margem, popup_y + margem + 50, ALLEGRO_ALIGN_LEFT, "Pontuacao: %d", controle.pontuacao[index_pontuacao]);
-    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + margem, popup_y + margem * 2 + 50, ALLEGRO_ALIGN_LEFT, "Pontuacao total: %d", controle.pontuacao_total);
-    //botao
+   // fundo popup
+    al_draw_filled_rectangle(popup_x, popup_y, popup_x + popup_width, popup_y + popup_height, al_map_rgb(192, 192, 192));
+
+    // borda popup
+    al_draw_rectangle(popup_x, popup_y, popup_x + popup_width, popup_y + popup_height, al_map_rgb(255, 255, 255), 2);
+
+    // cabeçalho popup
+    al_draw_filled_rectangle(popup_x, popup_y, popup_x + popup_width, popup_y + 50, al_map_rgb(23, 0, 209));
+
+    // título do popup
+    al_draw_textf(fonte, al_map_rgb(255, 255, 255), popup_x + popup_width / 2, popup_y + 5, ALLEGRO_ALIGN_CENTER, "Fase Concluída!");
+
+    // pontuação e etc
+    al_draw_textf(fonte, al_map_rgb(0, 0, 0), popup_x + margem, popup_y + 60, ALLEGRO_ALIGN_LEFT, "Pontuação: %d", controle.pontuacao[index_pontuacao]);
+    al_draw_textf(fonte, al_map_rgb(0, 0, 0), popup_x + margem, popup_y + 100, ALLEGRO_ALIGN_LEFT, "Pontuação total: %d", controle.pontuacao_total);
+
+    // botão
     al_draw_bitmap(botao, botao_x, botao_y, 0);
 }
 
@@ -2068,7 +2080,7 @@ int main() {
 
         //sistema de vitória
         if (controle.venceu_jogo)
-            popup_vitoria(fonte_HUD, botao_play, &tela);
+            popup_vitoria(fonte_HUD, nextlevel, &tela);
 
         //sistema de pausa
         if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
@@ -2119,6 +2131,7 @@ int main() {
     al_destroy_bitmap(spray_tutorial);
     al_destroy_bitmap(virus_PB);
     al_destroy_bitmap(botao_play);
+    al_destroy_bitmap(nextlevel);
     al_destroy_bitmap(paintogenico);
     al_destroy_bitmap(bg_venceu_jogo);
 

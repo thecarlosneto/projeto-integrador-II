@@ -1277,7 +1277,7 @@ int main() {
     tempo_perdeu = 0;
     pode_pausar = false;
     tela = TELA_LOADING;
-    tela = VIREMIA;
+
     //setup do controle geral do jogo (struct q guarda pontuação, estado do jogo, etc)
     controle.venceu_jogo = false;
     controle.pontuacao_total = 0;
@@ -1944,10 +1944,10 @@ int main() {
                             || player_vire.x >= x_checkpoint1 && player_vire.x <= x_checkpoint1 + 20 && player_vire.y >= y_checkpoint1 && player_vire.y <= y_checkpoint1 + 20
                             || player_vire.x >= x_checkpoint2 && player_vire.x <= x_checkpoint2 + 20 && player_vire.y >= y_checkpoint2 && player_vire.y <= y_checkpoint2 + 20) {
                             dentro_da_linha = true;
-                            printf("esta colidindo\n");
+                            //printf("esta colidindo\n");
                             break; // Se o cursor estiver sobre uma linha, não precisa verificar as demais
                         }
-                        else { printf("colisao is no more\n"); }
+                        else { /*printf("colisao is no more\n");*/ }
                     }
 
                     //PLAYER X INIMIGO
